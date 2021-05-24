@@ -4,8 +4,13 @@ package tk.booky.craftattack.manager;
 import org.bukkit.*;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.HumanEntity;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataHolder;
+import org.bukkit.persistence.PersistentDataType;
 import org.jetbrains.annotations.Nullable;
 import tk.booky.craftattack.CraftAttackMain;
 
@@ -17,6 +22,7 @@ public final class CraftAttackManager {
     private static int endRadius, spawnRadius;
     private static final Map<UUID, Integer> breeds = new HashMap<>();
 
+    private static final NamespacedKey BEFORE_ELYTRA = new NamespacedKey(CraftAttackMain.main, "before_elytra");
     private static final CraftAttackMain plugin = CraftAttackMain.main;
     private static boolean saving;
 
@@ -141,5 +147,38 @@ public final class CraftAttackManager {
 
     public static Map.Entry<UUID, Integer> getHighestBreedEntry() {
         return Collections.max(breeds.entrySet(), Map.Entry.comparingByValue());
+    }
+
+    public static boolean giveElytra(HumanEntity entity) {
+        if (hasElytra(entity)) return false;
+
+        ItemStack item = entity.getInventory().getChestplate();
+        entity.getPersistentDataContainer().set(BEFORE_ELYTRA, PersistentDataType.BYTE_ARRAY, (item == null ? new ItemStack(Material.VOID_AIR) : item).serializeAsBytes());
+
+        ItemStack elytra = new ItemStack(Material.ELYTRA);
+        ItemMeta meta = elytra.getItemMeta();
+
+        meta.setUnbreakable(true);
+        meta.addEnchant(Enchantment.BINDING_CURSE, 1, true);
+        meta.addEnchant(Enchantment.VANISHING_CURSE, 1, true);
+        meta.addItemFlags(ItemFlag.HIDE_UNBREAKABLE, ItemFlag.HIDE_ENCHANTS);
+
+        elytra.setItemMeta(meta);
+        entity.getInventory().setChestplate(elytra);
+
+        return true;
+    }
+
+    public static boolean removeElytra(HumanEntity entity) {
+        if (!hasElytra(entity)) return false;
+        ItemStack item = ItemStack.deserializeBytes(entity.getPersistentDataContainer().get(BEFORE_ELYTRA, PersistentDataType.BYTE_ARRAY));
+        entity.getInventory().setChestplate(item.getType().isAir() ? new ItemStack(Material.AIR) : item);
+
+        entity.getPersistentDataContainer().remove(BEFORE_ELYTRA);
+        return true;
+    }
+
+    public static boolean hasElytra(PersistentDataHolder holder) {
+        return holder.getPersistentDataContainer().has(BEFORE_ELYTRA, PersistentDataType.BYTE_ARRAY);
     }
 }
