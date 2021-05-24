@@ -24,5 +24,6 @@ public class AdminSubCommand extends CommandAPICommand {
         withSubcommand(new SetSpawnLocationSubCommand());
 
         withSubcommand(new BreedSubCommand());
+        withSubcommand(new ResetElytraSubCommand());
     }
 }
