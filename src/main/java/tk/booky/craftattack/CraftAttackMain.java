@@ -20,7 +20,6 @@ public final class CraftAttackMain extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new InteractListener(), this);
         Bukkit.getPluginManager().registerEvents(new MiscListener(), this);
         Bukkit.getPluginManager().registerEvents(new BlockListener(), this);
-        Bukkit.getPluginManager().registerEvents(new BoatListener(), this);
         Bukkit.getPluginManager().registerEvents(new SitListener(), this);
 
         new CraftAttackRootCommand().register();
