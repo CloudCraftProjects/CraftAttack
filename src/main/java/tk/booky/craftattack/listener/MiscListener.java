@@ -2,6 +2,7 @@ package tk.booky.craftattack.listener;
 // Created by booky10 in CraftAttack (15:02 01.03.21)
 
 import org.bukkit.GameMode;
+import org.bukkit.entity.Creeper;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -52,7 +53,11 @@ public class MiscListener implements Listener {
 
     @EventHandler
     public void onExplosion(EntityExplodeEvent event) {
-        if (CraftAttackManager.isInSpawn(event.getLocation(), null)) event.blockList().clear();
+        if (event.getEntity() instanceof Creeper) {
+            event.blockList().clear();
+        } else if (CraftAttackManager.isInSpawn(event.getLocation(), null, CraftAttackManager.getSpawnRadius() + 10)) {
+            event.blockList().clear();
+        }
     }
 
     @EventHandler
