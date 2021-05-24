@@ -3,10 +3,7 @@ package tk.booky.craftattack;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 import tk.booky.craftattack.commands.CraftAttackRootCommand;
-import tk.booky.craftattack.listener.BlockListener;
-import tk.booky.craftattack.listener.BoatListener;
-import tk.booky.craftattack.listener.InteractListener;
-import tk.booky.craftattack.listener.MiscListener;
+import tk.booky.craftattack.listener.*;
 import tk.booky.craftattack.manager.CraftAttackManager;
 
 public final class CraftAttackMain extends JavaPlugin {
@@ -24,6 +21,7 @@ public final class CraftAttackMain extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new MiscListener(), this);
         Bukkit.getPluginManager().registerEvents(new BlockListener(), this);
         Bukkit.getPluginManager().registerEvents(new BoatListener(), this);
+        Bukkit.getPluginManager().registerEvents(new SitListener(), this);
 
         new CraftAttackRootCommand().register();
     }
