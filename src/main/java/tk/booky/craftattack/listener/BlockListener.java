@@ -13,21 +13,37 @@ public class BlockListener implements Listener {
 
     @EventHandler
     public void onBreak(BlockBreakEvent event) {
-        if (CraftAttackManager.isInSpawn(event.getPlayer()) || CraftAttackManager.isInEnd(event.getPlayer())) event.setCancelled(true);
+        if (CraftAttackManager.isInSpawn(event.getBlock().getLocation(), event.getPlayer())) {
+            event.setCancelled(true);
+        } else if (CraftAttackManager.isInEnd(event.getBlock().getLocation(), event.getPlayer())) {
+            event.setCancelled(true);
+        }
     }
 
     @EventHandler
     public void onPlace(BlockPlaceEvent event) {
-        if (CraftAttackManager.isInSpawn(event.getPlayer()) || CraftAttackManager.isInEnd(event.getPlayer())) event.setCancelled(true);
+        if (CraftAttackManager.isInSpawn(event.getBlock().getLocation(), event.getPlayer())) {
+            event.setCancelled(true);
+        } else if (CraftAttackManager.isInEnd(event.getBlock().getLocation(), event.getPlayer())) {
+            event.setCancelled(true);
+        }
     }
 
     @EventHandler
     public void onBucket(PlayerBucketFillEvent event) {
-        if (CraftAttackManager.isInSpawn(event.getPlayer()) || CraftAttackManager.isInEnd(event.getPlayer())) event.setCancelled(true);
+        if (CraftAttackManager.isInSpawn(event.getBlock().getLocation(), event.getPlayer())) {
+            event.setCancelled(true);
+        } else if (CraftAttackManager.isInEnd(event.getBlock().getLocation(), event.getPlayer())) {
+            event.setCancelled(true);
+        }
     }
 
     @EventHandler
     public void onBucket(PlayerBucketEmptyEvent event) {
-        if (CraftAttackManager.isInSpawn(event.getPlayer()) || CraftAttackManager.isInEnd(event.getPlayer())) event.setCancelled(true);
+        if (CraftAttackManager.isInSpawn(event.getBlock().getLocation(), event.getPlayer())) {
+            event.setCancelled(true);
+        } else if (CraftAttackManager.isInEnd(event.getBlock().getLocation(), event.getPlayer())) {
+            event.setCancelled(true);
+        }
     }
 }

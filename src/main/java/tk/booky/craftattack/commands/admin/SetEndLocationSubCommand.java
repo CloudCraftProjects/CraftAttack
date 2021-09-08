@@ -3,6 +3,7 @@ package tk.booky.craftattack.commands.admin;
 
 import dev.jorel.commandapi.CommandAPI;
 import dev.jorel.commandapi.CommandAPICommand;
+import dev.jorel.commandapi.arguments.FloatArgument;
 import dev.jorel.commandapi.arguments.LocationArgument;
 import dev.jorel.commandapi.arguments.LocationType;
 import dev.jorel.commandapi.exceptions.WrapperCommandSyntaxException;
@@ -17,7 +18,7 @@ public class SetEndLocationSubCommand extends CommandAPICommand implements Comma
         super("setEndLocation");
 
         withPermission("craftattack.command.admin.end.set");
-        withArguments(new LocationArgument("location", LocationType.PRECISE_POSITION));
+        withArguments(new LocationArgument("location", LocationType.PRECISE_POSITION), new FloatArgument("yaw"), new FloatArgument("pitch"));
 
         executes(this);
     }
@@ -25,6 +26,9 @@ public class SetEndLocationSubCommand extends CommandAPICommand implements Comma
     @Override
     public void run(CommandSender sender, Object[] args) throws WrapperCommandSyntaxException {
         Location location = (Location) args[0];
+
+        location.setYaw((float) args[1]);
+        location.setPitch((float) args[2]);
 
         if (CraftAttackManager.getEndLocation() == location) {
             CommandAPI.fail("The end location is already at the exact same position!");

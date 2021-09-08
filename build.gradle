@@ -6,26 +6,27 @@ plugins {
 }
 
 group = 'tk.booky'
-version = '1.6-SNAPSHOT'
+version = '1.7.0'
 
 repositories {
     mavenCentral()
-    mavenLocal()
 
     maven { url = 'https://papermc.io/repo/repository/maven-snapshots/' }
     maven { url = 'https://papermc.io/repo/repository/maven-public/' }
     maven { url = 'https://oss.sonatype.org/content/groups/public/' }
     maven { url = 'https://repo.codemc.io/repository/maven-public/' }
+    maven { url = 'https://jitpack.io/' }
 }
 
 dependencies {
-    implementation 'com.tuinity:tuinity-api:1.16.5-R0.1-SNAPSHOT'
+    implementation 'io.papermc.paper:paper-api:1.17.1-R0.1-SNAPSHOT'
 
-    implementation 'dev.jorel:commandapi-shade:5.8'
-    implementation 'org.jetbrains:annotations:20.1.0'
+    implementation 'dev.jorel.CommandAPI:commandapi-core:6.2.0'
+    implementation 'org.jetbrains:annotations:21.0.1'
 }
 
 processResources {
+    duplicatesStrategy(DuplicatesStrategy.INCLUDE)
     from(sourceSets.main.resources.srcDirs) {
         filter ReplaceTokens, tokens: [version: version]
     }

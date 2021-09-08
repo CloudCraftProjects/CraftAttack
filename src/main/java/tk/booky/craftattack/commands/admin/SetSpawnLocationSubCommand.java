@@ -3,6 +3,7 @@ package tk.booky.craftattack.commands.admin;
 
 import dev.jorel.commandapi.CommandAPI;
 import dev.jorel.commandapi.CommandAPICommand;
+import dev.jorel.commandapi.arguments.FloatArgument;
 import dev.jorel.commandapi.arguments.LocationArgument;
 import dev.jorel.commandapi.arguments.LocationType;
 import dev.jorel.commandapi.exceptions.WrapperCommandSyntaxException;
@@ -17,7 +18,7 @@ public class SetSpawnLocationSubCommand extends CommandAPICommand implements Com
         super("setSpawnLocation");
 
         withPermission("craftattack.command.admin.spawn.set");
-        withArguments(new LocationArgument("location", LocationType.PRECISE_POSITION));
+        withArguments(new LocationArgument("location", LocationType.PRECISE_POSITION), new FloatArgument("yaw"), new FloatArgument("pitch"));
 
         executes(this);
     }
@@ -25,6 +26,9 @@ public class SetSpawnLocationSubCommand extends CommandAPICommand implements Com
     @Override
     public void run(CommandSender sender, Object[] args) throws WrapperCommandSyntaxException {
         Location location = (Location) args[0];
+
+        location.setYaw((float) args[1]);
+        location.setPitch((float) args[2]);
 
         if (CraftAttackManager.getSpawnLocation() == location) {
             CommandAPI.fail("The spawn location is already at the exact same position!");

@@ -17,10 +17,10 @@ public final class CraftAttackMain extends JavaPlugin {
         saveDefaultConfig();
         CraftAttackManager.load();
 
+        Bukkit.getPluginManager().registerEvents(new ElytraJumperListener(), this);
         Bukkit.getPluginManager().registerEvents(new InteractListener(), this);
-        Bukkit.getPluginManager().registerEvents(new MiscListener(), this);
         Bukkit.getPluginManager().registerEvents(new BlockListener(), this);
-        Bukkit.getPluginManager().registerEvents(new ElytraListener(), this);
+        Bukkit.getPluginManager().registerEvents(new MiscListener(), this);
         Bukkit.getPluginManager().registerEvents(new SitListener(), this);
 
         new CraftAttackRootCommand().register();
