@@ -16,6 +16,7 @@ dependencies {
     api("io.papermc.paper:paper-api:1.17.1-R0.1-SNAPSHOT")
     api("dev.jorel.CommandAPI:commandapi-core:6.3.1")
     api("com.mojang:brigadier:1.0.18")
+    api("net.luckperms:api:5.3")
 }
 
 java {

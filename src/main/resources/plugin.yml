@@ -6,3 +6,4 @@ prefix: CA
 authors: [ booky10 ]
 website: https://booky.tk/
 depend: [ CommandAPI ]
+softdepend: [ LuckPerms ]

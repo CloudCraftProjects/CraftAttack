@@ -4,6 +4,7 @@ import dev.jorel.commandapi.CommandAPI;
 import dev.jorel.commandapi.CommandAPICommand;
 import org.bukkit.plugin.java.JavaPlugin;
 import tk.booky.craftattack.commands.CraftAttackRootCommand;
+import tk.booky.craftattack.listener.ChatListener;
 import tk.booky.craftattack.listener.ElytraListener;
 import tk.booky.craftattack.listener.InteractListener;
 import tk.booky.craftattack.listener.ProtectionListener;
@@ -41,6 +42,13 @@ public final class CraftAttackMain extends JavaPlugin {
         getPluginManager().registerEvents(new InteractListener(manager), this);
         getPluginManager().registerEvents(new ElytraListener(manager), this);
         getPluginManager().registerEvents(new SitListener(manager), this);
+
+        try {
+            Class.forName("net.luckperms.api.LuckPerms");
+            getPluginManager().registerEvents(new ChatListener(), this);
+        } catch (ClassNotFoundException exception) {
+            getLogger().warning("No group prefixes or suffixes will be displayed, as luckperms is not available.");
+        }
 
         getServicesManager().register(CraftAttackManager.class, manager, this, Normal);
     }
