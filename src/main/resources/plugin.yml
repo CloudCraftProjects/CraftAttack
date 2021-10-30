@@ -1,9 +1,8 @@
 name: CraftAttack
-version: @version@
+version: ${version}
 main: tk.booky.craftattack.CraftAttackMain
-api-version: 1.16
+api-version: 1.17
 prefix: CA
 authors: [ booky10 ]
 website: https://booky.tk/
-load: POSTWORLD
 depend: [ CommandAPI ]
