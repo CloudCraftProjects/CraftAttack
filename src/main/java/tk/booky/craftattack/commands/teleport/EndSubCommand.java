@@ -1,42 +1,59 @@
 package tk.booky.craftattack.commands.teleport;
 // Created by booky10 in CraftAttack (14:54 03.01.21)
 
-import dev.jorel.commandapi.CommandAPI;
 import dev.jorel.commandapi.CommandAPICommand;
 import dev.jorel.commandapi.exceptions.WrapperCommandSyntaxException;
 import dev.jorel.commandapi.executors.PlayerCommandExecutor;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
-import org.bukkit.event.player.PlayerTeleportEvent;
-import tk.booky.craftattack.manager.CraftAttackManager;
+import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
+import tk.booky.craftattack.utils.CraftAttackManager;
 
-import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
+
+import static net.kyori.adventure.text.Component.text;
+import static net.kyori.adventure.text.format.NamedTextColor.RED;
+import static org.bukkit.Bukkit.getScheduler;
+import static org.bukkit.GameMode.CREATIVE;
+import static org.bukkit.GameMode.SPECTATOR;
 
 public class EndSubCommand extends CommandAPICommand implements PlayerCommandExecutor {
 
-    private static final HashMap<UUID, Long> lastUse = new HashMap<>();
+    private final Set<UUID> currentlyTeleporting = new HashSet<>();
+    private final CraftAttackManager manager;
 
-    public EndSubCommand() {
+    public EndSubCommand(CraftAttackManager manager) {
         super("end");
+        this.manager = manager;
 
-        withPermission("craftattack.command.teleport.end");
-
-        executesPlayer(this);
+        withPermission("craftattack.command.teleport.end").executesPlayer(this);
     }
 
     @Override
     public void run(Player sender, Object[] args) throws WrapperCommandSyntaxException {
-        if (!sender.hasPermission("craftattack.bypass.cooldown.end") && lastUse.getOrDefault(sender.getUniqueId(), 0L) + 60000 > System.currentTimeMillis()) {
-            long seconds = (lastUse.get(sender.getUniqueId()) + 60000 - System.currentTimeMillis()) / 1000 + 1;
-            CommandAPI.fail("You still have to wait " + seconds + " more seconds before you can use this command again!");
+        if (manager.config().endLocation() == null) {
+            manager.fail("The end location has not been set yet!");
         } else {
-            lastUse.put(sender.getUniqueId(), System.currentTimeMillis());
+            if (currentlyTeleporting.add(sender.getUniqueId())) {
+                manager.message(sender, "Please don't move, you will get teleported in five seconds.");
+                Location oldLocation = sender.getLocation().toBlockLocation();
 
-            if (CraftAttackManager.getEndLocation() == null) {
-                CommandAPI.fail("The end location has not been set yet!");
+                getScheduler().runTaskLater(manager.plugin(), () -> {
+                    currentlyTeleporting.remove(sender.getUniqueId());
+
+                    if (sender.isOnline()) {
+                        if (oldLocation.equals(sender.getLocation().toBlockLocation())) {
+                            sender.teleportAsync(manager.config().endLocation(), TeleportCause.COMMAND);
+                            manager.message(sender, "You have been brought to the end location!");
+                        } else {
+                            manager.message(sender, text("You have moved.", RED));
+                        }
+                    }
+                }, sender.getAllowFlight() ? 0 : 5 * 20);
             } else {
-                sender.teleportAsync(CraftAttackManager.getEndLocation(), PlayerTeleportEvent.TeleportCause.COMMAND);
-                sender.sendMessage("You have been brought to the end location!");
+                manager.fail("You are already teleporting.");
             }
         }
     }

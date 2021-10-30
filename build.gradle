@@ -23,6 +23,7 @@ dependencies {
 
     implementation 'dev.jorel.CommandAPI:commandapi-core:6.2.0'
     implementation 'org.jetbrains:annotations:21.0.1'
+    implementation 'com.mojang:brigadier:1.0.18'
 }
 
 processResources {

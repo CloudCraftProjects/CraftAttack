@@ -18,11 +18,15 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.spigotmc.event.entity.EntityDismountEvent;
-import tk.booky.craftattack.CraftAttackMain;
+import tk.booky.craftattack.utils.CraftAttackManager;
 
 public class SitListener implements Listener {
 
-    private static final NamespacedKey CHAIR_KEY = new NamespacedKey(CraftAttackMain.main, "chair");
+    private final NamespacedKey chairKey;
+
+    public SitListener(CraftAttackManager manager) {
+        chairKey = new NamespacedKey(manager.plugin(), "chair");
+    }
 
     @EventHandler
     public void onInteract(PlayerInteractEvent event) {
@@ -49,7 +53,7 @@ public class SitListener implements Listener {
                     if (location.getNearbyEntitiesByType(ArmorStand.class, 0.5).size() == 0) {
                         ArmorStand stand = location.getWorld().spawn(location, ArmorStand.class);
                         PersistentDataContainer container = stand.getPersistentDataContainer();
-                        container.set(CHAIR_KEY, PersistentDataType.BYTE, type);
+                        container.set(chairKey, PersistentDataType.BYTE, type);
 
                         stand.addPassenger(event.getPlayer());
                         stand.setInvisible(true);
@@ -69,7 +73,7 @@ public class SitListener implements Listener {
         if (Tag.STAIRS.isTagged(material) || Tag.SLABS.isTagged(material)) {
             Location location = block.getLocation().add(0.5, 0.3, 0.5);
             for (ArmorStand stand : location.getNearbyEntitiesByType(ArmorStand.class, 0.5)) {
-                if (stand.getPersistentDataContainer().has(CHAIR_KEY, PersistentDataType.BYTE)) {
+                if (stand.getPersistentDataContainer().has(chairKey, PersistentDataType.BYTE)) {
                     stand.remove();
                 }
             }
@@ -78,7 +82,7 @@ public class SitListener implements Listener {
 
     @EventHandler
     public void onDismount(EntityDismountEvent event) {
-        Byte chairType = event.getDismounted().getPersistentDataContainer().get(CHAIR_KEY, PersistentDataType.BYTE);
+        Byte chairType = event.getDismounted().getPersistentDataContainer().get(chairKey, PersistentDataType.BYTE);
         if (chairType != null && event.getEntity() instanceof LivingEntity entity) {
             Location location = event.getDismounted().getLocation().add(0, chairType / 2d, 0);
             location.setPitch(entity.getLocation().getPitch());

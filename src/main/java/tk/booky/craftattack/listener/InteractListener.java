@@ -5,33 +5,40 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-import tk.booky.craftattack.manager.CraftAttackManager;
+import org.bukkit.event.player.PlayerJoinEvent;
+import tk.booky.craftattack.utils.CraftAttackManager;
 
-public class InteractListener implements Listener {
+public record InteractListener(CraftAttackManager manager) implements Listener {
 
     @EventHandler
     public void onInteract(PlayerInteractEvent event) {
-        switch (event.getAction()) {
-            case LEFT_CLICK_BLOCK:
-            case RIGHT_CLICK_BLOCK:
-            case PHYSICAL:
-                if (event.getClickedBlock() != null) {
-                    if (CraftAttackManager.isInSpawn(event.getClickedBlock().getLocation(), event.getPlayer())) {
+        if (event.getClickedBlock() != null) {
+            switch (event.getAction()) {
+                case LEFT_CLICK_BLOCK, RIGHT_CLICK_BLOCK -> {
+                    if (manager.isInSpawn(event.getClickedBlock().getLocation(), event.getPlayer())) {
                         event.setCancelled(true);
                     }
-                } else if (CraftAttackManager.isInSpawn(event.getPlayer())) {
-                    event.setCancelled(true);
                 }
-                break;
-            default:
-                break;
+                case PHYSICAL -> {
+                    if (manager.isInSpawn(event.getClickedBlock().getLocation(), null)) {
+                        event.setCancelled(true);
+                    }
+                }
+            }
         }
     }
 
     @EventHandler
     public void onInteract(PlayerInteractEntityEvent event) {
-        if (CraftAttackManager.isInSpawn(event.getRightClicked().getLocation(), event.getPlayer())) {
+        if (manager.isInSpawn(event.getRightClicked().getLocation(), event.getPlayer())) {
             event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onJoin(PlayerJoinEvent event) {
+        if (System.currentTimeMillis() - event.getPlayer().getFirstPlayed() < 500) {
+            event.getPlayer().teleport(manager.config().spawnLocation());
         }
     }
 }

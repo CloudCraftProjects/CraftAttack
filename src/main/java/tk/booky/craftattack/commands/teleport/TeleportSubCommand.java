@@ -2,17 +2,16 @@ package tk.booky.craftattack.commands.teleport;
 // Created by booky10 in CraftAttack (14:50 01.03.21)
 
 import dev.jorel.commandapi.CommandAPICommand;
+import tk.booky.craftattack.utils.CraftAttackManager;
 
 public class TeleportSubCommand extends CommandAPICommand {
 
-    public TeleportSubCommand() {
+    public TeleportSubCommand(CraftAttackManager manager) {
         super("teleport");
+        withPermission("craftattack.command.teleport").withAliases("tp");
 
-        withPermission("craftattack.command.teleport");
-        withAliases("tp");
-
-        withSubcommand(new BedSubCommand());
-        withSubcommand(new EndSubCommand());
-        withSubcommand(new SpawnSubCommand());
+        withSubcommand(new BedSubCommand(manager));
+        withSubcommand(new EndSubCommand(manager));
+        withSubcommand(new SpawnSubCommand(manager));
     }
 }
