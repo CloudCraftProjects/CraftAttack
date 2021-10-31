@@ -36,13 +36,13 @@ public class SpawnSubCommand extends CommandAPICommand implements PlayerCommandE
         } else {
             if (currentlyTeleporting.add(sender.getUniqueId())) {
                 manager.message(sender, "Please don't move, you will get teleported in five seconds.");
-                Location oldLocation = sender.getLocation().toBlockLocation();
+                Location oldLocation = sender.getLocation().getBlock().getLocation();
 
                 getScheduler().runTaskLater(manager.plugin(), () -> {
                     currentlyTeleporting.remove(sender.getUniqueId());
 
                     if (sender.isOnline()) {
-                        if (oldLocation.equals(sender.getLocation().toBlockLocation())) {
+                        if (oldLocation.equals(sender.getLocation().getBlock().getLocation())) {
                             sender.teleportAsync(manager.config().spawnLocation().toCenterLocation(), TeleportCause.COMMAND);
                             manager.message(sender, "You have been brought to the spawn location!");
                         } else {

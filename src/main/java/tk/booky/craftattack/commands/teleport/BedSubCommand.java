@@ -35,13 +35,13 @@ public class BedSubCommand extends CommandAPICommand implements PlayerCommandExe
     public void run(Player sender, Object[] args) throws WrapperCommandSyntaxException {
         if (currentlyTeleporting.add(sender.getUniqueId())) {
             manager.message(sender, "Please don't move, you will get teleported in five seconds.");
-            Location oldLocation = sender.getLocation().toBlockLocation();
+            Location oldLocation = sender.getLocation().getBlock().getLocation();
 
             getScheduler().runTaskLater(manager.plugin(), () -> {
                 currentlyTeleporting.remove(sender.getUniqueId());
 
                 if (sender.isOnline()) {
-                    if (oldLocation.equals(sender.getLocation().toBlockLocation())) {
+                    if (oldLocation.equals(sender.getLocation().getBlock().getLocation())) {
                         Location location = sender.getBedSpawnLocation();
 
                         if (location == null) {
