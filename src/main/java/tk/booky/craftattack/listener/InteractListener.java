@@ -1,6 +1,7 @@
 package tk.booky.craftattack.listener;
 // Created by booky10 in CraftAttack (15:02 01.03.21)
 
+import org.bukkit.Material;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
@@ -16,7 +17,9 @@ public record InteractListener(CraftAttackManager manager) implements Listener {
             switch (event.getAction()) {
                 case LEFT_CLICK_BLOCK, RIGHT_CLICK_BLOCK -> {
                     if (manager.isInSpawn(event.getClickedBlock().getLocation(), event.getPlayer())) {
-                        event.setCancelled(true);
+                        if (event.getClickedBlock() == null || event.getClickedBlock().getType() != Material.ENDER_CHEST) {
+                            event.setCancelled(true);
+                        }
                     }
                 }
                 case PHYSICAL -> {
