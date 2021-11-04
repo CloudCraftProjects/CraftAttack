@@ -64,18 +64,8 @@ public class CraftAttackConfig {
         return endRadiusSquared;
     }
 
-    public void endRadiusSquared(int endRadiusSquared) {
-        this.endRadiusSquared = endRadiusSquared;
-        saveConfiguration();
-    }
-
     public int spawnRadiusSquared() {
         return spawnRadiusSquared;
-    }
-
-    public void spawnRadiusSquared(int spawnRadiusSquared) {
-        this.spawnRadiusSquared = spawnRadiusSquared;
-        saveConfiguration();
     }
 
     public int endRadius() {
@@ -83,7 +73,7 @@ public class CraftAttackConfig {
     }
 
     public void endRadius(int endRadius) {
-        this.endRadius = endRadius;
+        endRadiusSquared = (this.endRadius = endRadius) * endRadius;
         saveConfiguration();
     }
 
@@ -92,7 +82,7 @@ public class CraftAttackConfig {
     }
 
     public void spawnRadius(int spawnRadius) {
-        this.spawnRadius = spawnRadius;
+        spawnRadiusSquared = (this.spawnRadius = spawnRadius) * spawnRadius;
         saveConfiguration();
     }
 
