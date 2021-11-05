@@ -20,52 +20,42 @@ public record ProtectionListener(CraftAttackManager manager) implements Listener
 
     @EventHandler
     public void onBreak(BlockBreakEvent event) {
-        if (manager.isInSpawn(event.getBlock().getLocation(), event.getPlayer())) {
-            event.setCancelled(true);
-        } else if (manager.isInEnd(event.getBlock().getLocation(), event.getPlayer())) {
+        if (manager.isProtected(event.getBlock().getLocation(), event.getPlayer())) {
             event.setCancelled(true);
         }
     }
 
     @EventHandler
     public void onPlace(BlockPlaceEvent event) {
-        if (manager.isInSpawn(event.getBlock().getLocation(), event.getPlayer())) {
-            event.setCancelled(true);
-        } else if (manager.isInEnd(event.getBlock().getLocation(), event.getPlayer())) {
+        if (manager.isProtected(event.getBlock().getLocation(), event.getPlayer())) {
             event.setCancelled(true);
         }
     }
 
     @EventHandler
     public void onBucket(PlayerBucketFillEvent event) {
-        if (manager.isInSpawn(event.getBlock().getLocation(), event.getPlayer())) {
-            event.setCancelled(true);
-        } else if (manager.isInEnd(event.getBlock().getLocation(), event.getPlayer())) {
+        if (manager.isProtected(event.getBlock().getLocation(), event.getPlayer())) {
             event.setCancelled(true);
         }
     }
 
     @EventHandler
     public void onBucket(PlayerBucketEmptyEvent event) {
-        if (manager.isInSpawn(event.getBlock().getLocation(), event.getPlayer())) {
-            event.setCancelled(true);
-        } else if (manager.isInEnd(event.getBlock().getLocation(), event.getPlayer())) {
+        if (manager.isProtected(event.getBlock().getLocation(), event.getPlayer())) {
             event.setCancelled(true);
         }
     }
 
     @EventHandler
     public void onDamage(EntityDamageEvent event) {
-        if (manager.isInSpawn(event.getEntity().getLocation(), null)) {
-            event.setCancelled(true);
-        } else if (manager.isInEnd(event.getEntity().getLocation(), null)) {
+        if (manager.isProtected(event.getEntity().getLocation(), null)) {
             event.setCancelled(true);
         }
     }
 
     @EventHandler
     public void onCreatureSpawn(CreatureSpawnEvent event) {
-        if (manager.isInSpawn(event.getEntity().getLocation(), null)) {
+        if (manager.isProtected(event.getEntity().getLocation(), null)) {
             switch (event.getSpawnReason()) {
                 case JOCKEY, SPAWNER, VILLAGE_DEFENSE, VILLAGE_INVASION, REINFORCEMENTS, MOUNT, LIGHTNING,
                     TRAP, ENDER_PEARL, RAID, PATROL -> event.setCancelled(true);
@@ -85,13 +75,13 @@ public record ProtectionListener(CraftAttackManager manager) implements Listener
         if (event.getEntity() instanceof Creeper) {
             event.blockList().clear();
         } else {
-            event.blockList().removeIf(block -> manager.isInSpawn(block.getLocation(), null));
+            event.blockList().removeIf(block -> manager.isProtected(block.getLocation(), null));
         }
     }
 
     @EventHandler
     public void onRedstone(BlockRedstoneEvent event) {
-        if (manager.isInSpawn(event.getBlock().getLocation(), null)) {
+        if (manager.isProtected(event.getBlock().getLocation(), null)) {
             event.setNewCurrent(0);
         }
     }
@@ -99,9 +89,7 @@ public record ProtectionListener(CraftAttackManager manager) implements Listener
     @EventHandler
     public void onFoodChange(FoodLevelChangeEvent event) {
         if (event.getFoodLevel() < event.getEntity().getFoodLevel()) {
-            if (manager.isInSpawn(event.getEntity().getLocation(), event.getEntity())) {
-                event.setCancelled(true);
-            } else if (manager.isInEnd(event.getEntity().getLocation(), event.getEntity())) {
+            if (manager.isProtected(event.getEntity().getLocation(), event.getEntity())) {
                 event.setCancelled(true);
             }
         }

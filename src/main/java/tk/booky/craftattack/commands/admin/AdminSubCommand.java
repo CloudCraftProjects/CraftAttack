@@ -3,6 +3,8 @@ package tk.booky.craftattack.commands.admin;
 
 import dev.jorel.commandapi.CommandAPICommand;
 import tk.booky.craftattack.commands.admin.end.EndSubCommand;
+import tk.booky.craftattack.commands.admin.protection.GetProtectedAreaSubCommand;
+import tk.booky.craftattack.commands.admin.protection.SetProtectedAreaSubCommand;
 import tk.booky.craftattack.commands.admin.spawn.SpawnSubCommand;
 import tk.booky.craftattack.utils.CraftAttackManager;
 
@@ -15,5 +17,7 @@ public class AdminSubCommand extends CommandAPICommand {
         withSubcommand(new EndSubCommand(manager));
         withSubcommand(new SpawnSubCommand(manager));
         withSubcommand(new StartSubCommand(manager));
+        withSubcommand(new SetProtectedAreaSubCommand(manager));
+        withSubcommand(new GetProtectedAreaSubCommand(manager));
     }
 }

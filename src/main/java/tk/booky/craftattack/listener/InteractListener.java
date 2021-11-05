@@ -16,14 +16,14 @@ public record InteractListener(CraftAttackManager manager) implements Listener {
         if (event.getClickedBlock() != null) {
             switch (event.getAction()) {
                 case LEFT_CLICK_BLOCK, RIGHT_CLICK_BLOCK -> {
-                    if (manager.isInSpawn(event.getClickedBlock().getLocation(), event.getPlayer())) {
+                    if (manager.isProtected(event.getClickedBlock().getLocation(), event.getPlayer())) {
                         if (event.getClickedBlock() == null || event.getClickedBlock().getType() != Material.ENDER_CHEST) {
                             event.setCancelled(true);
                         }
                     }
                 }
                 case PHYSICAL -> {
-                    if (manager.isInSpawn(event.getClickedBlock().getLocation(), null)) {
+                    if (manager.isProtected(event.getClickedBlock().getLocation(), null)) {
                         event.setCancelled(true);
                     }
                 }
@@ -33,7 +33,7 @@ public record InteractListener(CraftAttackManager manager) implements Listener {
 
     @EventHandler
     public void onInteract(PlayerInteractEntityEvent event) {
-        if (manager.isInSpawn(event.getRightClicked().getLocation(), event.getPlayer())) {
+        if (manager.isProtected(event.getRightClicked().getLocation(), event.getPlayer())) {
             event.setCancelled(true);
         }
     }

@@ -93,6 +93,21 @@ public final class CraftAttackManager {
         throw new IllegalStateException("No overworld could be found!");
     }
 
+    public boolean isProtected(Location location, @Nullable HumanEntity entity) {
+        if (entity != null && entity.getGameMode() == GameMode.CREATIVE) {
+            return false;
+        } else if (config.protectedArea().contains(location.toVector())) {
+            return true;
+        } else {
+            return isInRadius(location, config.spawnLocation(), config.spawnRadiusSquared()) ||
+                isInRadius(location, config.endLocation(), config.endRadiusSquared());
+        }
+    }
+
+    public boolean isInRadius(Location source, Location target, int squaredRadius) {
+        return target != null && target.getWorld() == source.getWorld() && target.distanceSquared(source) <= squaredRadius;
+    }
+
     public boolean isInSpawn(Location location, @Nullable HumanEntity entity) {
         return isInRadius(location, entity, config.spawnLocation(), config.spawnRadiusSquared());
     }

@@ -4,6 +4,7 @@ package tk.booky.craftattack.utils;
 import org.bukkit.Location;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.util.BoundingBox;
 
 import java.io.File;
 import java.io.IOException;
@@ -11,6 +12,7 @@ import java.io.IOException;
 public class CraftAttackConfig {
 
     private final File configurationFile;
+    private BoundingBox protectedArea = new BoundingBox(0, 0, 0, 0, 0, 0);
     private int endRadiusSquared = 0, spawnRadiusSquared = 0, endRadius = 0, spawnRadius = 0;
     private Location endLocation, spawnLocation;
     private boolean endActivated = true;
@@ -32,6 +34,8 @@ public class CraftAttackConfig {
             spawnLocation = configuration.getLocation("spawn.location", spawnLocation);
             spawnRadius = configuration.getInt("spawn.radius", spawnRadius);
 
+            protectedArea = configuration.getObject("protected-area.bounding-box", BoundingBox.class, protectedArea);
+
             spawnRadiusSquared = spawnRadius * spawnRadius;
             endRadiusSquared = endRadius * endRadius;
             return this;
@@ -49,6 +53,8 @@ public class CraftAttackConfig {
             configuration.set("spawn.location", spawnLocation);
             configuration.set("spawn.radius", spawnRadius);
 
+            configuration.set("protected-area.bounding-box", protectedArea);
+
             configuration.save(configurationFile);
             return this;
         } catch (IOException exception) {
@@ -58,6 +64,15 @@ public class CraftAttackConfig {
 
     public File configurationFile() {
         return configurationFile;
+    }
+
+    public BoundingBox protectedArea() {
+        return protectedArea;
+    }
+
+    public void protectedArea(BoundingBox protectedArea) {
+        this.protectedArea = protectedArea;
+        saveConfiguration();
     }
 
     public int endRadiusSquared() {
