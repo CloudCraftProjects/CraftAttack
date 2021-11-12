@@ -1,6 +1,8 @@
 plugins {
     `java-library`
     `maven-publish`
+
+    id("xyz.jpenilla.run-paper") version "1.0.4"
 }
 
 group = "tk.booky"
@@ -31,9 +33,15 @@ publishing {
     }
 }
 
-tasks.processResources {
-    inputs.property("version", project.version)
-    filesMatching("plugin.yml") {
-        expand("version" to project.version)
+tasks {
+    runServer {
+        minecraftVersion("1.17.1")
+    }
+
+    processResources {
+        inputs.property("version", project.version)
+        filesMatching("plugin.yml") {
+            expand("version" to project.version)
+        }
     }
 }
