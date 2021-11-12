@@ -1,6 +1,7 @@
 package tk.booky.craftattack.listener;
 // Created by booky10 in CraftAttack (17:38 30.10.21)
 
+import org.bukkit.World.Environment;
 import org.bukkit.entity.Creeper;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -14,6 +15,7 @@ import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerBucketFillEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
 import tk.booky.craftattack.utils.CraftAttackManager;
 
 public record ProtectionListener(CraftAttackManager manager) implements Listener {
@@ -90,6 +92,15 @@ public record ProtectionListener(CraftAttackManager manager) implements Listener
     public void onFoodChange(FoodLevelChangeEvent event) {
         if (event.getFoodLevel() < event.getEntity().getFoodLevel()) {
             if (manager.isProtected(event.getEntity().getLocation(), event.getEntity())) {
+                event.setCancelled(true);
+            }
+        }
+    }
+
+    @EventHandler
+    public void onEndEnter(PlayerTeleportEvent event) {
+        if (event.getTo().getWorld().getEnvironment() == Environment.THE_END && !event.getPlayer().getAllowFlight()) {
+            if (!manager.config().endActivated()) {
                 event.setCancelled(true);
             }
         }
