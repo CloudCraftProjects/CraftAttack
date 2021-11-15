@@ -88,7 +88,7 @@ public class SitListener implements Listener {
             location.setPitch(entity.getLocation().getPitch());
             location.setYaw(entity.getLocation().getYaw());
 
-            if (location.clone().add(0, entity.getEyeHeight(), 0).getBlock().getType().isSolid()) {
+            if (location.clone().add(0, entity.getEyeHeight(), 0).getBlock().getType().isCollidable()) {
                 event.getDismounted().getLocation().getBlock().breakNaturally(true);
 
                 entity.teleport(entity.getLocation()
