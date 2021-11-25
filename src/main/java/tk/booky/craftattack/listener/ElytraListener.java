@@ -2,6 +2,8 @@ package tk.booky.craftattack.listener;
 // Created by booky10 in CraftAttack (13:20 06.08.21)
 
 import com.destroystokyo.paper.event.player.PlayerPostRespawnEvent;
+import it.unimi.dsi.fastutil.objects.Object2LongMap;
+import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import org.bukkit.Material;
 import org.bukkit.Tag;
 import org.bukkit.block.Block;
@@ -24,14 +26,23 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.util.Vector;
 import tk.booky.craftattack.utils.CraftAttackManager;
 
+import java.util.UUID;
+
 import static org.bukkit.Sound.ENTITY_FIREWORK_ROCKET_LAUNCH;
 import static org.bukkit.SoundCategory.AMBIENT;
 import static org.bukkit.potion.PotionEffectType.SLOW_FALLING;
 
-public record ElytraListener(CraftAttackManager manager) implements Listener {
+public class ElytraListener implements Listener {
 
-    private static final Vector BOOST_VELOCITY = new Vector(0, 4, 0);
     private static final PotionEffect BOOST_EFFECT = new PotionEffect(SLOW_FALLING, 20 * 5, 255, false, false, false);
+    private static final Vector BOOST_VELOCITY = new Vector(0, 4, 0);
+    private final Object2LongMap<UUID> lastBoost = new Object2LongOpenHashMap<>();
+    private final CraftAttackManager manager;
+
+    public ElytraListener(CraftAttackManager manager) {
+        this.lastBoost.defaultReturnValue(0);
+        this.manager = manager;
+    }
 
     @EventHandler
     public void onInteract(PlayerInteractEvent event) {
@@ -39,11 +50,17 @@ public record ElytraListener(CraftAttackManager manager) implements Listener {
             Block block = event.getClickedBlock();
             if (block != null && Tag.PRESSURE_PLATES.isTagged(block.getType())) {
                 if (block.getRelative(BlockFace.UP).getType() == Material.MOVING_PISTON) {
-                    event.getPlayer().setVelocity(BOOST_VELOCITY);
-                    event.getPlayer().addPotionEffect(BOOST_EFFECT);
+                    long currentTime = System.currentTimeMillis();
+                    event.setCancelled(true);
 
-                    event.getPlayer().playSound(block.getLocation(), ENTITY_FIREWORK_ROCKET_LAUNCH, AMBIENT, Short.MAX_VALUE, 0.75f);
-                    manager.giveElytra(event.getPlayer());
+                    if (currentTime - lastBoost.getLong(event.getPlayer().getUniqueId()) > 1000) {
+                        event.getPlayer().setVelocity(BOOST_VELOCITY);
+                        event.getPlayer().addPotionEffect(BOOST_EFFECT);
+
+                        event.getPlayer().playSound(block.getLocation(), ENTITY_FIREWORK_ROCKET_LAUNCH, AMBIENT, Short.MAX_VALUE, 0.75f);
+                        lastBoost.put(event.getPlayer().getUniqueId(), currentTime);
+                        manager.giveElytra(event.getPlayer());
+                    }
                 }
             }
         }
