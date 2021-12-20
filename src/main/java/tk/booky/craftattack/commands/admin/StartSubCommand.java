@@ -19,7 +19,7 @@ import static net.kyori.adventure.text.Component.text;
 import static net.kyori.adventure.text.format.NamedTextColor.GOLD;
 import static net.kyori.adventure.text.format.NamedTextColor.GREEN;
 import static net.kyori.adventure.text.format.TextDecoration.BOLD;
-import static net.kyori.adventure.title.Title.Times.of;
+import static net.kyori.adventure.title.Title.Times.times;
 import static net.kyori.adventure.title.Title.title;
 import static net.kyori.adventure.util.Ticks.duration;
 import static org.bukkit.Bukkit.broadcast;
@@ -69,7 +69,7 @@ public class StartSubCommand extends CommandAPICommand implements CommandExecuto
                     case 3:
                     case 2:
                     case 1:
-                        Times countdownTimes = of(duration(5), duration(10), duration(5));
+                        Times countdownTimes = times(duration(5), duration(10), duration(5));
                         Title countdownTitle = title(text(countdown + 1, GOLD, BOLD), empty(), countdownTimes);
 
                         for (Player player : getOnlinePlayers()) {
@@ -86,7 +86,7 @@ public class StartSubCommand extends CommandAPICommand implements CommandExecuto
                         broadcast(manager.prefix(text(args[1] + " starts in " + (countdown + 1) + " seconds.", GREEN)));
                         break;
                     case 0:
-                        Times startTimes = of(duration(10), duration(100), duration(20));
+                        Times startTimes = times(duration(10), duration(100), duration(20));
                         Title startTitle = title(text(args[2].toString()), text(args[1].toString(), GREEN), startTimes);
 
                         Component message = manager.prefix(text(args[1] + " has started!", GOLD, BOLD));

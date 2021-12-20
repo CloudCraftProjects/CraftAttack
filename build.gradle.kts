@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "tk.booky"
-version = "1.8.1"
+version = "1.8.2"
 
 repositories {
     maven("https://papermc.io/repo/repository/maven-public/")
@@ -15,8 +15,8 @@ repositories {
 }
 
 dependencies {
-    api("io.papermc.paper:paper-api:1.17.1-R0.1-SNAPSHOT")
-    api("dev.jorel.CommandAPI:commandapi-core:6.3.1")
+    api("io.papermc.paper:paper-api:1.18.1-R0.1-SNAPSHOT")
+    api("dev.jorel.CommandAPI:commandapi-core:6.5.3")
     api("com.mojang:brigadier:1.0.18")
     api("net.luckperms:api:5.3")
 }
@@ -35,7 +35,7 @@ publishing {
 
 tasks {
     runServer {
-        minecraftVersion("1.17.1")
+        minecraftVersion("1.18.1")
     }
 
     processResources {
