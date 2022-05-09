@@ -1,9 +1,8 @@
 name: CraftAttack
 version: ${version}
-main: tk.booky.craftattack.CraftAttackMain
-api-version: 1.17
+main: dev.booky.craftattack.CraftAttackMain
+api-version: 1.18
 prefix: CA
 authors: [ booky10 ]
-website: https://booky.tk/
+website: https://booky.dev/
 depend: [ CommandAPI ]
-softdepend: [ LuckPerms ]

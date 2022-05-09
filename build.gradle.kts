@@ -5,8 +5,8 @@ plugins {
     id("xyz.jpenilla.run-paper") version "1.0.4"
 }
 
-group = "tk.booky"
-version = "1.8.2"
+group = "dev.booky"
+version = "1.8.3"
 
 repositories {
     maven("https://papermc.io/repo/repository/maven-public/")
@@ -15,15 +15,13 @@ repositories {
 }
 
 dependencies {
-    api("io.papermc.paper:paper-api:1.18.1-R0.1-SNAPSHOT")
-    api("dev.jorel.CommandAPI:commandapi-core:6.5.3")
+    api("io.papermc.paper:paper-api:1.18.2-R0.1-SNAPSHOT")
+    api("dev.jorel.CommandAPI:commandapi-core:8.1.0")
     api("com.mojang:brigadier:1.0.18")
-    api("net.luckperms:api:5.3")
 }
 
 java {
     withSourcesJar()
-    withJavadocJar()
 }
 
 publishing {
@@ -35,7 +33,7 @@ publishing {
 
 tasks {
     runServer {
-        minecraftVersion("1.18.1")
+        minecraftVersion("1.18.2")
     }
 
     processResources {
