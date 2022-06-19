@@ -1,6 +1,7 @@
 package dev.booky.craftattack.commands.admin;
 // Created by booky10 in Kingdoms (20:18 08.09.21)
 
+import dev.booky.craftattack.utils.CraftAttackManager;
 import dev.jorel.commandapi.CommandAPICommand;
 import dev.jorel.commandapi.arguments.IntegerArgument;
 import dev.jorel.commandapi.arguments.TextArgument;
@@ -12,7 +13,6 @@ import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
-import dev.booky.craftattack.utils.CraftAttackManager;
 
 import static net.kyori.adventure.text.Component.empty;
 import static net.kyori.adventure.text.Component.text;
@@ -42,19 +42,18 @@ public class StartSubCommand extends CommandAPICommand implements CommandExecuto
         this.manager = manager;
 
         withArguments(
-            new IntegerArgument("countdown", 0),
-            new TextArgument("project"),
-            new TextArgument("owner")
-        );
-
-        withPermission("craftattack.command.admin.start").executes(this);
+                new IntegerArgument("countdown", 0),
+                new TextArgument("project"),
+                new TextArgument("owner"));
+        withPermission("craftattack.command.admin.start");
+        executes(this);
     }
 
     @Override
     public void run(CommandSender sender, Object[] args) {
         World world = manager.overworld();
         int timeId = getScheduler().runTaskTimer(manager.plugin(),
-            () -> world.setTime(world.getTime() + 20), 20, 1).getTaskId();
+                () -> world.setTime(world.getTime() + 20), 20, 1).getTaskId();
 
         manager.message(sender, args[1] + " will be started...");
         new BukkitRunnable() {
@@ -78,18 +77,18 @@ public class StartSubCommand extends CommandAPICommand implements CommandExecuto
                         }
 
                         if (countdown == 0) {
-                            broadcast(manager.prefix(text(args[1] + " starts in one second.", GREEN)));
+                            broadcast(manager.prefix(text(args[1] + " starts in one second", GREEN)));
                             break;
                         }
                     case 30:
                     case 15:
-                        broadcast(manager.prefix(text(args[1] + " starts in " + (countdown + 1) + " seconds.", GREEN)));
+                        broadcast(manager.prefix(text(args[1] + " starts in " + (countdown + 1) + " seconds", GREEN)));
                         break;
                     case 0:
                         Times startTimes = times(duration(10), duration(100), duration(20));
                         Title startTitle = title(text(args[2].toString()), text(args[1].toString(), GREEN), startTimes);
 
-                        Component message = manager.prefix(text(args[1] + " has started!", GOLD, BOLD));
+                        Component message = manager.prefix(text(args[1] + " has started", GOLD, BOLD));
                         getConsoleSender().sendMessage(message);
 
                         for (Player player : getOnlinePlayers()) {

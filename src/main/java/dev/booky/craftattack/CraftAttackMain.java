@@ -33,9 +33,8 @@ public final class CraftAttackMain extends JavaPlugin {
     public void onEnable() {
         manager.loadOverworld();
 
-        configuration
-            .reloadConfiguration()
-            .saveConfiguration();
+        configuration.reloadConfiguration();
+        configuration.saveConfiguration();
 
         getPluginManager().registerEvents(new ProtectionListener(manager), this);
         getPluginManager().registerEvents(new InteractListener(manager), this);

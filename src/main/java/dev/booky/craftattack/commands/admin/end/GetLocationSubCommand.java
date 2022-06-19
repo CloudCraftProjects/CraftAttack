@@ -18,8 +18,8 @@ public class GetLocationSubCommand extends CommandAPICommand implements CommandE
         this.manager = manager;
 
         withArguments(new LiteralArgument("get"));
-
-        withPermission("craftattack.command.admin.end.location.get").executes(this);
+        withPermission("craftattack.command.admin.end.location.get");
+        executes(this);
     }
 
     @Override
@@ -27,14 +27,15 @@ public class GetLocationSubCommand extends CommandAPICommand implements CommandE
         Location location = manager.config().endLocation();
 
         if (location == null) {
-            manager.fail("The end location has not been set yet!");
-        } else {
-            manager.message(sender, String.format(
-                "The end location is currently at %s %s %s %s %s in %s!",
+            manager.fail(sender, "The end location has not been set yet");
+            return;
+        }
+
+        manager.message(sender, String.format(
+                "The end location is currently at %s %s %s %s %s in %s",
                 location.getX(), location.getY(), location.getZ(),
                 location.getYaw(), location.getPitch(),
                 location.getWorld().getName()
-            ));
-        }
+        ));
     }
 }

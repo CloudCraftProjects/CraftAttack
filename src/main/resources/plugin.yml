@@ -1,7 +1,7 @@
 name: CraftAttack
 version: ${version}
 main: dev.booky.craftattack.CraftAttackMain
-api-version: 1.18
+api-version: 1.19
 prefix: CA
 authors: [ booky10 ]
 website: https://booky.dev/

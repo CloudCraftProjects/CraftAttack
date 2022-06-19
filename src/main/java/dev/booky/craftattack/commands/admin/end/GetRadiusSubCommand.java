@@ -17,8 +17,8 @@ public class GetRadiusSubCommand extends CommandAPICommand implements CommandExe
         this.manager = manager;
 
         withArguments(new LiteralArgument("get"));
-
-        withPermission("craftattack.command.admin.end.radius.get").executes(this);
+        withPermission("craftattack.command.admin.end.radius.get");
+        executes(this);
     }
 
     @Override
@@ -26,9 +26,10 @@ public class GetRadiusSubCommand extends CommandAPICommand implements CommandExe
         int radius = manager.config().endRadius();
 
         if (radius <= -1) {
-            manager.fail("The end radius has not been set yet!");
-        } else {
-            manager.message(sender, "The end radius is currently at " + radius + " blocks!");
+            manager.fail(sender, "The end radius has not been set yet");
+            return;
         }
+
+        manager.message(sender, "The end radius is currently at " + radius + " blocks");
     }
 }

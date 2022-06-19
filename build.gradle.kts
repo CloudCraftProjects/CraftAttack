@@ -1,22 +1,19 @@
 plugins {
-    `java-library`
-    `maven-publish`
-
-    id("xyz.jpenilla.run-paper") version "1.0.4"
+    id("java-library")
+    id("maven-publish")
+    id("xyz.jpenilla.run-paper") version "1.0.6"
 }
 
 group = "dev.booky"
-version = "1.8.3"
+version = "1.9.0"
 
 repositories {
     maven("https://papermc.io/repo/repository/maven-public/")
-    maven("https://repo.codemc.io/repository/maven-public/")
-    maven("https://jitpack.io/")
 }
 
 dependencies {
-    api("io.papermc.paper:paper-api:1.18.2-R0.1-SNAPSHOT")
-    api("dev.jorel.CommandAPI:commandapi-core:8.1.0")
+    api("io.papermc.paper:paper-api:1.19-R0.1-SNAPSHOT")
+    api("dev.jorel:commandapi-core:8.4.0")
     api("com.mojang:brigadier:1.0.18")
 }
 
@@ -33,7 +30,7 @@ publishing {
 
 tasks {
     runServer {
-        minecraftVersion("1.18.2")
+        minecraftVersion("1.19")
     }
 
     processResources {

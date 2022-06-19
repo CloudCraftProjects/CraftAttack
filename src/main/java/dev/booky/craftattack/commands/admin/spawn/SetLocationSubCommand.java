@@ -31,10 +31,11 @@ public class SetLocationSubCommand extends CommandAPICommand implements CommandE
         location.setYaw((float) args[1]);
 
         if (location.equals(manager.config().spawnLocation())) {
-            manager.fail("The spawn location is already at the exact same position!");
-        } else {
-            manager.config().spawnLocation(location);
-            manager.message(sender, "The spawn location has been set!");
+            manager.fail(sender, "The spawn location is already at the exact same position");
+            return;
         }
+
+        manager.config().spawnLocation(location);
+        manager.message(sender, "The spawn location has been set");
     }
 }

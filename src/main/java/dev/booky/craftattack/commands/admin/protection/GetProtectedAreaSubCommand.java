@@ -18,7 +18,8 @@ public class GetProtectedAreaSubCommand extends CommandAPICommand implements Com
         this.manager = manager;
 
         withArguments(new LiteralArgument("get"));
-        withPermission("craftattack.command.admin.protection.get").executes(this);
+        withPermission("craftattack.command.admin.protection.get");
+        executes(this);
     }
 
     @Override
@@ -26,11 +27,12 @@ public class GetProtectedAreaSubCommand extends CommandAPICommand implements Com
         BoundingBox boundingBox = manager.config().protectedArea();
 
         if (boundingBox.getMin().equals(boundingBox.getMax())) {
-            manager.fail("No protected area is set!");
-        } else {
-            manager.message(sender, "The current protected area reaches from " +
-                boundingBox.getMinX() + " " + boundingBox.getMinY() + " " + boundingBox.getMinZ() + " to " +
-                boundingBox.getMaxX() + " " + boundingBox.getMaxY() + " " + boundingBox.getMaxZ() + ".");
+            manager.fail(sender, "No protected area is set");
+            return;
         }
+
+        manager.message(sender, "The current protected area reaches from " +
+                boundingBox.getMinX() + " " + boundingBox.getMinY() + " " + boundingBox.getMinZ() + " to " +
+                boundingBox.getMaxX() + " " + boundingBox.getMaxY() + " " + boundingBox.getMaxZ());
     }
 }

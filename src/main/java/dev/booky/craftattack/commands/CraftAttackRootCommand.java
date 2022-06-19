@@ -1,10 +1,10 @@
 package dev.booky.craftattack.commands;
 // Created by booky10 in CraftAttack (14:36 01.03.21)
 
-import dev.booky.craftattack.commands.teleport.TeleportSubCommand;
-import dev.jorel.commandapi.CommandAPICommand;
 import dev.booky.craftattack.commands.admin.AdminSubCommand;
+import dev.booky.craftattack.commands.teleport.TeleportSubCommand;
 import dev.booky.craftattack.utils.CraftAttackManager;
+import dev.jorel.commandapi.CommandAPICommand;
 
 public class CraftAttackRootCommand extends CommandAPICommand {
 

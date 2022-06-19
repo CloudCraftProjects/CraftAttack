@@ -21,12 +21,11 @@ public class SetLocationSubCommand extends CommandAPICommand implements CommandE
         this.manager = manager;
 
         withArguments(
-            new LiteralArgument("set"),
-            new LocationArgument("location", LocationType.PRECISE_POSITION),
-            new AngleArgument("yaw")
-        );
-
-        withPermission("craftattack.command.admin.end.location.set").executes(this);
+                new LiteralArgument("set"),
+                new LocationArgument("location", LocationType.PRECISE_POSITION),
+                new AngleArgument("yaw"));
+        withPermission("craftattack.command.admin.end.location.set");
+        executes(this);
     }
 
     @Override
@@ -35,10 +34,11 @@ public class SetLocationSubCommand extends CommandAPICommand implements CommandE
         location.setYaw((float) args[1]);
 
         if (location.equals(manager.config().endLocation())) {
-            manager.fail("The end location is already at the exact same position!");
-        } else {
-            manager.config().endLocation(location);
-            manager.message(sender, "The end location has been set!");
+            manager.fail(sender, "The end location is already at the exact same position");
+            return;
         }
+
+        manager.config().endLocation(location);
+        manager.message(sender, "The end location has been set");
     }
 }

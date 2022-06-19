@@ -18,11 +18,10 @@ public class SetRadiusSubCommand extends CommandAPICommand implements CommandExe
         this.manager = manager;
 
         withArguments(
-            new LiteralArgument("set"),
-            new IntegerArgument("radius", 0)
-        );
-
-        withPermission("craftattack.command.admin.end.radius.set").executes(this);
+                new LiteralArgument("set"),
+                new IntegerArgument("radius", 0));
+        withPermission("craftattack.command.admin.end.radius.set");
+        executes(this);
     }
 
     @Override
@@ -30,10 +29,11 @@ public class SetRadiusSubCommand extends CommandAPICommand implements CommandExe
         int radius = (int) args[0];
 
         if (manager.config().endRadius() == radius) {
-            manager.fail("The end radius is already at this size!");
-        } else {
-            manager.config().endRadius(radius);
-            manager.message(sender, "The end radius has been set to " + radius + "!");
+            manager.fail(sender, "The end radius is already at this size");
+            return;
         }
+
+        manager.config().endRadius(radius);
+        manager.message(sender, "The end radius has been set to " + radius);
     }
 }
