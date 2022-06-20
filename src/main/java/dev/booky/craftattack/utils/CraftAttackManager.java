@@ -14,8 +14,8 @@ import org.bukkit.entity.HumanEntity;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataHolder;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
+import org.bukkit.util.NumberConversions;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
@@ -107,7 +107,7 @@ public final class CraftAttackManager {
     }
 
     public boolean isInRadius(Location source, Location target, int squaredRadius) {
-        return target != null && target.getWorld() == source.getWorld() && target.distanceSquared(source) <= squaredRadius;
+        return target != null && target.getWorld() == source.getWorld() && distanceXZSquared(source, target) <= squaredRadius;
     }
 
     public boolean isInSpawn(Location location, @Nullable HumanEntity entity) {
@@ -131,7 +131,12 @@ public final class CraftAttackManager {
             return false;
         }
 
-        return target.distanceSquared(source) <= radiusSquared;
+        return distanceXZSquared(source, target) <= radiusSquared;
+    }
+
+    private double distanceXZSquared(Location loc1, Location loc2) {
+        return NumberConversions.square(loc1.getX() - loc2.getX())
+                + NumberConversions.square(loc1.getZ() - loc2.getZ());
     }
 
     public boolean giveElytra(HumanEntity entity) {
