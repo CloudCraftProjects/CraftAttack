@@ -68,7 +68,7 @@ public record ProtectionListener(CraftAttackManager manager) implements Listener
     @EventHandler
     public void onExplosionDamage(EntityDamageByEntityEvent event) {
         if (event.getDamager() instanceof Creeper) {
-            event.setCancelled(true);
+            event.setDamage(event.getDamage() / 2);
         }
     }
 
