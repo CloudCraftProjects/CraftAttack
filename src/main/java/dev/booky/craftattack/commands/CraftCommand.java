@@ -16,7 +16,7 @@ public class CraftCommand extends CommandAPICommand implements PlayerCommandExec
         super("craft");
         this.manager = manager;
 
-        withPermission("crafttack.command.craft");
+        withPermission("craftattack.command.craft");
         executesPlayer(this);
     }
 
