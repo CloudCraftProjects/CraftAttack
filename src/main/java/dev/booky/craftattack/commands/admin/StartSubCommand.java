@@ -29,6 +29,9 @@ import static org.bukkit.Bukkit.getScheduler;
 import static org.bukkit.Bukkit.getWorlds;
 import static org.bukkit.GameRule.DO_DAYLIGHT_CYCLE;
 import static org.bukkit.GameRule.DO_MOB_SPAWNING;
+import static org.bukkit.GameRule.DO_WEATHER_CYCLE;
+import static org.bukkit.GameRule.MOB_GRIEFING;
+import static org.bukkit.GameRule.RANDOM_TICK_SPEED;
 import static org.bukkit.Sound.BLOCK_NOTE_BLOCK_HAT;
 import static org.bukkit.Sound.UI_TOAST_CHALLENGE_COMPLETE;
 import static org.bukkit.SoundCategory.AMBIENT;
@@ -107,8 +110,11 @@ public class StartSubCommand extends CommandAPICommand implements CommandExecuto
                             }
                         }, 10 * 20);
 
+                        world.setGameRule(RANDOM_TICK_SPEED, 3);
+                        world.setGameRule(DO_WEATHER_CYCLE, true);
                         world.setGameRule(DO_DAYLIGHT_CYCLE, true);
                         world.setGameRule(DO_MOB_SPAWNING, true);
+                        world.setGameRule(MOB_GRIEFING, true);
 
                         getScheduler().cancelTask(timeId);
                         getScheduler().cancelTask(getTaskId());
