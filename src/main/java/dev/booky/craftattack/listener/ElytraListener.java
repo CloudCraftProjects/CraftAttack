@@ -72,8 +72,9 @@ public class ElytraListener implements Listener {
         if (event.getPose() == Pose.FALL_FLYING) return;
 
         if (!manager.isInSpawn(event.getEntity().getLocation(), null)) {
-            manager.removeElytra((HumanEntity) event.getEntity());
-            ((Player) event.getEntity()).setNoDamageTicks(20);
+            if (manager.removeElytra((HumanEntity) event.getEntity())) {
+                ((Player) event.getEntity()).setNoDamageTicks(20);
+            }
         }
     }
 
@@ -102,8 +103,9 @@ public class ElytraListener implements Listener {
         boolean onGround = event.getPlayer().isOnGround();
 
         if (onGround && !manager.isInSpawn(event.getPlayer().getLocation(), null)) {
-            event.getPlayer().setNoDamageTicks(20);
-            manager.removeElytra(event.getPlayer());
+            if (manager.removeElytra(event.getPlayer())) {
+                event.getPlayer().setNoDamageTicks(20);
+            }
         }
     }
 
