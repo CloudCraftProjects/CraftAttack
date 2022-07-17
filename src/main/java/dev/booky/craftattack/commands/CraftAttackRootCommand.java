@@ -16,5 +16,6 @@ public class CraftAttackRootCommand extends CommandAPICommand {
 
         withSubcommand(new TeleportSubCommand(manager));
         withSubcommand(new AdminSubCommand(manager));
+        withSubcommand(new CraftCommand(manager));
     }
 }
