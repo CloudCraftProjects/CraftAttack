@@ -95,6 +95,7 @@ public class SitListener implements Listener {
         if (!location.clone().add(0, entity.getEyeHeight(), 0).getBlock().getType().isCollidable()) {
             entity.teleport(location);
             event.getDismounted().remove();
+            return;
         }
 
         event.getDismounted().getLocation().getBlock().breakNaturally(true);
