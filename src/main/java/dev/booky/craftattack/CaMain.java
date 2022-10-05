@@ -20,6 +20,14 @@ public final class CaMain extends JavaPlugin {
     private CommandAPICommand command;
     private CaManager manager;
 
+    public CaMain() {
+        try {
+            Class.forName("io.papermc.paper.configuration.Configuration");
+        } catch (ClassNotFoundException exception) {
+            throw new RuntimeException("Please use paper for this plugin to function! Download it at https://papermc.io/.");
+        }
+    }
+
     @Override
     public void onLoad() {
         this.manager = new CaManager(this, super.getDataFolder().toPath());
