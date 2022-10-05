@@ -8,10 +8,10 @@ public class SpawnSubCommand extends CommandAPICommand {
 
     public SpawnSubCommand(CaManager manager) {
         super("spawn");
+        super.withPermission("craftattack.command.admin.spawn");
 
-        withPermission("craftattack.command.admin.spawn");
-
-        withSubcommand(new GetLocationSubCommand(manager));
-        withSubcommand(new SetLocationSubCommand(manager));
+        super.withSubcommand(new SpawnWarpLocationGetCommand(manager));
+        super.withSubcommand(new SpawnWarpLocationSetCommand(manager, true));
+        super.withSubcommand(new SpawnWarpLocationSetCommand(manager, false));
     }
 }

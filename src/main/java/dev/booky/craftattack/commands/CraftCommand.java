@@ -5,29 +5,30 @@ import dev.booky.craftattack.CaManager;
 import dev.jorel.commandapi.CommandAPICommand;
 import dev.jorel.commandapi.exceptions.WrapperCommandSyntaxException;
 import dev.jorel.commandapi.executors.PlayerCommandExecutor;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
 public class CraftCommand extends CommandAPICommand implements PlayerCommandExecutor {
 
-    private final CaManager manager;
-
-    public CraftCommand(CaManager manager) {
+    public CraftCommand() {
         super("craft");
-        this.manager = manager;
+        super.withPermission("craftattack.command.craft");
+        super.executesPlayer(this);
 
-        withPermission("craftattack.command.craft");
-        executesPlayer(this);
+        // Additionally register just /craft as a command
+        super.register();
     }
 
     @Override
     public void run(Player sender, Object[] args) throws WrapperCommandSyntaxException {
         if (!sender.getInventory().contains(Material.CRAFTING_TABLE)) {
-            manager.fail(sender, "You have to have at least one crafting table in your inventory");
+            CaManager.getPrefix().append(Component.translatable("ca.command.craft.no-table-found", NamedTextColor.RED));
             return;
         }
 
         sender.openWorkbench(null, true);
-        manager.message(sender, "Opened a crafting table for you");
+        CaManager.getPrefix().append(Component.translatable("ca.command.craft.success", NamedTextColor.GREEN));
     }
 }

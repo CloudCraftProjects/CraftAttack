@@ -4,7 +4,6 @@ package dev.booky.craftattack.config;
 import dev.booky.craftattack.utils.CaBoundingBox;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
-import org.bukkit.util.BoundingBox;
 import org.spongepowered.configurate.CommentedConfigurationNode;
 import org.spongepowered.configurate.yaml.NodeStyle;
 import org.spongepowered.configurate.yaml.YamlConfigurationLoader;

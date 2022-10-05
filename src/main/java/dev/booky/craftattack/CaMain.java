@@ -1,6 +1,6 @@
 package dev.booky.craftattack;
 
-import dev.booky.craftattack.commands.CraftAttackRootCommand;
+import dev.booky.craftattack.commands.CaCommand;
 import dev.booky.craftattack.listener.ElytraListener;
 import dev.booky.craftattack.listener.EndListener;
 import dev.booky.craftattack.listener.ExplosionListener;
@@ -22,8 +22,7 @@ public final class CaMain extends JavaPlugin {
     @Override
     public void onLoad() {
         this.manager = new CaManager(this, getDataFolder().toPath());
-        this.command = new CraftAttackRootCommand(this.manager);
-        this.command.register();
+        this.command = new CaCommand(this.manager);
     }
 
     @Override

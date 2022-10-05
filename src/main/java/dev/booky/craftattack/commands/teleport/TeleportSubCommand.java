@@ -7,11 +7,11 @@ import dev.jorel.commandapi.CommandAPICommand;
 public class TeleportSubCommand extends CommandAPICommand {
 
     public TeleportSubCommand(CaManager manager) {
-        super("teleport");
-        withPermission("craftattack.command.teleport").withAliases("tp");
+        super("tp");
+        super.withPermission("craftattack.command.teleport");
 
-        withSubcommand(new BedSubCommand(manager));
-        withSubcommand(new EndSubCommand(manager));
-        withSubcommand(new SpawnSubCommand(manager));
+        super.withSubcommand(new TeleportBedCommand(manager));
+        super.withSubcommand(new TeleportEndCommand(manager));
+        super.withSubcommand(new TeleportSpawnCommand(manager));
     }
 }

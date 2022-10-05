@@ -4,12 +4,13 @@ package dev.booky.craftattack;
 import dev.booky.craftattack.config.ConfigLoader;
 import dev.booky.craftattack.utils.CaBoundingBox;
 import dev.booky.craftattack.utils.CaConfig;
-import net.kyori.adventure.audience.Audience;
-import net.kyori.adventure.audience.MessageType;
-import net.kyori.adventure.identity.Identity;
+import dev.booky.craftattack.utils.TpResult;
+import dev.booky.craftattack.utils.TranslationLoader;
+import io.papermc.paper.entity.RelativeTeleportFlag;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
+import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -18,12 +19,14 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.HumanEntity;
+import org.bukkit.entity.Player;
+import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataHolder;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.scheduler.BukkitTask;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
 
 import java.nio.file.Path;
@@ -31,6 +34,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 public final class CaManager {
@@ -52,9 +56,11 @@ public final class CaManager {
             .append(Component.text(']', NamedTextColor.GRAY))
             .append(Component.space()).build();
 
-    private final Map<UUID, BukkitTask> teleportRunnables = new HashMap<>();
+    private final Map<UUID, CompletableFuture<TpResult>> teleports = new HashMap<>();
     private final NamespacedKey elytraDataKey;
     private final Plugin plugin;
+
+    private final TranslationLoader i18n;
 
     private final Path configPath;
     private CaConfig config;
@@ -63,6 +69,65 @@ public final class CaManager {
         this.elytraDataKey = new NamespacedKey(plugin, "elytra_data");
         this.plugin = plugin;
         this.configPath = configDir.resolve("config.yml");
+
+        this.i18n = new TranslationLoader(plugin);
+        this.i18n.load();
+    }
+
+    public static Component getPrefix() {
+        return PREFIX;
+    }
+
+    public CompletableFuture<TpResult> teleportRequest(Player player, Location target) {
+        if (this.teleports.containsKey(player.getUniqueId())) {
+            player.sendMessage(getPrefix().append(Component.translatable("ca.teleport.already", NamedTextColor.RED)));
+            return CompletableFuture.completedFuture(TpResult.ALREADY_TELEPORTING);
+        }
+
+        if (target == null) {
+            target = this.getConfig().getSpawnConfig().getWarpLocation();
+            if (target == null) {
+                target = player.getWorld().getSpawnLocation();
+            }
+            player.sendMessage(getPrefix().append(Component.translatable("ca.teleport.spawn-warning", NamedTextColor.RED)));
+        }
+
+        if (player.getAllowFlight()) {
+            player.sendMessage(getPrefix().append(Component.translatable("ca.teleport.teleporting", NamedTextColor.GRAY)));
+
+            Location finalTarget = target;
+            return target.getWorld().getChunkAtAsync(target, true).thenApply(chunk -> {
+                finalTarget.setYaw(player.getLocation().getYaw());
+                finalTarget.setPitch(player.getLocation().getPitch());
+                player.teleport(finalTarget, PlayerTeleportEvent.TeleportCause.COMMAND, true,
+                        true, RelativeTeleportFlag.YAW, RelativeTeleportFlag.PITCH);
+                return TpResult.SUCCESSFUL;
+            });
+        }
+
+        player.sendMessage(getPrefix().append(Component.translatable("ca.teleport.please-wait", NamedTextColor.GRAY)));
+        CompletableFuture<TpResult> future = new CompletableFuture<>();
+
+        Location finalTarget = target;
+        Bukkit.getScheduler().runTaskLater(this.plugin, () -> {
+            if (future.isDone()) {
+                return;
+            }
+
+            CaManager.this.teleports.remove(player.getUniqueId());
+            player.sendMessage(getPrefix().append(Component.translatable("ca.teleport.teleporting", NamedTextColor.GRAY)));
+
+            finalTarget.getWorld().getChunkAtAsync(finalTarget, true).thenAccept(chunk -> {
+                finalTarget.setYaw(player.getLocation().getYaw());
+                finalTarget.setPitch(player.getLocation().getPitch());
+                player.teleport(finalTarget, PlayerTeleportEvent.TeleportCause.COMMAND, true,
+                        true, RelativeTeleportFlag.YAW, RelativeTeleportFlag.PITCH);
+                future.complete(TpResult.SUCCESSFUL);
+            });
+        }, 5 * 20);
+
+        teleports.put(player.getUniqueId(), future);
+        return future;
     }
 
     public void updateConfig(Consumer<CaConfig> updater) {
@@ -76,30 +141,6 @@ public final class CaManager {
 
     public void saveConfig() {
         ConfigLoader.saveObject(this.configPath, this.getConfig());
-    }
-
-    public void fail(Audience audience, String message) {
-        audience.sendMessage(Identity.nil(), prefix(Component.text(message, NamedTextColor.RED)), MessageType.SYSTEM);
-    }
-
-    public void fail(Audience audience, Component component) {
-        audience.sendMessage(Identity.nil(), prefix(component.color(NamedTextColor.RED)), MessageType.SYSTEM);
-    }
-
-    public void message(Audience audience, String message) {
-        audience.sendMessage(Identity.nil(), prefix(Component.text(message, NamedTextColor.GREEN)), MessageType.SYSTEM);
-    }
-
-    public void message(Audience audience, Component component) {
-        audience.sendMessage(Identity.nil(), PREFIX.append(component), MessageType.SYSTEM);
-    }
-
-    public Component prefix(String message) {
-        return PREFIX.append(Component.text(message, NamedTextColor.GREEN));
-    }
-
-    public Component prefix(Component component) {
-        return PREFIX.append(component);
     }
 
     public boolean isProtected(Location location, @Nullable HumanEntity entity) {
@@ -171,8 +212,9 @@ public final class CaManager {
         return holder.getPersistentDataContainer().has(elytraDataKey, PersistentDataType.BYTE_ARRAY);
     }
 
-    public Map<UUID, BukkitTask> getTeleportRunnables() {
-        return teleportRunnables;
+    @ApiStatus.Internal
+    public Map<UUID, CompletableFuture<TpResult>> getTeleports() {
+        return teleports;
     }
 
     public CaConfig getConfig() {

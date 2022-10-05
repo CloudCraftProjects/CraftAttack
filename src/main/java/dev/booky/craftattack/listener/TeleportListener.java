@@ -2,11 +2,15 @@ package dev.booky.craftattack.listener;
 // Created by booky10 in CraftAttack (15:02 01.03.21)
 
 import dev.booky.craftattack.CaManager;
+import dev.booky.craftattack.utils.TpResult;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.scheduler.BukkitTask;
+
+import java.util.concurrent.CompletableFuture;
 
 public final class TeleportListener implements Listener {
 
@@ -22,18 +26,18 @@ public final class TeleportListener implements Listener {
             return;
         }
 
-        BukkitTask task = this.manager.getTeleportRunnables().remove(event.getPlayer().getUniqueId());
-        if (task != null) {
-            this.manager.fail(event.getPlayer(), "You have moved, cancelled teleport");
-            task.cancel();
+        CompletableFuture<TpResult> future = this.manager.getTeleports().remove(event.getPlayer().getUniqueId());
+        if (future != null) {
+            event.getPlayer().sendMessage(CaManager.getPrefix().append(Component.translatable("ca.teleport.moved", NamedTextColor.RED)));
+            future.complete(TpResult.CANCELLED);
         }
     }
 
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
-        BukkitTask task = this.manager.getTeleportRunnables().remove(event.getPlayer().getUniqueId());
-        if (task != null) {
-            task.cancel();
+        CompletableFuture<TpResult> future = this.manager.getTeleports().remove(event.getPlayer().getUniqueId());
+        if (future != null) {
+            future.complete(TpResult.DISCONNECTED);
         }
     }
 }
