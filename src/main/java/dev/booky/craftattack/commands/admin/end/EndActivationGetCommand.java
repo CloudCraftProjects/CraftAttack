@@ -25,6 +25,6 @@ public class EndActivationGetCommand extends CommandAPICommand implements Comman
     public void run(CommandSender sender, Object[] args) throws WrapperCommandSyntaxException {
         String activatedStr = this.manager.getConfig().getEndConfig().isActivated() ? "activated" : "deactivated";
         sender.sendMessage(CaManager.getPrefix().append(Component.translatable("ca.command.admin.end.activate.get.message", NamedTextColor.GREEN)
-                .args(Component.translatable("ca.command.admin.end." + activatedStr, NamedTextColor.GREEN))));
+                .args(Component.translatable("ca.command.admin.end." + activatedStr))));
     }
 }

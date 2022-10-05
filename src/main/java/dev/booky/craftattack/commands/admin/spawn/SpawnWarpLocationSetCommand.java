@@ -41,7 +41,7 @@ public class SpawnWarpLocationSetCommand extends CommandAPICommand implements Co
         }
 
         if (location.equals(this.manager.getConfig().getSpawnConfig().getWarpLocation())) {
-            sender.sendMessage(CaManager.getPrefix().append(Component.translatable("ca.command.admin.spawn.location.set.already-set", NamedTextColor.RED)));
+            sender.sendMessage(CaManager.getPrefix().append(Component.translatable("ca.command.admin.spawn.location.set.already", NamedTextColor.RED)));
             return;
         }
 

@@ -41,7 +41,7 @@ public class EndWarpLocationSetCommand extends CommandAPICommand implements Comm
         }
 
         if (location.equals(this.manager.getConfig().getEndConfig().getWarpLocation())) {
-            sender.sendMessage(CaManager.getPrefix().append(Component.translatable("ca.command.admin.end.location.set.already-set", NamedTextColor.RED)));
+            sender.sendMessage(CaManager.getPrefix().append(Component.translatable("ca.command.admin.end.location.set.already", NamedTextColor.RED)));
             return;
         }
 

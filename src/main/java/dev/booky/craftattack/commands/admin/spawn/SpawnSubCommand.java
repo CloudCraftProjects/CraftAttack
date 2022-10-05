@@ -13,5 +13,7 @@ public class SpawnSubCommand extends CommandAPICommand {
         super.withSubcommand(new SpawnWarpLocationGetCommand(manager));
         super.withSubcommand(new SpawnWarpLocationSetCommand(manager, true));
         super.withSubcommand(new SpawnWarpLocationSetCommand(manager, false));
+        super.withSubcommand(new SpawnElytraBoxGetCommand(manager));
+        super.withSubcommand(new SpawnElytraBoxSetCommand(manager));
     }
 }
