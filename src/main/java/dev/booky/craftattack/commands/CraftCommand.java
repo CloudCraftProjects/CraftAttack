@@ -24,11 +24,11 @@ public class CraftCommand extends CommandAPICommand implements PlayerCommandExec
     @Override
     public void run(Player sender, Object[] args) throws WrapperCommandSyntaxException {
         if (!sender.getInventory().contains(Material.CRAFTING_TABLE)) {
-            CaManager.getPrefix().append(Component.translatable("ca.command.craft.no-table-found", NamedTextColor.RED));
+            sender.sendMessage(CaManager.getPrefix().append(Component.translatable("ca.command.craft.no-table-found", NamedTextColor.RED)));
             return;
         }
 
         sender.openWorkbench(null, true);
-        CaManager.getPrefix().append(Component.translatable("ca.command.craft.success", NamedTextColor.GREEN));
+        sender.sendMessage(CaManager.getPrefix().append(Component.translatable("ca.command.craft.success", NamedTextColor.GREEN)));
     }
 }
