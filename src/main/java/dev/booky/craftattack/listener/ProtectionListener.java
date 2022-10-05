@@ -30,28 +30,28 @@ public final class ProtectionListener implements Listener {
 
     @EventHandler
     public void onBreak(BlockBreakEvent event) {
-        if (this.manager.isProtected(event.getBlock().getLocation(), event.getPlayer())) {
+        if (this.manager.isProtected(event.getBlock(), event.getPlayer())) {
             event.setCancelled(true);
         }
     }
 
     @EventHandler
     public void onPlace(BlockPlaceEvent event) {
-        if (this.manager.isProtected(event.getBlock().getLocation(), event.getPlayer())) {
+        if (this.manager.isProtected(event.getBlock(), event.getPlayer())) {
             event.setCancelled(true);
         }
     }
 
     @EventHandler
     public void onBucketFill(PlayerBucketFillEvent event) {
-        if (this.manager.isProtected(event.getBlock().getLocation(), event.getPlayer())) {
+        if (this.manager.isProtected(event.getBlock(), event.getPlayer())) {
             event.setCancelled(true);
         }
     }
 
     @EventHandler
     public void onBucketEmpty(PlayerBucketEmptyEvent event) {
-        if (this.manager.isProtected(event.getBlock().getLocation(), event.getPlayer())) {
+        if (this.manager.isProtected(event.getBlock(), event.getPlayer())) {
             event.setCancelled(true);
         }
     }
@@ -75,7 +75,7 @@ public final class ProtectionListener implements Listener {
 
     @EventHandler
     public void onRedstone(BlockRedstoneEvent event) {
-        if (this.manager.isProtected(event.getBlock().getLocation(), null)) {
+        if (this.manager.isProtected(event.getBlock(), null)) {
             event.setNewCurrent(0);
         }
     }
@@ -100,7 +100,7 @@ public final class ProtectionListener implements Listener {
 
         switch (event.getAction()) {
             case LEFT_CLICK_BLOCK, RIGHT_CLICK_BLOCK -> {
-                if (!this.manager.isProtected(event.getClickedBlock().getLocation(), event.getPlayer())) {
+                if (!this.manager.isProtected(event.getClickedBlock(), event.getPlayer())) {
                     return;
                 }
                 if (event.getClickedBlock() == null || event.getClickedBlock().getType() != Material.ENDER_CHEST) {
@@ -110,7 +110,7 @@ public final class ProtectionListener implements Listener {
             }
             case PHYSICAL -> {
                 // We use null as an entity, because creative players should still not trample farmland
-                if (this.manager.isProtected(event.getClickedBlock().getLocation(), null)) {
+                if (this.manager.isProtected(event.getClickedBlock(), null)) {
                     event.setCancelled(true);
                 }
             }
@@ -126,12 +126,12 @@ public final class ProtectionListener implements Listener {
 
     @EventHandler
     public void onEntityExplosion(EntityExplodeEvent event) {
-        event.blockList().removeIf(block -> this.manager.isProtected(block.getLocation(), null));
+        event.blockList().removeIf(block -> this.manager.isProtected(block, null));
     }
 
     @EventHandler
     public void onBlockExplosion(BlockExplodeEvent event) {
-        event.blockList().removeIf(block -> this.manager.isProtected(block.getLocation(), null));
+        event.blockList().removeIf(block -> this.manager.isProtected(block, null));
     }
 
     @EventHandler
