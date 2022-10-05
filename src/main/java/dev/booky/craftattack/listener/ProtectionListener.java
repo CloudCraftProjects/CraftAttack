@@ -103,9 +103,22 @@ public final class ProtectionListener implements Listener {
                 if (!this.manager.isProtected(event.getClickedBlock(), event.getPlayer())) {
                     return;
                 }
-                if (event.getClickedBlock() == null || event.getClickedBlock().getType() != Material.ENDER_CHEST) {
+                if (event.getClickedBlock() == null) {
                     event.setUseInteractedBlock(Event.Result.DENY);
-                    // TODO: test with fas
+                }
+
+                Material blockType = event.getClickedBlock().getType();
+                if (blockType == Material.ENDER_CHEST) {
+                    return;
+                }
+                if (!event.getMaterial().isBlock()) {
+                    event.setUseInteractedBlock(Event.Result.DENY);
+                    return;
+                }
+
+                // Try to not handle block places, because handling them here seems more "buggy"
+                if (blockType.isInteractable() && !event.getPlayer().isSneaking()) {
+                    event.setUseInteractedBlock(Event.Result.DENY);
                 }
             }
             case PHYSICAL -> {
