@@ -14,7 +14,5 @@ public class EndSubCommand extends CommandAPICommand {
         withSubcommand(new GetLocationSubCommand(manager));
         withSubcommand(new SetLocationSubCommand(manager));
         withSubcommand(new ActivationSubCommand(manager));
-        withSubcommand(new GetRadiusSubCommand(manager));
-        withSubcommand(new SetRadiusSubCommand(manager));
     }
 }

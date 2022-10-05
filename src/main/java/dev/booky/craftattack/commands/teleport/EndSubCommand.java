@@ -23,7 +23,7 @@ public class EndSubCommand extends CommandAPICommand implements PlayerCommandExe
 
     @Override
     public void run(Player sender, Object[] args) throws WrapperCommandSyntaxException {
-        if (manager.config().endLocation() == null) {
+        if (manager.getConfig().getEndConfig().getWarpLocation() == null) {
             manager.fail(sender, "The end location has not been set yet");
             return;
         }
@@ -35,14 +35,14 @@ public class EndSubCommand extends CommandAPICommand implements PlayerCommandExe
 
         if (sender.getAllowFlight()) {
             manager.message(sender, "You have been brought to the end location");
-            sender.teleportAsync(manager.config().endLocation(), TeleportCause.COMMAND);
+            sender.teleportAsync(manager.getConfig().getEndConfig().getWarpLocation(), TeleportCause.COMMAND);
             return;
         }
 
         manager.message(sender, "Please don't move, you will get teleported in five seconds");
-        manager.teleportRunnables().put(sender.getUniqueId(), Bukkit.getScheduler().runTaskLater(manager.plugin(), () -> {
+        manager.teleportRunnables().put(sender.getUniqueId(), Bukkit.getScheduler().runTaskLater(manager.getMain(), () -> {
             manager.teleportRunnables().remove(sender.getUniqueId());
-            sender.teleportAsync(manager.config().endLocation(), TeleportCause.COMMAND);
+            sender.teleportAsync(manager.getConfig().getEndConfig().getWarpLocation(), TeleportCause.COMMAND);
             manager.message(sender, "You have been brought to the end location");
         }, 5 * 20));
     }

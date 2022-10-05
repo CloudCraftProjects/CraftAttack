@@ -68,10 +68,14 @@ public class ElytraListener implements Listener {
 
     @EventHandler
     public void onElytraChange(EntityPoseChangeEvent event) {
-        if (event.getEntityType() != EntityType.PLAYER) return;
-        if (event.getPose() == Pose.FALL_FLYING) return;
+        if (event.getEntityType() != EntityType.PLAYER) {
+            return;
+        }
+        if (event.getPose() == Pose.FALL_FLYING) {
+            return;
+        }
 
-        if (!manager.isInSpawn(event.getEntity().getLocation(), null)) {
+        if (!manager.inElytraBox(event.getEntity().getLocation())) {
             if (manager.removeElytra((HumanEntity) event.getEntity())) {
                 ((Player) event.getEntity()).setNoDamageTicks(20);
             }
@@ -80,7 +84,9 @@ public class ElytraListener implements Listener {
 
     @EventHandler
     public void onElytraDamage(EntityDamageEvent event) {
-        if (!(event.getEntity() instanceof Player player)) return;
+        if (!(event.getEntity() instanceof Player player)) {
+            return;
+        }
 
         if (manager.removeElytra(player)) {
             player.setNoDamageTicks(20);
@@ -90,19 +96,21 @@ public class ElytraListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH)
     public void onJoin(PlayerJoinEvent event) {
-        if (manager.isInSpawn(event.getPlayer().getLocation(), null)) {
+        if (manager.inElytraBox(event.getPlayer().getLocation())) {
             manager.giveElytra(event.getPlayer());
         }
     }
 
     @EventHandler
     public void onMove(PlayerMoveEvent event) {
-        if (!event.hasExplicitlyChangedBlock() && event.getPlayer().getPose() != Pose.FALL_FLYING) return;
+        if (!event.hasExplicitlyChangedBlock() && event.getPlayer().getPose() != Pose.FALL_FLYING) {
+            return;
+        }
 
         @SuppressWarnings("deprecation") // Yes, this is controlled by the client, but we don't care, Grim will fix this
         boolean onGround = event.getPlayer().isOnGround();
 
-        if (onGround && !manager.isInSpawn(event.getPlayer().getLocation(), null)) {
+        if (onGround && !manager.inElytraBox(event.getPlayer().getLocation())) {
             if (manager.removeElytra(event.getPlayer())) {
                 event.getPlayer().setNoDamageTicks(20);
             }
@@ -111,22 +119,24 @@ public class ElytraListener implements Listener {
 
     @EventHandler
     public void onRespawn(PlayerRespawnEvent event) {
-        if (manager.config().spawnLocation() == null) return;
+        if (manager.getConfig().getSpawnConfig().getWarpLocation() == null) {
+            return;
+        }
         if (!event.isAnchorSpawn() && !event.isBedSpawn()) {
-            event.setRespawnLocation(manager.config().spawnLocation());
+            event.setRespawnLocation(manager.getConfig().getSpawnConfig().getWarpLocation());
         }
     }
 
     @EventHandler
     public void onPostRespawn(PlayerPostRespawnEvent event) {
-        if (manager.isInSpawn(event.getRespawnedLocation(), null)) {
+        if (manager.inElytraBox(event.getRespawnedLocation())) {
             manager.giveElytra(event.getPlayer());
         }
     }
 
     @EventHandler
     public void onTeleport(PlayerTeleportEvent event) {
-        if (manager.isInSpawn(event.getTo(), null)) {
+        if (manager.inElytraBox(event.getTo())) {
             manager.giveElytra(event.getPlayer());
         }
     }

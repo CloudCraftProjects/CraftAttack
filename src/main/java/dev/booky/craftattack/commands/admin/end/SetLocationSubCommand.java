@@ -33,12 +33,14 @@ public class SetLocationSubCommand extends CommandAPICommand implements CommandE
         Location location = (Location) args[0];
         location.setYaw((float) args[1]);
 
-        if (location.equals(manager.config().endLocation())) {
+        if (location.equals(manager.getConfig().getEndConfig().getWarpLocation())) {
             manager.fail(sender, "The end location is already at the exact same position");
             return;
         }
 
-        manager.config().endLocation(location);
+        manager.getConfig().getEndConfig().setWarpLocation(location);
+        manager.getMain().saveCaConfig();
+
         manager.message(sender, "The end location has been set");
     }
 }

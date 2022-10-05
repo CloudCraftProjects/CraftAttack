@@ -103,7 +103,7 @@ public record ProtectionListener(CraftAttackManager manager) implements Listener
         if (event.getTo().getWorld().getEnvironment() != Environment.THE_END) return;
         if (event.getPlayer().getAllowFlight()) return;
 
-        if (!manager.config().endActivated()) {
+        if (!manager.getConfig().getEndConfig().isActivated()) {
             event.setCancelled(true);
         }
     }

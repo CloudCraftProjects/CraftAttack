@@ -55,7 +55,7 @@ public class StartSubCommand extends CommandAPICommand implements CommandExecuto
     @Override
     public void run(CommandSender sender, Object[] args) {
         World world = manager.overworld();
-        int timeId = getScheduler().runTaskTimer(manager.plugin(),
+        int timeId = getScheduler().runTaskTimer(manager.getMain(),
                 () -> world.setTime(world.getTime() + 20), 20, 1).getTaskId();
 
         manager.message(sender, args[1] + " will be started...");
@@ -104,7 +104,7 @@ public class StartSubCommand extends CommandAPICommand implements CommandExecuto
                             world.getWorldBorder().setSize(world.getWorldBorder().getSize() + 1600, 20);
                         }
 
-                        getScheduler().runTaskLater(manager.plugin(), () -> {
+                        getScheduler().runTaskLater(manager.getMain(), () -> {
                             for (World world : getWorlds()) {
                                 world.getWorldBorder().setSize(59999968);
                             }
@@ -122,6 +122,6 @@ public class StartSubCommand extends CommandAPICommand implements CommandExecuto
                         break;
                 }
             }
-        }.runTaskTimer(manager.plugin(), 20, 20);
+        }.runTaskTimer(manager.getMain(), 20, 20);
     }
 }

@@ -25,7 +25,7 @@ public class SitListener implements Listener {
     private final NamespacedKey chairKey;
 
     public SitListener(CraftAttackManager manager) {
-        chairKey = new NamespacedKey(manager.plugin(), "chair");
+        chairKey = new NamespacedKey(manager.getMain(), "chair");
     }
 
     @EventHandler

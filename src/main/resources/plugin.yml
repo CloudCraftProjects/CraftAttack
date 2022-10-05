@@ -6,3 +6,5 @@ prefix: CA
 authors: [ booky10 ]
 website: https://booky.dev/
 depend: [ CommandAPI ]
+libraries: [ org.spongepowered:configurate-yaml:4.1.2 ]
+load: POSTWORLD

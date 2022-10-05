@@ -59,10 +59,12 @@ public record InteractListener(CraftAttackManager manager) implements Listener {
 
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
-        if (System.currentTimeMillis() - event.getPlayer().getFirstPlayed() >= 500) return;
+        if (System.currentTimeMillis() - event.getPlayer().getFirstPlayed() >= 500) {
+            return;
+        }
 
-        if (manager.config().spawnLocation() != null) {
-            event.getPlayer().teleport(manager.config().spawnLocation());
+        if (manager.getConfig().getSpawnConfig().getWarpLocation() != null) {
+            event.getPlayer().teleport(manager.getConfig().getSpawnConfig().getWarpLocation());
         }
     }
 }

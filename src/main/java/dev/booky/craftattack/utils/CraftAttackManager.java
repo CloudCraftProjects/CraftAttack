@@ -1,35 +1,32 @@
 package dev.booky.craftattack.utils;
 // Created by booky10 in CraftAttack (14:51 01.03.21)
 
+import dev.booky.craftattack.CraftAttackMain;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.audience.MessageType;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
+import org.bukkit.block.Block;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataHolder;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
-import org.bukkit.util.NumberConversions;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import static net.kyori.adventure.text.Component.space;
 import static net.kyori.adventure.text.Component.text;
-import static net.kyori.adventure.text.format.NamedTextColor.AQUA;
-import static net.kyori.adventure.text.format.NamedTextColor.GRAY;
 import static net.kyori.adventure.text.format.NamedTextColor.GREEN;
 import static net.kyori.adventure.text.format.NamedTextColor.RED;
-import static net.kyori.adventure.text.format.NamedTextColor.WHITE;
-import static net.kyori.adventure.text.format.TextDecoration.BOLD;
 import static org.bukkit.Material.AIR;
 import static org.bukkit.Material.ELYTRA;
 import static org.bukkit.enchantments.Enchantment.BINDING_CURSE;
@@ -40,22 +37,29 @@ import static org.bukkit.persistence.PersistentDataType.BYTE_ARRAY;
 
 public final class CraftAttackManager {
 
-    private static final Component PREFIX = text()
-            .append(text('[', GRAY))
-            .append(text('C', WHITE, BOLD))
-            .append(text('A', AQUA, BOLD))
-            .append(text(']', GRAY))
-            .append(space()).build();
+    private static final Component PREFIX = Component.text() // <gray>[<gradient:#aaffdd:#55eeee>CraftAttack</gradient>]</gray><space>
+            .append(Component.text('[', NamedTextColor.GRAY))
+            .append(Component.text('C', TextColor.color(0xaaffdd)))
+            .append(Component.text('r', TextColor.color(0xa2fddf)))
+            .append(Component.text('a', TextColor.color(0x9bfce0)))
+            .append(Component.text('f', TextColor.color(0x93fae2)))
+            .append(Component.text('t', TextColor.color(0x8bf9e3)))
+            .append(Component.text('A', TextColor.color(0x83f7e5)))
+            .append(Component.text('t', TextColor.color(0x7cf6e6)))
+            .append(Component.text('t', TextColor.color(0x74f4e8)))
+            .append(Component.text('a', TextColor.color(0x6cf3e9)))
+            .append(Component.text('c', TextColor.color(0x64f1eb)))
+            .append(Component.text('k', TextColor.color(0x5df0ec)))
+            .append(Component.text(']', NamedTextColor.GRAY))
+            .append(Component.space()).build();
 
     private final Map<UUID, BukkitTask> teleportRunnables = new HashMap<>();
-    private final CraftAttackConfig config;
     private final NamespacedKey elytraData;
-    private final Plugin plugin;
+    private final CraftAttackMain main;
     private World overworld;
 
-    public CraftAttackManager(CraftAttackConfig config, Plugin plugin) {
-        this.elytraData = new NamespacedKey((this.plugin = plugin), "elytra_data");
-        this.config = config;
+    public CraftAttackManager(CraftAttackMain main) {
+        this.elytraData = new NamespacedKey((this.main = main), "elytra_data");
     }
 
     public void fail(Audience audience, String message) {
@@ -94,49 +98,35 @@ public final class CraftAttackManager {
     }
 
     public boolean isProtected(Location location, @Nullable HumanEntity entity) {
+        return isProtected(location.getWorld(), location.getX(), location.getY(), location.getZ(), entity);
+    }
+
+    public boolean isProtected(Block block, @Nullable HumanEntity entity) {
+        return isProtected(block.getWorld(), block.getX() + 0.5d, block.getY() + 0.5d, block.getZ() + 0.5d, entity);
+    }
+
+    public boolean isProtected(World world, double x, double y, double z, @Nullable HumanEntity entity) {
         if (entity != null && entity.getGameMode() == GameMode.CREATIVE) {
             return false;
         }
 
-        if (config.protectedArea().contains(location.toVector())) {
+        for (CaBoundingBox bbox : getConfig().getProtectedAreas()) {
+            if (bbox.getWorld() != world) {
+                continue;
+            }
+            if (!bbox.contains(x, y, z)) {
+                continue;
+            }
             return true;
         }
-
-        return isInRadius(location, config.spawnLocation(), config.spawnRadiusSquared()) ||
-                isInRadius(location, config.endLocation(), config.endRadiusSquared());
+        return false;
     }
 
-    public boolean isInRadius(Location source, Location target, int squaredRadius) {
-        return target != null && target.getWorld() == source.getWorld() && distanceXZSquared(source, target) <= squaredRadius;
-    }
-
-    public boolean isInSpawn(Location location, @Nullable HumanEntity entity) {
-        return isInRadius(location, entity, config.spawnLocation(), config.spawnRadiusSquared());
-    }
-
-    public boolean isInEnd(Location location, @Nullable HumanEntity entity) {
-        return isInRadius(location, entity, config.endLocation(), config.endRadiusSquared());
-    }
-
-    public boolean isInRadius(Location target, @Nullable HumanEntity entity, Location source, int radiusSquared) {
-        if (source == null || radiusSquared <= 0) {
+    public boolean inElytraBox(Location location) {
+        if (getConfig().getSpawnConfig().getElytraBox() == null) {
             return false;
         }
-
-        if (entity != null && entity.getGameMode() == GameMode.CREATIVE) {
-            return false;
-        }
-
-        if (target.getWorld() != source.getWorld()) {
-            return false;
-        }
-
-        return distanceXZSquared(source, target) <= radiusSquared;
-    }
-
-    private double distanceXZSquared(Location loc1, Location loc2) {
-        return NumberConversions.square(loc1.getX() - loc2.getX())
-                + NumberConversions.square(loc1.getZ() - loc2.getZ());
+        return getConfig().getSpawnConfig().getElytraBox().contains(location);
     }
 
     public boolean giveElytra(HumanEntity entity) {
@@ -178,15 +168,15 @@ public final class CraftAttackManager {
         return teleportRunnables;
     }
 
-    public CraftAttackConfig config() {
-        return config;
+    public CaConfig getConfig() {
+        return main.getCaConfig();
     }
 
     public World overworld() {
         return overworld;
     }
 
-    public Plugin plugin() {
-        return plugin;
+    public CraftAttackMain getMain() {
+        return main;
     }
 }

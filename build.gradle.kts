@@ -15,6 +15,8 @@ dependencies {
     api("io.papermc.paper:paper-api:1.19.2-R0.1-SNAPSHOT")
     api("dev.jorel:commandapi-core:8.5.1")
     api("com.mojang:brigadier:1.0.18")
+
+    api("org.spongepowered:configurate-yaml:4.1.2")
 }
 
 java {

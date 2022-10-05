@@ -25,12 +25,14 @@ public class ActivationSubCommand extends CommandAPICommand implements CommandEx
     public void run(CommandSender sender, Object[] args) throws WrapperCommandSyntaxException {
         boolean activate = (boolean) args[0];
 
-        if (manager.config().endActivated() == activate) {
+        if (manager.getConfig().getEndConfig().isActivated() == activate) {
             manager.fail(sender, "The end is already " + (activate ? "" : "de") + "activated");
             return;
         }
 
-        manager.config().endActivated(activate);
+        manager.getConfig().getEndConfig().setActivated(activate);
+        manager.getMain().saveCaConfig();
+
         manager.message(sender, "The end has been " + (activate ? "" : "de") + "activated");
     }
 }

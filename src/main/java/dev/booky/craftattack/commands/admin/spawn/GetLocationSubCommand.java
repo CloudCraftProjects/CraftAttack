@@ -24,7 +24,7 @@ public class GetLocationSubCommand extends CommandAPICommand implements CommandE
 
     @Override
     public void run(CommandSender sender, Object[] args) throws WrapperCommandSyntaxException {
-        Location location = manager.config().spawnLocation();
+        Location location = manager.getConfig().getSpawnConfig().getWarpLocation();
 
         if (location == null) {
             manager.fail(sender, "The spawn location has not been set yet");

@@ -31,8 +31,8 @@ public class BedSubCommand extends CommandAPICommand implements PlayerCommandExe
 
         Location location = sender.getBedSpawnLocation();
         if (location == null) {
-            manager.fail(sender, "Warning, you will be teleported to world spawn");
-            location = manager.config().spawnLocation();
+            manager.fail(sender, "WARNING: You will be teleported to world spawn");
+            location = manager.getConfig().getSpawnConfig().getWarpLocation();
 
             if (location == null) {
                 location = sender.getWorld().getSpawnLocation();
@@ -47,7 +47,7 @@ public class BedSubCommand extends CommandAPICommand implements PlayerCommandExe
 
         Location finalLocation = location;
         manager.message(sender, "Please don't move, you will get teleported in five seconds");
-        manager.teleportRunnables().put(sender.getUniqueId(), Bukkit.getScheduler().runTaskLater(manager.plugin(), () -> {
+        manager.teleportRunnables().put(sender.getUniqueId(), Bukkit.getScheduler().runTaskLater(manager.getMain(), () -> {
             manager.teleportRunnables().remove(sender.getUniqueId());
             sender.teleportAsync(finalLocation, TeleportCause.COMMAND);
             manager.message(sender, "You have been brought to your bed location");
