@@ -27,7 +27,7 @@ public class TeleportSpawnCommand extends CommandAPICommand implements PlayerCom
 
     @Override
     public void run(Player sender, Object[] args) throws WrapperCommandSyntaxException {
-        this.manager.teleportRequest(sender, this.manager.getConfig().getEndConfig().getWarpLocation()).thenAccept(result -> {
+        this.manager.teleportRequest(sender, this.manager.getConfig().getSpawnConfig().getWarpLocation()).thenAccept(result -> {
             if (result == TpResult.SUCCESSFUL) {
                 sender.sendMessage(CaManager.getPrefix().append(Component.translatable("ca.teleport.spawn", NamedTextColor.GREEN)));
             }
