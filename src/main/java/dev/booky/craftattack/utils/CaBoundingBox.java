@@ -51,18 +51,18 @@ public final class CaBoundingBox extends BoundingBox {
         if (this == ob) return true;
         if (!(ob instanceof CaBoundingBox that)) return false;
         if (!super.equals(ob)) return false;
-        return this.world.equals(that.world);
+        return this.getWorld().equals(that.getWorld());
     }
 
     @Override
     public int hashCode() {
         int result = super.hashCode();
-        result = 31 * result + this.world.hashCode();
+        result = 31 * result + this.getWorld().hashCode();
         return result;
     }
 
     @Override
     public String toString() {
-        return "CaBoundingBox{world=" + this.world + ",parent={" + super.toString() + "}}";
+        return "CaBoundingBox{world=" + this.getWorld() + ",parent={" + super.toString() + "}}";
     }
 }

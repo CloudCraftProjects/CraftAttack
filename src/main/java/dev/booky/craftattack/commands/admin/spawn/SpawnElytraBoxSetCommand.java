@@ -21,8 +21,8 @@ public class SpawnElytraBoxSetCommand extends CommandAPICommand implements Comma
         super("elytra-box");
         this.manager = manager;
 
-        withArguments(new LocationArgument("corner1", LocationType.BLOCK_POSITION),
-                new LocationArgument("corner2", LocationType.BLOCK_POSITION));
+        super.withArguments(new LocationArgument("corner1", LocationType.BLOCK_POSITION));
+        super.withArguments(new LocationArgument("corner2", LocationType.BLOCK_POSITION));
 
         super.withPermission("craftattack.command.admin.spawn.elytra-box.set");
         super.executes(this);

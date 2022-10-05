@@ -30,7 +30,8 @@ public class SpawnWarpLocationGetCommand extends CommandAPICommand implements Co
             return;
         }
 
-        sender.sendMessage(CaManager.getPrefix().append(Component.translatable("ca.command.admin.spawn.location.get.success", NamedTextColor.GREEN).args(Component.text(location.getX()), Component.text(location.getY()), Component.text(location.getZ()),
+        sender.sendMessage(CaManager.getPrefix().append(Component.translatable("ca.command.admin.spawn.location.get.success", NamedTextColor.GREEN).args(
+                Component.text(location.getX()), Component.text(location.getY()), Component.text(location.getZ()),
                 Component.text(location.getYaw()), Component.text(location.getPitch()),
                 Component.text(location.getWorld().getKey().asString()))));
     }
