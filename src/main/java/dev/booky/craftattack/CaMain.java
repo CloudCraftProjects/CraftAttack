@@ -10,6 +10,7 @@ import dev.booky.craftattack.listener.SpawnListener;
 import dev.booky.craftattack.listener.TeleportListener;
 import dev.jorel.commandapi.CommandAPI;
 import dev.jorel.commandapi.CommandAPICommand;
+import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -23,6 +24,7 @@ public final class CaMain extends JavaPlugin {
     public void onLoad() {
         this.manager = new CaManager(this, getDataFolder().toPath());
         this.command = new CaCommand(this.manager);
+        new Metrics(this, 16590);
     }
 
     @Override

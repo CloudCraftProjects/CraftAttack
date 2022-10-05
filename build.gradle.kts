@@ -1,7 +1,9 @@
 plugins {
     id("java-library")
     id("maven-publish")
+
     id("xyz.jpenilla.run-paper") version "1.0.6"
+    id("com.github.johnrengelman.shadow") version "7.1.2"
 }
 
 group = "dev.booky"
@@ -12,11 +14,13 @@ repositories {
 }
 
 dependencies {
-    api("io.papermc.paper:paper-api:1.19.2-R0.1-SNAPSHOT")
-    api("dev.jorel:commandapi-core:8.5.1")
-    api("com.mojang:brigadier:1.0.18")
+    compileOnlyApi("io.papermc.paper:paper-api:1.19.2-R0.1-SNAPSHOT")
+    compileOnlyApi("com.mojang:brigadier:1.0.18")
 
-    api("org.spongepowered:configurate-yaml:4.1.2")
+    compileOnlyApi("org.spongepowered:configurate-yaml:4.1.2")
+    compileOnlyApi("dev.jorel:commandapi-core:8.5.1")
+
+    api("org.bstats:bstats-bukkit:3.0.0")
 }
 
 java {
@@ -41,5 +45,13 @@ tasks {
         filesMatching("plugin.yml") {
             expand("version" to project.version)
         }
+    }
+
+    shadowJar {
+        relocate("org.bstats", "dev.booky.craftattack.bstats")
+    }
+
+    build {
+        dependsOn(shadowJar)
     }
 }
