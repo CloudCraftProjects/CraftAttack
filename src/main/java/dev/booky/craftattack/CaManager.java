@@ -1,43 +1,42 @@
-package dev.booky.craftattack.utils;
+package dev.booky.craftattack;
 // Created by booky10 in CraftAttack (14:51 01.03.21)
 
-import dev.booky.craftattack.CraftAttackMain;
+import dev.booky.craftattack.config.ConfigLoader;
+import dev.booky.craftattack.utils.CaBoundingBox;
+import dev.booky.craftattack.utils.CaConfig;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.audience.MessageType;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
-import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.HumanEntity;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataHolder;
+import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.Nullable;
 
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
+import java.util.function.Consumer;
 
-import static net.kyori.adventure.text.Component.text;
-import static net.kyori.adventure.text.format.NamedTextColor.GREEN;
-import static net.kyori.adventure.text.format.NamedTextColor.RED;
-import static org.bukkit.Material.AIR;
-import static org.bukkit.Material.ELYTRA;
-import static org.bukkit.enchantments.Enchantment.BINDING_CURSE;
-import static org.bukkit.enchantments.Enchantment.VANISHING_CURSE;
-import static org.bukkit.inventory.ItemFlag.HIDE_ENCHANTS;
-import static org.bukkit.inventory.ItemFlag.HIDE_UNBREAKABLE;
-import static org.bukkit.persistence.PersistentDataType.BYTE_ARRAY;
+public final class CaManager {
 
-public final class CraftAttackManager {
-
-    private static final Component PREFIX = Component.text() // <gray>[<gradient:#aaffdd:#55eeee>CraftAttack</gradient>]</gray><space>
+    // <gray>[<gradient:#aaffdd:#55eeee>CraftAttack</gradient>]</gray><space>
+    private static final Component PREFIX = Component.text()
             .append(Component.text('[', NamedTextColor.GRAY))
             .append(Component.text('C', TextColor.color(0xaaffdd)))
             .append(Component.text('r', TextColor.color(0xa2fddf)))
@@ -54,24 +53,41 @@ public final class CraftAttackManager {
             .append(Component.space()).build();
 
     private final Map<UUID, BukkitTask> teleportRunnables = new HashMap<>();
-    private final NamespacedKey elytraData;
-    private final CraftAttackMain main;
-    private World overworld;
+    private final NamespacedKey elytraDataKey;
+    private final Plugin plugin;
 
-    public CraftAttackManager(CraftAttackMain main) {
-        this.elytraData = new NamespacedKey((this.main = main), "elytra_data");
+    private final Path configPath;
+    private CaConfig config;
+
+    public CaManager(Plugin plugin, Path configDir) {
+        this.elytraDataKey = new NamespacedKey(plugin, "elytra_data");
+        this.plugin = plugin;
+        this.configPath = configDir.resolve("config.yml");
+    }
+
+    public void updateConfig(Consumer<CaConfig> updater) {
+        updater.accept(this.getConfig());
+        this.saveConfig();
+    }
+
+    public void reloadConfig() {
+        this.config = ConfigLoader.loadObject(this.configPath, CaConfig.class);
+    }
+
+    public void saveConfig() {
+        ConfigLoader.saveObject(this.configPath, this.getConfig());
     }
 
     public void fail(Audience audience, String message) {
-        audience.sendMessage(Identity.nil(), prefix(text(message, RED)), MessageType.SYSTEM);
+        audience.sendMessage(Identity.nil(), prefix(Component.text(message, NamedTextColor.RED)), MessageType.SYSTEM);
     }
 
     public void fail(Audience audience, Component component) {
-        audience.sendMessage(Identity.nil(), prefix(component.color(RED)), MessageType.SYSTEM);
+        audience.sendMessage(Identity.nil(), prefix(component.color(NamedTextColor.RED)), MessageType.SYSTEM);
     }
 
     public void message(Audience audience, String message) {
-        audience.sendMessage(Identity.nil(), prefix(text(message, GREEN)), MessageType.SYSTEM);
+        audience.sendMessage(Identity.nil(), prefix(Component.text(message, NamedTextColor.GREEN)), MessageType.SYSTEM);
     }
 
     public void message(Audience audience, Component component) {
@@ -79,22 +95,11 @@ public final class CraftAttackManager {
     }
 
     public Component prefix(String message) {
-        return PREFIX.append(text(message, GREEN));
+        return PREFIX.append(Component.text(message, NamedTextColor.GREEN));
     }
 
     public Component prefix(Component component) {
         return PREFIX.append(component);
-    }
-
-    public CraftAttackManager loadOverworld() {
-        for (World world : Bukkit.getWorlds()) {
-            if (world.getEnvironment() == World.Environment.NORMAL) {
-                overworld = world;
-                return this;
-            }
-        }
-
-        throw new IllegalStateException("No overworld could be found!");
     }
 
     public boolean isProtected(Location location, @Nullable HumanEntity entity) {
@@ -130,19 +135,19 @@ public final class CraftAttackManager {
     }
 
     public boolean giveElytra(HumanEntity entity) {
-        if (entity.getPersistentDataContainer().has(elytraData, BYTE_ARRAY)) {
+        if (entity.getPersistentDataContainer().has(elytraDataKey, PersistentDataType.BYTE_ARRAY)) {
             return false;
         }
 
         ItemStack item = entity.getInventory().getChestplate();
         byte[] itemBytes = (item == null ? new byte[0] : item.serializeAsBytes());
-        entity.getPersistentDataContainer().set(elytraData, BYTE_ARRAY, itemBytes);
+        entity.getPersistentDataContainer().set(elytraDataKey, PersistentDataType.BYTE_ARRAY, itemBytes);
 
-        ItemStack elytra = new ItemStack(ELYTRA);
+        ItemStack elytra = new ItemStack(Material.ELYTRA);
         elytra.editMeta(meta -> {
-            meta.addEnchant(VANISHING_CURSE, 1, true);
-            meta.addEnchant(BINDING_CURSE, 1, true);
-            meta.addItemFlags(HIDE_UNBREAKABLE, HIDE_ENCHANTS);
+            meta.addEnchant(Enchantment.VANISHING_CURSE, 1, true);
+            meta.addEnchant(Enchantment.BINDING_CURSE, 1, true);
+            meta.addItemFlags(ItemFlag.HIDE_UNBREAKABLE, ItemFlag.HIDE_ENCHANTS);
             meta.setUnbreakable(true);
         });
 
@@ -151,32 +156,30 @@ public final class CraftAttackManager {
     }
 
     public boolean removeElytra(HumanEntity entity) {
-        byte[] itemBytes = entity.getPersistentDataContainer().get(elytraData, BYTE_ARRAY);
-        if (itemBytes == null) return false;
+        byte[] itemBytes = entity.getPersistentDataContainer().get(elytraDataKey, PersistentDataType.BYTE_ARRAY);
+        if (itemBytes == null) {
+            return false;
+        }
 
-        ItemStack item = itemBytes.length == 0 ? new ItemStack(AIR) : ItemStack.deserializeBytes(itemBytes);
-        entity.getPersistentDataContainer().remove(elytraData);
+        ItemStack item = itemBytes.length == 0 ? new ItemStack(Material.AIR) : ItemStack.deserializeBytes(itemBytes);
+        entity.getPersistentDataContainer().remove(elytraDataKey);
         entity.getInventory().setChestplate(item);
         return true;
     }
 
     public boolean hasElytra(PersistentDataHolder holder) {
-        return holder.getPersistentDataContainer().has(elytraData, BYTE_ARRAY);
+        return holder.getPersistentDataContainer().has(elytraDataKey, PersistentDataType.BYTE_ARRAY);
     }
 
-    public Map<UUID, BukkitTask> teleportRunnables() {
+    public Map<UUID, BukkitTask> getTeleportRunnables() {
         return teleportRunnables;
     }
 
     public CaConfig getConfig() {
-        return main.getCaConfig();
+        return Objects.requireNonNull(config, "Config has not been loaded yet");
     }
 
-    public World overworld() {
-        return overworld;
-    }
-
-    public CraftAttackMain getMain() {
-        return main;
+    public Plugin getPlugin() {
+        return plugin;
     }
 }

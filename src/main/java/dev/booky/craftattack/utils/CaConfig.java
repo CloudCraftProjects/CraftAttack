@@ -2,7 +2,6 @@ package dev.booky.craftattack.utils;
 // Created by booky10 in CraftAttack (01:08 30.10.21)
 
 import org.bukkit.Location;
-import org.bukkit.util.BoundingBox;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
 import java.util.Set;
@@ -22,11 +21,11 @@ public class CaConfig {
         private boolean activated = true;
 
         public Location getWarpLocation() {
-            return warpLocation;
+            return this.warpLocation;
         }
 
         public boolean isActivated() {
-            return activated;
+            return this.activated;
         }
 
         public void setWarpLocation(Location warpLocation) {
@@ -47,11 +46,11 @@ public class CaConfig {
         private CaBoundingBox elytraBox;
 
         public Location getWarpLocation() {
-            return warpLocation;
+            return this.warpLocation;
         }
 
         public CaBoundingBox getElytraBox() {
-            return elytraBox;
+            return this.elytraBox;
         }
 
         public void setWarpLocation(Location warpLocation) {
@@ -64,14 +63,14 @@ public class CaConfig {
     }
 
     public Set<CaBoundingBox> getProtectedAreas() {
-        return protectedAreas;
+        return this.protectedAreas;
     }
 
     public EndConfig getEndConfig() {
-        return end;
+        return this.end;
     }
 
     public SpawnConfig getSpawnConfig() {
-        return spawn;
+        return this.spawn;
     }
 }

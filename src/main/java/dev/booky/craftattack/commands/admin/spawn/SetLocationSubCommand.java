@@ -1,7 +1,7 @@
 package dev.booky.craftattack.commands.admin.spawn;
 // Created by booky10 in CraftAttack (15:52 01.03.21)
 
-import dev.booky.craftattack.utils.CraftAttackManager;
+import dev.booky.craftattack.CaManager;
 import dev.jorel.commandapi.CommandAPICommand;
 import dev.jorel.commandapi.arguments.AngleArgument;
 import dev.jorel.commandapi.arguments.LiteralArgument;
@@ -14,9 +14,9 @@ import org.bukkit.command.CommandSender;
 
 public class SetLocationSubCommand extends CommandAPICommand implements CommandExecutor {
 
-    private final CraftAttackManager manager;
+    private final CaManager manager;
 
-    public SetLocationSubCommand(CraftAttackManager manager) {
+    public SetLocationSubCommand(CaManager manager) {
         super("location");
         this.manager = manager;
 
@@ -35,9 +35,7 @@ public class SetLocationSubCommand extends CommandAPICommand implements CommandE
             return;
         }
 
-        manager.getConfig().getSpawnConfig().setWarpLocation(location);
-        manager.getMain().saveCaConfig();
-
+        manager.updateConfig(config -> config.getSpawnConfig().setWarpLocation(location));
         manager.message(sender, "The spawn location has been set");
     }
 }

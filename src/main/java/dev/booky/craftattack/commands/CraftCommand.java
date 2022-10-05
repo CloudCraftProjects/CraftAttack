@@ -1,7 +1,7 @@
 package dev.booky.craftattack.commands;
 // Created by booky10 in CraftAttack (21:08 17.07.22)
 
-import dev.booky.craftattack.utils.CraftAttackManager;
+import dev.booky.craftattack.CaManager;
 import dev.jorel.commandapi.CommandAPICommand;
 import dev.jorel.commandapi.exceptions.WrapperCommandSyntaxException;
 import dev.jorel.commandapi.executors.PlayerCommandExecutor;
@@ -10,9 +10,9 @@ import org.bukkit.entity.Player;
 
 public class CraftCommand extends CommandAPICommand implements PlayerCommandExecutor {
 
-    private final CraftAttackManager manager;
+    private final CaManager manager;
 
-    public CraftCommand(CraftAttackManager manager) {
+    public CraftCommand(CaManager manager) {
         super("craft");
         this.manager = manager;
 

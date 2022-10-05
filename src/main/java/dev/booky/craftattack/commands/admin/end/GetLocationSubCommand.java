@@ -1,7 +1,7 @@
 package dev.booky.craftattack.commands.admin.end;
 // Created by booky10 in CraftAttack (15:51 01.03.21)
 
-import dev.booky.craftattack.utils.CraftAttackManager;
+import dev.booky.craftattack.CaManager;
 import dev.jorel.commandapi.CommandAPICommand;
 import dev.jorel.commandapi.arguments.LiteralArgument;
 import dev.jorel.commandapi.exceptions.WrapperCommandSyntaxException;
@@ -11,9 +11,9 @@ import org.bukkit.command.CommandSender;
 
 public class GetLocationSubCommand extends CommandAPICommand implements CommandExecutor {
 
-    private final CraftAttackManager manager;
+    private final CaManager manager;
 
-    public GetLocationSubCommand(CraftAttackManager manager) {
+    public GetLocationSubCommand(CaManager manager) {
         super("location");
         this.manager = manager;
 

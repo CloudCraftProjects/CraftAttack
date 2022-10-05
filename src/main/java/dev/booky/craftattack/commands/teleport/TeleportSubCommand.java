@@ -1,12 +1,12 @@
 package dev.booky.craftattack.commands.teleport;
 // Created by booky10 in CraftAttack (14:50 01.03.21)
 
-import dev.booky.craftattack.utils.CraftAttackManager;
+import dev.booky.craftattack.CaManager;
 import dev.jorel.commandapi.CommandAPICommand;
 
 public class TeleportSubCommand extends CommandAPICommand {
 
-    public TeleportSubCommand(CraftAttackManager manager) {
+    public TeleportSubCommand(CaManager manager) {
         super("teleport");
         withPermission("craftattack.command.teleport").withAliases("tp");
 

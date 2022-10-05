@@ -1,7 +1,7 @@
 package dev.booky.craftattack.commands.teleport;
 // Created by booky10 in CraftAttack (14:54 03.01.21)
 
-import dev.booky.craftattack.utils.CraftAttackManager;
+import dev.booky.craftattack.CaManager;
 import dev.jorel.commandapi.CommandAPICommand;
 import dev.jorel.commandapi.exceptions.WrapperCommandSyntaxException;
 import dev.jorel.commandapi.executors.PlayerCommandExecutor;
@@ -11,9 +11,9 @@ import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 
 public class EndSubCommand extends CommandAPICommand implements PlayerCommandExecutor {
 
-    private final CraftAttackManager manager;
+    private final CaManager manager;
 
-    public EndSubCommand(CraftAttackManager manager) {
+    public EndSubCommand(CaManager manager) {
         super("end");
         this.manager = manager;
 
@@ -28,7 +28,7 @@ public class EndSubCommand extends CommandAPICommand implements PlayerCommandExe
             return;
         }
 
-        if (manager.teleportRunnables().containsKey(sender.getUniqueId())) {
+        if (manager.getTeleportRunnables().containsKey(sender.getUniqueId())) {
             manager.fail(sender, "You are already teleporting");
             return;
         }
@@ -40,8 +40,8 @@ public class EndSubCommand extends CommandAPICommand implements PlayerCommandExe
         }
 
         manager.message(sender, "Please don't move, you will get teleported in five seconds");
-        manager.teleportRunnables().put(sender.getUniqueId(), Bukkit.getScheduler().runTaskLater(manager.getMain(), () -> {
-            manager.teleportRunnables().remove(sender.getUniqueId());
+        manager.getTeleportRunnables().put(sender.getUniqueId(), Bukkit.getScheduler().runTaskLater(manager.getPlugin(), () -> {
+            manager.getTeleportRunnables().remove(sender.getUniqueId());
             sender.teleportAsync(manager.getConfig().getEndConfig().getWarpLocation(), TeleportCause.COMMAND);
             manager.message(sender, "You have been brought to the end location");
         }, 5 * 20));

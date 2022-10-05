@@ -1,7 +1,7 @@
 package dev.booky.craftattack.commands.admin;
 // Created by booky10 in Kingdoms (20:18 08.09.21)
 
-import dev.booky.craftattack.utils.CraftAttackManager;
+import dev.booky.craftattack.CaManager;
 import dev.jorel.commandapi.CommandAPICommand;
 import dev.jorel.commandapi.arguments.IntegerArgument;
 import dev.jorel.commandapi.arguments.TextArgument;
@@ -9,8 +9,11 @@ import dev.jorel.commandapi.executors.CommandExecutor;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.Title;
 import net.kyori.adventure.title.Title.Times;
+import org.bukkit.Bukkit;
 import org.bukkit.World;
+import org.bukkit.command.BlockCommandSender;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -38,9 +41,9 @@ import static org.bukkit.SoundCategory.AMBIENT;
 
 public class StartSubCommand extends CommandAPICommand implements CommandExecutor {
 
-    private final CraftAttackManager manager;
+    private final CaManager manager;
 
-    public StartSubCommand(CraftAttackManager manager) {
+    public StartSubCommand(CaManager manager) {
         super("start");
         this.manager = manager;
 
@@ -54,8 +57,16 @@ public class StartSubCommand extends CommandAPICommand implements CommandExecuto
 
     @Override
     public void run(CommandSender sender, Object[] args) {
-        World world = manager.overworld();
-        int timeId = getScheduler().runTaskTimer(manager.getMain(),
+        World world;
+        if (sender instanceof Entity) {
+            world = ((Entity) sender).getWorld();
+        } else if (sender instanceof BlockCommandSender) {
+            world = ((BlockCommandSender) sender).getBlock().getWorld();
+        } else {
+            world = Bukkit.getWorlds().get(0);
+        }
+
+        int timeId = getScheduler().runTaskTimer(manager.getPlugin(),
                 () -> world.setTime(world.getTime() + 20), 20, 1).getTaskId();
 
         manager.message(sender, args[1] + " will be started...");
@@ -104,7 +115,7 @@ public class StartSubCommand extends CommandAPICommand implements CommandExecuto
                             world.getWorldBorder().setSize(world.getWorldBorder().getSize() + 1600, 20);
                         }
 
-                        getScheduler().runTaskLater(manager.getMain(), () -> {
+                        getScheduler().runTaskLater(manager.getPlugin(), () -> {
                             for (World world : getWorlds()) {
                                 world.getWorldBorder().setSize(59999968);
                             }
@@ -122,6 +133,6 @@ public class StartSubCommand extends CommandAPICommand implements CommandExecuto
                         break;
                 }
             }
-        }.runTaskTimer(manager.getMain(), 20, 20);
+        }.runTaskTimer(manager.getPlugin(), 20, 20);
     }
 }

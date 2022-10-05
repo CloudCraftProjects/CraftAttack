@@ -1,7 +1,7 @@
 package dev.booky.craftattack.commands.teleport;
 // Created by booky10 in CraftAttack (14:45 01.03.21)
 
-import dev.booky.craftattack.utils.CraftAttackManager;
+import dev.booky.craftattack.CaManager;
 import dev.jorel.commandapi.CommandAPICommand;
 import dev.jorel.commandapi.exceptions.WrapperCommandSyntaxException;
 import dev.jorel.commandapi.executors.PlayerCommandExecutor;
@@ -12,9 +12,9 @@ import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 
 public class BedSubCommand extends CommandAPICommand implements PlayerCommandExecutor {
 
-    private final CraftAttackManager manager;
+    private final CaManager manager;
 
-    public BedSubCommand(CraftAttackManager manager) {
+    public BedSubCommand(CaManager manager) {
         super("bed");
         this.manager = manager;
 
@@ -24,7 +24,7 @@ public class BedSubCommand extends CommandAPICommand implements PlayerCommandExe
 
     @Override
     public void run(Player sender, Object[] args) throws WrapperCommandSyntaxException {
-        if (manager.teleportRunnables().containsKey(sender.getUniqueId())) {
+        if (manager.getTeleportRunnables().containsKey(sender.getUniqueId())) {
             manager.fail(sender, "You are already teleporting");
             return;
         }
@@ -47,8 +47,8 @@ public class BedSubCommand extends CommandAPICommand implements PlayerCommandExe
 
         Location finalLocation = location;
         manager.message(sender, "Please don't move, you will get teleported in five seconds");
-        manager.teleportRunnables().put(sender.getUniqueId(), Bukkit.getScheduler().runTaskLater(manager.getMain(), () -> {
-            manager.teleportRunnables().remove(sender.getUniqueId());
+        manager.getTeleportRunnables().put(sender.getUniqueId(), Bukkit.getScheduler().runTaskLater(manager.getPlugin(), () -> {
+            manager.getTeleportRunnables().remove(sender.getUniqueId());
             sender.teleportAsync(finalLocation, TeleportCause.COMMAND);
             manager.message(sender, "You have been brought to your bed location");
         }, 5 * 20));

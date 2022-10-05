@@ -3,12 +3,12 @@ package dev.booky.craftattack.commands.admin;
 
 import dev.booky.craftattack.commands.admin.end.EndSubCommand;
 import dev.booky.craftattack.commands.admin.spawn.SpawnSubCommand;
-import dev.booky.craftattack.utils.CraftAttackManager;
+import dev.booky.craftattack.CaManager;
 import dev.jorel.commandapi.CommandAPICommand;
 
 public class AdminSubCommand extends CommandAPICommand {
 
-    public AdminSubCommand(CraftAttackManager manager) {
+    public AdminSubCommand(CaManager manager) {
         super("admin");
         withPermission("craftattack.command.admin");
 

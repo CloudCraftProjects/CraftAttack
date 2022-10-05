@@ -3,12 +3,12 @@ package dev.booky.craftattack.commands;
 
 import dev.booky.craftattack.commands.admin.AdminSubCommand;
 import dev.booky.craftattack.commands.teleport.TeleportSubCommand;
-import dev.booky.craftattack.utils.CraftAttackManager;
+import dev.booky.craftattack.CaManager;
 import dev.jorel.commandapi.CommandAPICommand;
 
 public class CraftAttackRootCommand extends CommandAPICommand {
 
-    public CraftAttackRootCommand(CraftAttackManager manager) {
+    public CraftAttackRootCommand(CaManager manager) {
         super("craftattack");
 
         withAliases("ca");

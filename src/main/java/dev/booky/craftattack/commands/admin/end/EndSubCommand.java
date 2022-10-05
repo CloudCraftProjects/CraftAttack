@@ -1,12 +1,12 @@
 package dev.booky.craftattack.commands.admin.end;
 // Created by booky10 in Kingdoms (20:34 26.08.21)
 
-import dev.booky.craftattack.utils.CraftAttackManager;
+import dev.booky.craftattack.CaManager;
 import dev.jorel.commandapi.CommandAPICommand;
 
 public class EndSubCommand extends CommandAPICommand {
 
-    public EndSubCommand(CraftAttackManager manager) {
+    public EndSubCommand(CaManager manager) {
         super("end");
 
         withPermission("craftattack.command.admin.end");
