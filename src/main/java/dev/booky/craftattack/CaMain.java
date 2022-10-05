@@ -22,9 +22,16 @@ public final class CaMain extends JavaPlugin {
 
     @Override
     public void onLoad() {
-        this.manager = new CaManager(this, getDataFolder().toPath());
-        this.command = new CaCommand(this.manager);
+        this.manager = new CaManager(this, super.getDataFolder().toPath());
         new Metrics(this, 16590);
+
+        if (Bukkit.getPluginManager().getPlugin("CommandAPI") == null) {
+            super.getLogger().severe("###################################################################");
+            super.getLogger().severe("# Install CommandAPI (https://commandapi.jorel.dev/) for commands #");
+            super.getLogger().severe("###################################################################");
+        } else {
+            this.command = new CaCommand(this.manager);
+        }
     }
 
     @Override
@@ -45,6 +52,8 @@ public final class CaMain extends JavaPlugin {
     @Override
     public void onDisable() {
         this.manager.saveConfig();
-        CommandAPI.unregister(this.command.getName(), true);
+        if (Bukkit.getPluginManager().getPlugin("CommandAPI") != null) {
+            CommandAPI.unregister(this.command.getName(), true);
+        }
     }
 }

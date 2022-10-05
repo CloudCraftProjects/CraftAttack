@@ -4,6 +4,6 @@ main: dev.booky.craftattack.CaMain
 api-version: 1.19
 prefix: CA
 authors: [ booky10 ]
-depend: [ CommandAPI ]
+softdepend: [ CommandAPI ]
 libraries: [ org.spongepowered:configurate-yaml:4.1.2 ]
 load: POSTWORLD
