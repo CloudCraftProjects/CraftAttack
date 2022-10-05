@@ -5,20 +5,21 @@ plugins {
 }
 
 group = "dev.booky"
-version = "1.9.1"
+version = "1.10.0"
 
 repositories {
     maven("https://papermc.io/repo/repository/maven-public/")
 }
 
 dependencies {
-    api("io.papermc.paper:paper-api:1.19-R0.1-SNAPSHOT")
-    api("dev.jorel:commandapi-core:8.4.0")
+    api("io.papermc.paper:paper-api:1.19.2-R0.1-SNAPSHOT")
+    api("dev.jorel:commandapi-core:8.5.1")
     api("com.mojang:brigadier:1.0.18")
 }
 
 java {
     withSourcesJar()
+    toolchain.languageVersion.set(JavaLanguageVersion.of(17))
 }
 
 publishing {
@@ -30,7 +31,7 @@ publishing {
 
 tasks {
     runServer {
-        minecraftVersion("1.19")
+        minecraftVersion("1.19.2")
     }
 
     processResources {
