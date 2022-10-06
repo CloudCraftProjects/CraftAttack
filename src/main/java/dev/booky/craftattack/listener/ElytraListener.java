@@ -3,8 +3,6 @@ package dev.booky.craftattack.listener;
 
 import com.destroystokyo.paper.event.player.PlayerPostRespawnEvent;
 import dev.booky.craftattack.CaManager;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Pose;
 import org.bukkit.event.EventHandler;
@@ -26,16 +24,17 @@ public final class ElytraListener implements Listener {
 
     @EventHandler
     public void onElytraChange(EntityPoseChangeEvent event) {
-        if (event.getEntityType() != EntityType.PLAYER) {
-            return;
-        }
         if (event.getPose() == Pose.FALL_FLYING) {
             return;
         }
+        if (!(event.getEntity() instanceof Player player)) {
+            return;
+        }
 
-        if (!this.manager.inElytraBox(event.getEntity().getLocation())) {
-            if (this.manager.removeElytra((HumanEntity) event.getEntity())) {
-                ((Player) event.getEntity()).setNoDamageTicks(20);
+        if (!this.manager.inElytraBox(player.getLocation())) {
+            if (this.manager.removeElytra(player)) {
+                player.setNoDamageTicks(20);
+                player.setFallDistance(0f);
             }
         }
     }
@@ -47,6 +46,7 @@ public final class ElytraListener implements Listener {
         }
 
         if (this.manager.removeElytra(player)) {
+            player.setFallDistance(0f);
             player.setNoDamageTicks(20);
             event.setDamage(0);
         }
@@ -76,6 +76,7 @@ public final class ElytraListener implements Listener {
         if (onGround && !this.manager.inElytraBox(event.getPlayer().getLocation())) {
             if (this.manager.removeElytra(event.getPlayer())) {
                 event.getPlayer().setNoDamageTicks(20);
+                event.getPlayer().setFallDistance(0f);
             }
         }
     }
