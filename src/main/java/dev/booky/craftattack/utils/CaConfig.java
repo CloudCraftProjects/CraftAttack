@@ -4,6 +4,7 @@ package dev.booky.craftattack.utils;
 import org.bukkit.Location;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 // Can't be final because of object mapping
@@ -11,7 +12,9 @@ import java.util.Set;
 @ConfigSerializable
 public class CaConfig {
 
-    private Set<CaBoundingBox> protectedAreas = Set.of();
+    private Set<CaBoundingBox> protectedAreas = new LinkedHashSet<>();
+    private Set<Location> launchPlates = new LinkedHashSet<>();
+
     private EndConfig end = new EndConfig();
 
     @ConfigSerializable
@@ -64,6 +67,10 @@ public class CaConfig {
 
     public Set<CaBoundingBox> getProtectedAreas() {
         return this.protectedAreas;
+    }
+
+    public Set<Location> getLaunchPlates() {
+        return launchPlates;
     }
 
     public EndConfig getEndConfig() {

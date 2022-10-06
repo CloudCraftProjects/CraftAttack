@@ -4,12 +4,10 @@ package dev.booky.craftattack.listener;
 import dev.booky.craftattack.CaManager;
 import it.unimi.dsi.fastutil.objects.Object2LongMap;
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
-import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.SoundCategory;
 import org.bukkit.Tag;
 import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
@@ -48,9 +46,7 @@ public final class SpawnListener implements Listener {
         if (block == null || !Tag.PRESSURE_PLATES.isTagged(block.getType())) {
             return;
         }
-
-        // A moving piston on top marks a pressure plate as a jumping plate // TODO: add a command for placing this
-        if (block.getRelative(BlockFace.UP).getType() != Material.MOVING_PISTON) {
+        if (!this.manager.getConfig().getLaunchPlates().contains(block.getLocation())) {
             return;
         }
 

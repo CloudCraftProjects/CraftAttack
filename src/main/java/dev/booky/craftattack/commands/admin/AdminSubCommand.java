@@ -3,6 +3,7 @@ package dev.booky.craftattack.commands.admin;
 
 import dev.booky.craftattack.CaManager;
 import dev.booky.craftattack.commands.admin.end.EndSubCommand;
+import dev.booky.craftattack.commands.admin.launchplates.LaunchPlateSubCommand;
 import dev.booky.craftattack.commands.admin.protections.ProtectionsSubCommand;
 import dev.booky.craftattack.commands.admin.spawn.SpawnSubCommand;
 import dev.jorel.commandapi.CommandAPICommand;
@@ -16,5 +17,6 @@ public class AdminSubCommand extends CommandAPICommand {
         super.withSubcommand(new EndSubCommand(manager));
         super.withSubcommand(new SpawnSubCommand(manager));
         super.withSubcommand(new ProtectionsSubCommand(manager));
+        super.withSubcommand(new LaunchPlateSubCommand(manager));
     }
 }

@@ -26,6 +26,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataHolder;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.util.NumberConversions;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
 
@@ -33,6 +34,7 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
@@ -152,11 +154,35 @@ public final class CaManager {
     }
 
     public boolean isProtected(World world, double x, double y, double z, @Nullable HumanEntity entity) {
+        Set<Location> launchPlates = this.getConfig().getLaunchPlates();
+        if (!launchPlates.isEmpty()) {
+            int floorX = NumberConversions.floor(x);
+            int floorY = NumberConversions.floor(y);
+            int floorZ = NumberConversions.floor(z);
+
+            for (Location plate : launchPlates) {
+                if (plate.getX() != floorX) {
+                    continue;
+                }
+                if (plate.getY() != floorY) {
+                    // Prevents people breaking the block below the launch plate.
+                    // Cancelling the physics event didn't work.
+                    if (plate.getY() - 1 != floorY) {
+                        continue;
+                    }
+                }
+                if (plate.getZ() != floorZ) {
+                    continue;
+                }
+                return true;
+            }
+        }
+
         if (entity != null && entity.getGameMode() == GameMode.CREATIVE) {
             return false;
         }
 
-        for (CaBoundingBox bbox : getConfig().getProtectedAreas()) {
+        for (CaBoundingBox bbox : this.getConfig().getProtectedAreas()) {
             if (bbox.getWorld() != world) {
                 continue;
             }
