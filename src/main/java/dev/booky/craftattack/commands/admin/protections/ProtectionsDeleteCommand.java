@@ -45,6 +45,8 @@ public class ProtectionsDeleteCommand extends CommandAPICommand implements Comma
         corner2.setWorld(world);
 
         CaBoundingBox box = new CaBoundingBox(corner1, corner2);
+        box.expand(0d, 0d, 0d, 1d, 1d, 1d);
+
         if (!this.manager.getConfig().getProtectedAreas().contains(box)) {
             sender.sendMessage(CaManager.getPrefix().append(Component.translatable("ca.command.admin.protections.delete.not-found", NamedTextColor.RED)));
             return;

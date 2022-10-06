@@ -12,7 +12,6 @@ import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.command.CommandSender;
-import org.bukkit.util.NumberConversions;
 
 public class ProtectionsListCommand extends CommandAPICommand implements CommandExecutor {
 
@@ -41,6 +40,8 @@ public class ProtectionsListCommand extends CommandAPICommand implements Command
         boolean deletePerms = sender.hasPermission("craftattack.command.admin.protections.delete");
         boolean firstExec = true;
         for (CaBoundingBox box : this.manager.getConfig().getProtectedAreas()) {
+            box = (CaBoundingBox) box.clone().expand(0d, 0d, 0d, -1d, -1d, -1d);
+
             if (!firstExec) {
                 builder.append(Component.newline());
             } else {
@@ -53,12 +54,12 @@ public class ProtectionsListCommand extends CommandAPICommand implements Command
             } else {
                 String delCmd = "/minecraft:craftattack admin protections delete " +
                         box.getWorld().getKey().asString() + ' ' +
-                        NumberConversions.floor(box.getMinX()) + ' ' +
-                        NumberConversions.floor(box.getMinY()) + ' ' +
-                        NumberConversions.floor(box.getMinZ()) + ' ' +
-                        NumberConversions.floor(box.getMaxX()) + ' ' +
-                        NumberConversions.floor(box.getMaxY()) + ' ' +
-                        NumberConversions.floor(box.getMaxZ());
+                        box.getBlockMinX() + ' ' +
+                        box.getBlockMinY() + ' ' +
+                        box.getBlockMinZ() + ' ' +
+                        box.getBlockMaxX() + ' ' +
+                        box.getBlockMaxY() + ' ' +
+                        box.getBlockMaxZ();
 
                 deleteComp = Component.translatable("ca.command.admin.protections.list.delete.button", NamedTextColor.RED)
                         .hoverEvent(HoverEvent.showText(Component.translatable("ca.command.admin.protections.list.delete.warning", NamedTextColor.RED)))
@@ -66,8 +67,8 @@ public class ProtectionsListCommand extends CommandAPICommand implements Command
             }
 
             Component entryComp = Component.translatable("ca.command.admin.protections.list.entry", NamedTextColor.YELLOW).args(
-                    Component.text(box.getMinX()), Component.text(box.getMinY()), Component.text(box.getMinZ()),
-                    Component.text(box.getMaxX()), Component.text(box.getMaxY()), Component.text(box.getMaxZ()),
+                    Component.text(box.getBlockMinX()), Component.text(box.getBlockMinY()), Component.text(box.getBlockMinZ()),
+                    Component.text(box.getBlockMaxX()), Component.text(box.getBlockMaxY()), Component.text(box.getBlockMaxZ()),
                     Component.text(box.getWorld().getKey().asString()), deleteComp);
             builder.append(Component.space()).append(entryComp);
         }

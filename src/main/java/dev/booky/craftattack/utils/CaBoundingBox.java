@@ -4,6 +4,7 @@ package dev.booky.craftattack.utils;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.util.BoundingBox;
+import org.bukkit.util.NumberConversions;
 
 import java.lang.ref.WeakReference;
 import java.util.Objects;
@@ -11,11 +12,6 @@ import java.util.Objects;
 public final class CaBoundingBox extends BoundingBox {
 
     private final WeakReference<World> world;
-
-    public CaBoundingBox(World world) {
-        super();
-        this.world = new WeakReference<>(world);
-    }
 
     public CaBoundingBox(Location corner1, Location corner2) {
         this(corner1.getWorld(), corner1.getX(), corner1.getY(), corner1.getZ(), corner2.getX(), corner2.getY(), corner2.getZ());
@@ -32,6 +28,30 @@ public final class CaBoundingBox extends BoundingBox {
             return false;
         }
         return super.contains(location.getX(), location.getY(), location.getZ());
+    }
+
+    public int getBlockMinX() {
+        return NumberConversions.floor(super.getMinX());
+    }
+
+    public int getBlockMinY() {
+        return NumberConversions.floor(super.getMinY());
+    }
+
+    public int getBlockMinZ() {
+        return NumberConversions.floor(super.getMinZ());
+    }
+
+    public int getBlockMaxX() {
+        return NumberConversions.floor(super.getMaxX());
+    }
+
+    public int getBlockMaxY() {
+        return NumberConversions.floor(super.getMaxY());
+    }
+
+    public int getBlockMaxZ() {
+        return NumberConversions.floor(super.getMaxZ());
     }
 
     public Location getMinPos() {

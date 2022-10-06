@@ -30,9 +30,10 @@ public class SpawnElytraBoxGetCommand extends CommandAPICommand implements Comma
             return;
         }
 
+        box = (CaBoundingBox) box.clone().expand(0d, 0d, 0d, -1d, -1d, -1d);
         sender.sendMessage(CaManager.getPrefix().append(Component.translatable("ca.command.admin.spawn.elytra-box.get.success", NamedTextColor.GREEN).args(
-                Component.text(box.getMinX()), Component.text(box.getMinY()), Component.text(box.getMinZ()),
-                Component.text(box.getMaxX()), Component.text(box.getMaxY()), Component.text(box.getMaxZ()),
+                Component.text(box.getBlockMinX()), Component.text(box.getBlockMinY()), Component.text(box.getBlockMinZ()),
+                Component.text(box.getBlockMaxX()), Component.text(box.getBlockMaxY()), Component.text(box.getBlockMaxZ()),
                 Component.text(box.getWorld().getKey().asString()))));
     }
 }
