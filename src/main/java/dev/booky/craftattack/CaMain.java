@@ -62,6 +62,10 @@ public final class CaMain extends JavaPlugin {
         this.manager.saveConfig();
         if (Bukkit.getPluginManager().getPlugin("CommandAPI") != null) {
             CommandAPI.unregister(this.command.getName(), true);
+
+            // Additional command "aliases"
+            CommandAPI.unregister("spawn", true);
+            CommandAPI.unregister("craft", true);
         }
     }
 }
