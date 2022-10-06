@@ -3,11 +3,14 @@ package dev.booky.craftattack.listener;
 
 import dev.booky.craftattack.CaManager;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockExplodeEvent;
+import org.bukkit.event.block.BlockPistonExtendEvent;
+import org.bukkit.event.block.BlockPistonRetractEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.BlockRedstoneEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent;
@@ -152,6 +155,26 @@ public final class ProtectionListener implements Listener {
         // Paper doesn't want to fix it :(
         if (event.getAmount() < 0d) {
             event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onPistonExtend(BlockPistonExtendEvent event) {
+        for (Block block : event.getBlocks()) {
+            if (this.manager.isProtected(block, null)) {
+                event.setCancelled(true);
+                return;
+            }
+        }
+    }
+
+    @EventHandler
+    public void onPistonRetract(BlockPistonRetractEvent event) {
+        for (Block block : event.getBlocks()) {
+            if (this.manager.isProtected(block, null)) {
+                event.setCancelled(true);
+                return;
+            }
         }
     }
 }
