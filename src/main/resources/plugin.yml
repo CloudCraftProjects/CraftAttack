@@ -2,7 +2,6 @@ name: CraftAttack
 version: ${version}
 main: dev.booky.craftattack.CaMain
 api-version: 1.19
-prefix: CA
 authors: [ booky10 ]
 softdepend: [ CommandAPI ]
 libraries: [ org.spongepowered:configurate-yaml:4.1.2 ]
