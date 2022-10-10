@@ -39,9 +39,13 @@ public final class ElytraListener implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onElytraDamage(EntityDamageEvent event) {
         if (!(event.getEntity() instanceof Player player)) {
+            return;
+        }
+
+        if (event.isCancelled() || event.getFinalDamage() <= 0d) {
             return;
         }
 
