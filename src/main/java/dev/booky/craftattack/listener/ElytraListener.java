@@ -31,11 +31,16 @@ public final class ElytraListener implements Listener {
             return;
         }
 
-        if (!this.manager.inElytraBox(player.getLocation())) {
-            if (this.manager.removeElytra(player)) {
-                player.setNoDamageTicks(20);
-                player.setFallDistance(0f);
-            }
+        if (this.manager.inElytraBox(player.getLocation())) {
+            return;
+        }
+        if (!this.manager.noBoostSince(player, 100)) {
+            return;
+        }
+
+        if (this.manager.removeElytra(player)) {
+            player.setNoDamageTicks(20);
+            player.setFallDistance(0f);
         }
     }
 
@@ -76,12 +81,20 @@ public final class ElytraListener implements Listener {
         // Our anticheat fixes this on the packet level.
         @SuppressWarnings("deprecation")
         boolean onGround = event.getPlayer().isOnGround();
+        if (!onGround) {
+            return;
+        }
 
-        if (onGround && !this.manager.inElytraBox(event.getPlayer().getLocation())) {
-            if (this.manager.removeElytra(event.getPlayer())) {
-                event.getPlayer().setNoDamageTicks(20);
-                event.getPlayer().setFallDistance(0f);
-            }
+        if (this.manager.inElytraBox(event.getPlayer().getLocation())) {
+            return;
+        }
+        if (!this.manager.noBoostSince(event.getPlayer(), 100)) {
+            return;
+        }
+
+        if (this.manager.removeElytra(event.getPlayer())) {
+            event.getPlayer().setNoDamageTicks(20);
+            event.getPlayer().setFallDistance(0f);
         }
     }
 

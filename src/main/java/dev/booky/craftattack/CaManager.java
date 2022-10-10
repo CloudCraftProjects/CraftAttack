@@ -7,6 +7,8 @@ import dev.booky.craftattack.utils.CaConfig;
 import dev.booky.craftattack.utils.TpResult;
 import dev.booky.craftattack.utils.TranslationLoader;
 import io.papermc.paper.entity.RelativeTeleportFlag;
+import it.unimi.dsi.fastutil.objects.Object2LongMap;
+import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
@@ -63,6 +65,9 @@ public final class CaManager {
     private final NamespacedKey elytraDataKey;
     private final Plugin plugin;
 
+    private final Object2LongMap<UUID> lastBoost = new Object2LongOpenHashMap<>() {{
+        this.defaultReturnValue(0);
+    }};
     private final TranslationLoader i18n;
 
     private final Path configPath;
@@ -203,7 +208,7 @@ public final class CaManager {
     }
 
     public boolean giveElytra(HumanEntity entity) {
-        if (entity.getPersistentDataContainer().has(elytraDataKey, PersistentDataType.BYTE_ARRAY)) {
+        if (this.hasElytra(entity)) {
             return false;
         }
 
@@ -227,10 +232,12 @@ public final class CaManager {
     }
 
     public boolean removeElytra(HumanEntity entity) {
-        byte[] itemBytes = entity.getPersistentDataContainer().get(elytraDataKey, PersistentDataType.BYTE_ARRAY);
-        if (itemBytes == null) {
+        if (!this.hasElytra(entity)) {
             return false;
         }
+
+        byte[] itemBytes = entity.getPersistentDataContainer().get(elytraDataKey, PersistentDataType.BYTE_ARRAY);
+        Objects.requireNonNull(itemBytes, () -> "Invalid elytra data set for key " + elytraDataKey);
 
         ItemStack item = itemBytes.length == 0 ? new ItemStack(Material.AIR) : ItemStack.deserializeBytes(itemBytes);
         entity.getPersistentDataContainer().remove(elytraDataKey);
@@ -242,9 +249,25 @@ public final class CaManager {
         return holder.getPersistentDataContainer().has(elytraDataKey, PersistentDataType.BYTE_ARRAY);
     }
 
+    public boolean noBoostSince(Player player, long millis) {
+        return System.currentTimeMillis() - this.getLastBoost(player) > millis;
+    }
+
+    public void setLastBoost(Player player) {
+        this.lastBoost.put(player.getUniqueId(), System.currentTimeMillis());
+    }
+
+    public long getLastBoost(Player player) {
+        return this.lastBoost.getLong(player.getUniqueId());
+    }
+
     @ApiStatus.Internal
     public Map<UUID, CompletableFuture<TpResult>> getTeleports() {
         return teleports;
+    }
+
+    public TranslationLoader getI18n() {
+        return i18n;
     }
 
     public CaConfig getConfig() {
