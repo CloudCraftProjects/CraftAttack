@@ -10,6 +10,7 @@ import io.papermc.paper.entity.RelativeTeleportFlag;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -215,7 +216,10 @@ public final class CaManager {
             meta.addEnchant(Enchantment.VANISHING_CURSE, 1, true);
             meta.addEnchant(Enchantment.BINDING_CURSE, 1, true);
             meta.addItemFlags(ItemFlag.HIDE_UNBREAKABLE, ItemFlag.HIDE_ENCHANTS);
+
             meta.setUnbreakable(true);
+            meta.displayName(Component.translatable(Material.ELYTRA.translationKey(), NamedTextColor.WHITE)
+                    .decoration(TextDecoration.ITALIC, false));
         });
 
         entity.getInventory().setChestplate(elytra);
