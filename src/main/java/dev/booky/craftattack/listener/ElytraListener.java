@@ -10,6 +10,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityPoseChangeEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
@@ -117,5 +118,10 @@ public final class ElytraListener implements Listener {
         if (this.manager.inElytraBox(event.getTo())) {
             this.manager.giveElytra(event.getPlayer());
         }
+    }
+
+    @EventHandler
+    public void onDeath(PlayerDeathEvent event) {
+        this.manager.removeElytra(event.getPlayer());
     }
 }
