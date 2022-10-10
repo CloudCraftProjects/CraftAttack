@@ -54,6 +54,13 @@ public final class ElytraListener implements Listener {
             return;
         }
 
+        if (this.manager.inElytraBox(player.getLocation())) {
+            return;
+        }
+        if (!this.manager.noBoostSince(player, 100)) {
+            return;
+        }
+
         if (this.manager.removeElytra(player)) {
             player.setFallDistance(0f);
             player.setNoDamageTicks(20);
