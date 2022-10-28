@@ -15,7 +15,7 @@ public class EndWarpLocationGetCommand extends CommandAPICommand implements Comm
     private final CaManager manager;
 
     public EndWarpLocationGetCommand(CaManager manager) {
-        super("warp-location");
+        super("location");
         this.manager = manager;
 
         super.withPermission("craftattack.command.admin.end.location.get");
