@@ -29,12 +29,12 @@ public class EndActivationSetCommand extends CommandAPICommand implements Comman
 
         if (this.manager.getConfig().getEndConfig().isActivated() == activate) {
             sender.sendMessage(CaManager.getPrefix().append(Component.translatable("ca.command.admin.end.activate.set.already", NamedTextColor.RED)
-                    .args(Component.translatable("ca.command.admin." + (activate ? "activated" : "deactivated")))));
+                    .args(Component.translatable("ca.command.admin.end." + (activate ? "activated" : "deactivated")))));
             return;
         }
 
         this.manager.updateConfig(config -> config.getEndConfig().setActivated(activate));
         sender.sendMessage(CaManager.getPrefix().append(Component.translatable("ca.command.admin.end.activate.set.success", NamedTextColor.GREEN)
-                .args(Component.translatable("ca.command.admin." + (activate ? "activated" : "deactivated")))));
+                .args(Component.translatable("ca.command.admin.end." + (activate ? "activated" : "deactivated")))));
     }
 }
