@@ -94,6 +94,7 @@ public final class ElytraListener implements Listener {
         }
 
         if (this.manager.inElytraBox(event.getPlayer().getLocation())) {
+            this.manager.giveElytra(event.getPlayer());
             return;
         }
         if (!this.manager.noBoostSince(event.getPlayer(), 100)) {
