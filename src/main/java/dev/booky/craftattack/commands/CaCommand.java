@@ -5,6 +5,7 @@ import dev.booky.craftattack.CaManager;
 import dev.booky.craftattack.commands.admin.AdminSubCommand;
 import dev.booky.craftattack.commands.teleport.TeleportSubCommand;
 import dev.jorel.commandapi.CommandAPICommand;
+import org.bukkit.Bukkit;
 
 public class CaCommand extends CommandAPICommand {
 
@@ -16,6 +17,12 @@ public class CaCommand extends CommandAPICommand {
         super.withSubcommand(new TeleportSubCommand(manager));
         super.withSubcommand(new AdminSubCommand(manager));
         super.withSubcommand(new CraftCommand());
+
+        if (Bukkit.getPluginManager().getPlugin("CloudChat") != null) {
+            super.withSubcommand(new StatusCommand(manager));
+        } else {
+            Bukkit.getLogger().warning("CloudChat is not installed, the status command won't work!");
+        }
 
         super.register();
     }

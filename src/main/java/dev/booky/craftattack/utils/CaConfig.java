@@ -4,7 +4,9 @@ package dev.booky.craftattack.utils;
 import org.bukkit.Location;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 
 // Can't be final because of object mapping
@@ -14,6 +16,18 @@ public class CaConfig {
 
     private Set<CaBoundingBox> protectedAreas = new LinkedHashSet<>();
     private Set<Location> launchPlates = new LinkedHashSet<>();
+
+    // I know this name sounds weird, but this is the actual plural of "status"
+    // (according to wiktionary)
+    private Map<String, Integer> statuses = new LinkedHashMap<>() {{
+        put("farming", 0x10a361);
+        put("building", 0x13f21e);
+        put("redstone", 0xe50d35);
+
+        put("afk", 0xd67f2f);
+        put("live", 0x920de5);
+        put("rec", 0xfc2a0f);
+    }};
 
     private EndConfig end = new EndConfig();
 
@@ -71,6 +85,10 @@ public class CaConfig {
 
     public Set<Location> getLaunchPlates() {
         return launchPlates;
+    }
+
+    public Map<String, Integer> getStatuses() {
+        return statuses;
     }
 
     public EndConfig getEndConfig() {

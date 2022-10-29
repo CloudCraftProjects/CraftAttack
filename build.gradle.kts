@@ -7,9 +7,16 @@ plugins {
 }
 
 group = "dev.booky"
-version = "1.10.0"
+version = "1.10.1"
 
 repositories {
+    // TODO: find an actual repository for this
+    mavenLocal {
+        content {
+            includeGroup("dev.booky")
+        }
+    }
+
     maven("https://papermc.io/repo/repository/maven-public/")
 }
 
@@ -21,6 +28,9 @@ dependencies {
     compileOnlyApi("dev.jorel:commandapi-core:8.5.1")
 
     api("org.bstats:bstats-bukkit:3.0.0")
+
+    // needs to be published to maven local manually
+    compileOnlyApi("dev.booky:cloudchat:1.1.1")
 }
 
 java {

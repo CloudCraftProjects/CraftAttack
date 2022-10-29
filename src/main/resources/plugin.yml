@@ -3,6 +3,6 @@ version: ${version}
 main: dev.booky.craftattack.CaMain
 api-version: 1.19
 authors: [ booky10 ]
-softdepend: [ CommandAPI ]
+softdepend: [ CommandAPI, CloudChat ]
 libraries: [ org.spongepowered:configurate-yaml:4.1.2 ]
 load: POSTWORLD
