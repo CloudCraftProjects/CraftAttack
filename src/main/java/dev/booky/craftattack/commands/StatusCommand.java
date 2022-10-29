@@ -53,23 +53,30 @@ public class StatusCommand extends CommandAPICommand implements PlayerCommandExe
         if ("none".equalsIgnoreCase(statusKey)) {
             LuckPermsProvider.get().getUserManager().modifyUser(sender.getUniqueId(), user -> {
                 user.data().clear(NODE_PREDICATE);
-                this.chatApi.updateTeam(sender);
+                user.getCachedData().invalidate();
 
                 sender.sendMessage(CaManager.getPrefix().append(Component.translatable(
                         "ca.command.status.success.remove",
                         NamedTextColor.GREEN)));
+
+                Bukkit.getScheduler().runTaskLater(this.manager.getPlugin(),
+                        () -> this.chatApi.updateTeam(sender), 10);
             });
             return;
         }
 
-        Integer statusColor = this.manager.getConfig().getStatuses().get(statusKey);
+        String realKey = this.manager.getConfig().getStatuses().keySet().stream()
+                .filter(key -> key.equalsIgnoreCase(statusKey))
+                .findAny().orElse("null");
+        Integer statusColor = this.manager.getConfig().getStatuses().get(realKey);
+
         if (statusColor == null) {
             sender.sendMessage(CaManager.getPrefix().append(Component.translatable(
                     "ca.command.status.invalid-status", NamedTextColor.RED)));
             return;
         }
 
-        Component suffix = Component.text(statusKey, TextColor.color(statusColor));
+        Component suffix = Component.text(realKey, TextColor.color(statusColor));
         String serializedSuffix = LegacyComponentSerializer.legacySection().serialize(suffix);
 
         LuckPermsProvider.get().getUserManager().modifyUser(sender.getUniqueId(), user -> {
@@ -79,11 +86,14 @@ public class StatusCommand extends CommandAPICommand implements PlayerCommandExe
 
             user.data().clear(NODE_PREDICATE);
             user.data().add(suffixNode);
+            user.getCachedData().invalidate();
 
-            this.chatApi.updateTeam(sender);
             sender.sendMessage(CaManager.getPrefix().append(Component.translatable(
                     "ca.command.status.success.update",
                     NamedTextColor.GREEN).args(suffix)));
+
+            Bukkit.getScheduler().runTaskLater(this.manager.getPlugin(),
+                    () -> this.chatApi.updateTeam(sender), 10);
         });
     }
 }
