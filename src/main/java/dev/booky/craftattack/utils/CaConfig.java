@@ -20,13 +20,13 @@ public class CaConfig {
     // I know this name sounds weird, but this is the actual plural of "status"
     // (according to wiktionary)
     private Map<String, Integer> statuses = new LinkedHashMap<>() {{
-        put("farming", 0x10a361);
-        put("building", 0x13f21e);
-        put("redstone", 0xe50d35);
+        put("Farming", 0x10a361);
+        put("Building", 0x13f21e);
+        put("Redstone", 0xe50d35);
 
-        put("afk", 0xd67f2f);
-        put("live", 0x920de5);
-        put("rec", 0xfc2a0f);
+        put("AFK", 0xd67f2f);
+        put("LIVE", 0x920de5);
+        put("REC", 0xfc2a0f);
     }};
 
     private EndConfig end = new EndConfig();
