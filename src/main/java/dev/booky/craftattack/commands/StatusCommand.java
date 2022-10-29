@@ -73,7 +73,10 @@ public class StatusCommand extends CommandAPICommand implements PlayerCommandExe
         String serializedSuffix = LegacyComponentSerializer.legacySection().serialize(suffix);
 
         LuckPermsProvider.get().getUserManager().modifyUser(sender.getUniqueId(), user -> {
-            Node suffixNode = SuffixNode.builder(serializedSuffix, 100).build();
+            Node suffixNode = SuffixNode.builder(serializedSuffix, 100)
+                    .withContext("server", "craftattack")
+                    .build();
+
             user.data().clear(NODE_PREDICATE);
             user.data().add(suffixNode);
 
