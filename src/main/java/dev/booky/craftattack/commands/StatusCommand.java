@@ -69,18 +69,18 @@ public class StatusCommand extends CommandAPICommand implements PlayerCommandExe
             return;
         }
 
-        Component prefix = Component.text(statusKey.toUpperCase(Locale.ROOT), TextColor.color(statusColor));
-        String serializedPrefix = LegacyComponentSerializer.legacySection().serialize(prefix);
+        Component suffix = Component.text(statusKey, TextColor.color(statusColor));
+        String serializedSuffix = LegacyComponentSerializer.legacySection().serialize(suffix);
 
         LuckPermsProvider.get().getUserManager().modifyUser(sender.getUniqueId(), user -> {
-            Node suffixNode = SuffixNode.builder(serializedPrefix, 100).build();
+            Node suffixNode = SuffixNode.builder(serializedSuffix, 100).build();
             user.data().clear(NODE_PREDICATE);
             user.data().add(suffixNode);
 
             this.chatApi.updateTeam(sender);
             sender.sendMessage(CaManager.getPrefix().append(Component.translatable(
                     "ca.command.status.success.update",
-                    NamedTextColor.GREEN).args(prefix)));
+                    NamedTextColor.GREEN).args(suffix)));
         });
     }
 }
