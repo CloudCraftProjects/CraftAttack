@@ -6,6 +6,7 @@ import dev.jorel.commandapi.CommandAPICommand;
 import dev.jorel.commandapi.exceptions.WrapperCommandSyntaxException;
 import dev.jorel.commandapi.executors.CommandExecutor;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.command.CommandSender;
 
 public class ReloadConfigCommand extends CommandAPICommand implements CommandExecutor {
@@ -23,6 +24,6 @@ public class ReloadConfigCommand extends CommandAPICommand implements CommandExe
     @Override
     public void run(CommandSender sender, Object[] args) throws WrapperCommandSyntaxException {
         this.manager.reloadConfig();
-        sender.sendMessage(CaManager.getPrefix().append(Component.translatable("ca.command.admin.reload-config")));
+        sender.sendMessage(CaManager.getPrefix().append(Component.translatable("ca.command.admin.reload-config", NamedTextColor.GREEN)));
     }
 }
