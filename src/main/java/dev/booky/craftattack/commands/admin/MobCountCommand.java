@@ -21,7 +21,7 @@ public class MobCountCommand extends CommandAPICommand implements PlayerCommandE
 
     public MobCountCommand() {
         super("mobcounts");
-        super.withPermission("ca.command.admin.mobcounts");
+        super.withPermission("craftattack.command.admin.mobcounts");
 
         super.withArguments(new EntityTypeArgument("type"));
         super.executesPlayer(this);
