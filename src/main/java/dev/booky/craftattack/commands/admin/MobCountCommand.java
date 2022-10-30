@@ -29,12 +29,12 @@ public class MobCountCommand extends CommandAPICommand implements PlayerCommandE
 
     @Override
     public void run(Player sender, Object[] args) throws WrapperCommandSyntaxException {
-        // TODO: translations
         EntityType type = (EntityType) args[0];
         Map<Location, Integer> counted = MobCountUtils.run(sender.getWorld(), type);
 
         if (counted.isEmpty()) {
-            sender.sendMessage(CaManager.getPrefix().append(Component.text("No entities found with type " + type, NamedTextColor.RED)));
+            sender.sendMessage(CaManager.getPrefix().append(Component.translatable("ca.command.admin.mobcount.failure", NamedTextColor.RED)
+                    .args(Component.translatable(type.translationKey()))));
             return;
         }
 
