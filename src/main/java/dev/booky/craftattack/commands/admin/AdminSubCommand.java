@@ -19,5 +19,6 @@ public class AdminSubCommand extends CommandAPICommand {
         super.withSubcommand(new ProtectionsSubCommand(manager));
         super.withSubcommand(new LaunchPlateSubCommand(manager));
         super.withSubcommand(new ReloadConfigCommand(manager));
+        super.withSubcommand(new MobCountCommand());
     }
 }
