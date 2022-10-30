@@ -5,6 +5,7 @@ import dev.booky.cloudchat.CloudChatApi;
 import dev.booky.craftattack.CaManager;
 import dev.jorel.commandapi.CommandAPICommand;
 import dev.jorel.commandapi.arguments.ArgumentSuggestions;
+import dev.jorel.commandapi.arguments.GreedyStringArgument;
 import dev.jorel.commandapi.arguments.StringArgument;
 import dev.jorel.commandapi.exceptions.WrapperCommandSyntaxException;
 import dev.jorel.commandapi.executors.PlayerCommandExecutor;
@@ -37,7 +38,7 @@ public class StatusCommand extends CommandAPICommand implements PlayerCommandExe
         super.withPermission("craftattack.command.status");
         super.executesPlayer(this);
 
-        super.withArguments(new StringArgument("status")
+        super.withArguments(new GreedyStringArgument("status")
                 .replaceSuggestions(ArgumentSuggestions.strings(info ->
                         Stream.concat(manager.getConfig().getStatuses().keySet().stream()
                                         .map(str -> str.toLowerCase(Locale.ROOT)),
