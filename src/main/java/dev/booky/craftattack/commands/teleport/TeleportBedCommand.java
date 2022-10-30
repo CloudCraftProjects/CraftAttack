@@ -20,6 +20,9 @@ public class TeleportBedCommand extends CommandAPICommand implements PlayerComma
 
         super.withPermission("craftattack.command.teleport.bed");
         super.executesPlayer(this);
+
+        // Additionally register just /bed as a command
+        super.register();
     }
 
     @Override
