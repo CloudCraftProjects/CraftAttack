@@ -138,6 +138,18 @@ public final class CaManager {
         return future;
     }
 
+    public void cancelTeleport(Player player, TpResult result) {
+        CompletableFuture<TpResult> future = this.teleports.remove(player.getUniqueId());
+        if (future == null) {
+            return;
+        }
+
+        if (player.isOnline()) {
+            player.sendMessage(CaManager.getPrefix().append(Component.translatable("ca.teleport.moved", NamedTextColor.RED)));
+        }
+        future.complete(result);
+    }
+
     public void updateConfig(Consumer<CaConfig> updater) {
         updater.accept(this.getConfig());
         this.saveConfig();
@@ -259,11 +271,6 @@ public final class CaManager {
 
     public long getLastBoost(Player player) {
         return this.lastBoost.getLong(player.getUniqueId());
-    }
-
-    @ApiStatus.Internal
-    public Map<UUID, CompletableFuture<TpResult>> getTeleports() {
-        return teleports;
     }
 
     public TranslationLoader getI18n() {

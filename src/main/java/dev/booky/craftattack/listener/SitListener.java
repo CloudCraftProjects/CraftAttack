@@ -2,6 +2,7 @@ package dev.booky.craftattack.listener;
 // Created by booky10 in CraftAttack (15:40 24.05.21)
 
 import dev.booky.craftattack.CaManager;
+import dev.booky.craftattack.utils.TpResult;
 import io.papermc.paper.entity.RelativeTeleportFlag;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
@@ -40,10 +41,13 @@ public final class SitListener implements Listener {
 
     private static final Set<Material> VALID_TYPES = Stream.concat(Tag.STAIRS.getValues().stream(),
             Tag.SLABS.getValues().stream()).collect(Collectors.toUnmodifiableSet());
+
     private final NamespacedKey chairKey;
+    private final CaManager manager;
 
     public SitListener(CaManager manager) {
         this.chairKey = new NamespacedKey(manager.getPlugin(), "chair");
+        this.manager = manager;
     }
 
     @EventHandler
@@ -113,6 +117,9 @@ public final class SitListener implements Listener {
 
         // Hides the "Press Left Shift to Dismount" message
         event.getPlayer().sendActionBar(Component.empty());
+
+        // Cancel teleports, because moving across passengers doesn't count as movement to bukkit
+        this.manager.cancelTeleport(event.getPlayer(), TpResult.CANCELLED);
     }
 
     // Execute after all the cancelling has happened
