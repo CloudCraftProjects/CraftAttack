@@ -20,6 +20,9 @@ public class TeleportEndCommand extends CommandAPICommand implements PlayerComma
 
         super.withPermission("craftattack.command.teleport.end");
         super.executesPlayer(this);
+
+        // Additionally register just /end as a command
+        super.register();
     }
 
     @Override
