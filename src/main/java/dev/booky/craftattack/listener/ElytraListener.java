@@ -118,6 +118,8 @@ public final class ElytraListener implements Listener {
     public void onTeleport(PlayerTeleportEvent event) {
         if (this.manager.inElytraBox(event.getTo())) {
             this.manager.giveElytra(event.getPlayer());
+        } else {
+            this.manager.removeElytra(event.getPlayer());
         }
     }
 
