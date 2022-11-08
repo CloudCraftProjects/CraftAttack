@@ -1,6 +1,7 @@
 package dev.booky.craftattack.listener;
 // Created by booky10 in CraftAttack (17:38 30.10.21)
 
+import com.destroystokyo.paper.event.entity.EntityPathfindEvent;
 import dev.booky.craftattack.CaManager;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -175,6 +176,13 @@ public final class ProtectionListener implements Listener {
                 event.setCancelled(true);
                 return;
             }
+        }
+    }
+
+    @EventHandler
+    public void onPathfind(EntityPathfindEvent event) {
+        if (this.manager.isProtected(event.getLoc(), null)) {
+            event.setCancelled(true);
         }
     }
 }
