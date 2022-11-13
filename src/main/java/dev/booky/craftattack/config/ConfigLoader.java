@@ -2,6 +2,7 @@ package dev.booky.craftattack.config;
 // Created by booky10 in ********** (12:55 27.06.22)
 
 import dev.booky.craftattack.utils.CaBoundingBox;
+import dev.booky.craftattack.utils.ProtectedArea;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.spongepowered.configurate.CommentedConfigurationNode;
@@ -24,6 +25,7 @@ public class ConfigLoader {
                 .defaultOptions(opts -> opts.serializers(builder -> builder
                         .register(NamespacedKey.class, NamespacedKeySerializer.INSTANCE)
                         .register(Location.class, LocationSerializer.INSTANCE)
+                        .register(ProtectedArea.class, ProtectedAreaSerializer.INSTANCE)
                         .register(CaBoundingBox.class, CaBoundingBoxSerializer.INSTANCE)))
                 .nodeStyle(NodeStyle.BLOCK).indent(2).build());
     }

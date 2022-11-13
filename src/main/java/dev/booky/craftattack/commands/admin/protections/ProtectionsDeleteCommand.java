@@ -4,6 +4,7 @@ package dev.booky.craftattack.commands.admin.protections;
 import com.google.common.base.Preconditions;
 import dev.booky.craftattack.CaManager;
 import dev.booky.craftattack.utils.CaBoundingBox;
+import dev.booky.craftattack.utils.ProtectedArea;
 import dev.jorel.commandapi.CommandAPICommand;
 import dev.jorel.commandapi.arguments.ArgumentSuggestions;
 import dev.jorel.commandapi.arguments.LocationArgument;
@@ -46,14 +47,15 @@ public class ProtectionsDeleteCommand extends CommandAPICommand implements Comma
 
         CaBoundingBox box = new CaBoundingBox(corner1, corner2);
         box.expand(0d, 0d, 0d, 1d, 1d, 1d);
+        ProtectedArea area = new ProtectedArea(box);
 
-        if (!this.manager.getConfig().getProtectedAreas().contains(box)) {
+        if (!this.manager.getConfig().getProtectedAreas().contains(area)) {
             sender.sendMessage(CaManager.getPrefix().append(Component.translatable("ca.command.admin.protections.delete.not-found", NamedTextColor.RED)));
             return;
         }
 
         // For why can do this, see ProtectionsCreateCommand line 53+54.
-        this.manager.updateConfig(config -> config.getProtectedAreas().remove(box));
+        this.manager.updateConfig(config -> config.getProtectedAreas().remove(area));
         sender.sendMessage(CaManager.getPrefix().append(Component.translatable("ca.command.admin.protections.delete.success", NamedTextColor.GREEN)));
     }
 }

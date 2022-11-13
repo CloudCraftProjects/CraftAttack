@@ -3,6 +3,7 @@ package dev.booky.craftattack.commands.admin.protections;
 
 import dev.booky.craftattack.CaManager;
 import dev.booky.craftattack.utils.CaBoundingBox;
+import dev.booky.craftattack.utils.ProtectedArea;
 import dev.jorel.commandapi.CommandAPICommand;
 import dev.jorel.commandapi.exceptions.WrapperCommandSyntaxException;
 import dev.jorel.commandapi.executors.CommandExecutor;
@@ -39,8 +40,9 @@ public class ProtectionsListCommand extends CommandAPICommand implements Command
 
         boolean deletePerms = sender.hasPermission("craftattack.command.admin.protections.delete");
         boolean firstExec = true;
-        for (CaBoundingBox box : this.manager.getConfig().getProtectedAreas()) {
-            box = (CaBoundingBox) box.clone().expand(0d, 0d, 0d, -1d, -1d, -1d);
+        for (ProtectedArea area : this.manager.getConfig().getProtectedAreas()) {
+            CaBoundingBox box = (CaBoundingBox) area.getBox().expand(0d, 0d, 0d,
+                    -1d, -1d, -1d);
 
             if (!firstExec) {
                 builder.append(Component.newline());

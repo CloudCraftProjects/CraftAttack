@@ -4,6 +4,7 @@ package dev.booky.craftattack;
 import dev.booky.craftattack.config.ConfigLoader;
 import dev.booky.craftattack.utils.CaBoundingBox;
 import dev.booky.craftattack.utils.CaConfig;
+import dev.booky.craftattack.utils.ProtectedArea;
 import dev.booky.craftattack.utils.TpResult;
 import dev.booky.craftattack.utils.TranslationLoader;
 import io.papermc.paper.entity.RelativeTeleportFlag;
@@ -30,7 +31,6 @@ import org.bukkit.persistence.PersistentDataHolder;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.util.NumberConversions;
-import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
 
 import java.nio.file.Path;
@@ -200,11 +200,12 @@ public final class CaManager {
             return false;
         }
 
-        for (CaBoundingBox bbox : this.getConfig().getProtectedAreas()) {
-            if (bbox.getWorld() != world) {
+        for (ProtectedArea area : this.getConfig().getProtectedAreas()) {
+            CaBoundingBox box = area.getBox();
+            if (box.getWorld() != world) {
                 continue;
             }
-            if (!bbox.contains(x, y, z)) {
+            if (!box.contains(x, y, z)) {
                 continue;
             }
             return true;

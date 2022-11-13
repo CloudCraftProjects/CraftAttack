@@ -5,6 +5,7 @@ import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.util.BoundingBox;
 import org.bukkit.util.NumberConversions;
+import org.jetbrains.annotations.NotNull;
 
 import java.lang.ref.WeakReference;
 import java.util.Objects;
@@ -64,6 +65,11 @@ public final class CaBoundingBox extends BoundingBox {
 
     public World getWorld() {
         return Objects.requireNonNull(this.world.get(), "World has been unloaded");
+    }
+
+    @Override
+    public @NotNull CaBoundingBox clone() {
+        return (CaBoundingBox) super.clone();
     }
 
     @Override

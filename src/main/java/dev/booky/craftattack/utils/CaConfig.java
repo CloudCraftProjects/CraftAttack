@@ -14,7 +14,7 @@ import java.util.Set;
 @ConfigSerializable
 public class CaConfig {
 
-    private Set<CaBoundingBox> protectedAreas = new LinkedHashSet<>();
+    private Set<ProtectedArea> protectedAreas = new LinkedHashSet<>();
     private Set<Location> launchPlates = new LinkedHashSet<>();
 
     // I know this name sounds weird, but this is the actual plural of "status"
@@ -79,7 +79,7 @@ public class CaConfig {
         }
     }
 
-    public Set<CaBoundingBox> getProtectedAreas() {
+    public Set<ProtectedArea> getProtectedAreas() {
         return this.protectedAreas;
     }
 
