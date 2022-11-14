@@ -2,6 +2,7 @@ package dev.booky.craftattack.commands.admin.protections;
 // Created by booky10 in CraftAttack (22:40 05.10.22)
 
 import dev.booky.craftattack.CaManager;
+import dev.booky.craftattack.commands.admin.protections.flags.FlagSubCommand;
 import dev.jorel.commandapi.CommandAPICommand;
 
 public class ProtectionsSubCommand extends CommandAPICommand {
@@ -13,5 +14,6 @@ public class ProtectionsSubCommand extends CommandAPICommand {
         super.withSubcommand(new ProtectionsListCommand(manager));
         super.withSubcommand(new ProtectionsCreateCommand(manager));
         super.withSubcommand(new ProtectionsDeleteCommand(manager));
+        super.withSubcommand(new FlagSubCommand(manager));
     }
 }

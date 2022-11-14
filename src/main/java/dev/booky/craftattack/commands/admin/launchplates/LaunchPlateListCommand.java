@@ -50,7 +50,7 @@ public class LaunchPlateListCommand extends CommandAPICommand implements Command
             if (!deletePerms) {
                 deleteComp = Component.empty();
             } else {
-                String delCmd = "/minecraft:craftattack admin launches delete " +
+                String delCmd = "/craftattack admin launches delete " +
                         location.getWorld().getKey().asString() + ' ' +
                         location.getBlockX() + ' ' +
                         location.getBlockY() + ' ' +

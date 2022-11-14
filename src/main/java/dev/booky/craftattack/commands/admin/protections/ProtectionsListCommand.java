@@ -50,29 +50,34 @@ public class ProtectionsListCommand extends CommandAPICommand implements Command
                 firstExec = false;
             }
 
+            String baseCmd = "/craftattack admin protections %s " +
+                    box.getWorld().getKey().asString() + ' ' +
+                    box.getBlockMinX() + ' ' +
+                    box.getBlockMinY() + ' ' +
+                    box.getBlockMinZ() + ' ' +
+                    box.getBlockMaxX() + ' ' +
+                    box.getBlockMaxY() + ' ' +
+                    box.getBlockMaxZ();
+
             Component deleteComp;
             if (!deletePerms) {
                 deleteComp = Component.empty();
             } else {
-                String delCmd = "/minecraft:craftattack admin protections delete " +
-                        box.getWorld().getKey().asString() + ' ' +
-                        box.getBlockMinX() + ' ' +
-                        box.getBlockMinY() + ' ' +
-                        box.getBlockMinZ() + ' ' +
-                        box.getBlockMaxX() + ' ' +
-                        box.getBlockMaxY() + ' ' +
-                        box.getBlockMaxZ();
-
                 deleteComp = Component.translatable("ca.command.admin.protections.list.delete.button", NamedTextColor.RED)
                         .hoverEvent(HoverEvent.showText(Component.translatable("ca.command.admin.protections.list.delete.warning", NamedTextColor.RED)))
-                        .clickEvent(ClickEvent.runCommand(delCmd));
+                        .clickEvent(ClickEvent.runCommand(String.format(baseCmd, "delete")));
             }
 
             Component entryComp = Component.translatable("ca.command.admin.protections.list.entry", NamedTextColor.YELLOW).args(
-                    Component.text(box.getBlockMinX()), Component.text(box.getBlockMinY()), Component.text(box.getBlockMinZ()),
-                    Component.text(box.getBlockMaxX()), Component.text(box.getBlockMaxY()), Component.text(box.getBlockMaxZ()),
-                    Component.text(box.getWorld().getKey().asString()), deleteComp);
-            builder.append(Component.space()).append(entryComp);
+                            Component.text(box.getBlockMinX()), Component.text(box.getBlockMinY()), Component.text(box.getBlockMinZ()),
+                            Component.text(box.getBlockMaxX()), Component.text(box.getBlockMaxY()), Component.text(box.getBlockMaxZ()),
+                            Component.text(box.getWorld().getKey().asString()))
+                    .hoverEvent(HoverEvent.showText(Component.translatable("ca.command.admin.protections.list.flags", NamedTextColor.AQUA)))
+                    .clickEvent(ClickEvent.runCommand(String.format(baseCmd, "flag list")));
+
+            builder
+                    .append(Component.space()).append(entryComp)
+                    .append(Component.space()).append(deleteComp);
         }
 
         sender.sendMessage(builder.build());
