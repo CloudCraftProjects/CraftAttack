@@ -5,6 +5,7 @@ import dev.booky.craftattack.config.ConfigLoader;
 import dev.booky.craftattack.utils.CaBoundingBox;
 import dev.booky.craftattack.utils.CaConfig;
 import dev.booky.craftattack.utils.ProtectedArea;
+import dev.booky.craftattack.utils.ProtectionFlag;
 import dev.booky.craftattack.utils.TpResult;
 import dev.booky.craftattack.utils.TranslationLoader;
 import io.papermc.paper.entity.RelativeTeleportFlag;
@@ -163,15 +164,15 @@ public final class CaManager {
         ConfigLoader.saveObject(this.configPath, this.getConfig());
     }
 
-    public boolean isProtected(Location location, @Nullable HumanEntity entity) {
-        return isProtected(location.getWorld(), location.getX(), location.getY(), location.getZ(), entity);
+    public boolean isProtected(Location location, ProtectionFlag flag, @Nullable HumanEntity entity) {
+        return isProtected(location.getWorld(), location.getX(), location.getY(), location.getZ(), flag, entity);
     }
 
-    public boolean isProtected(Block block, @Nullable HumanEntity entity) {
-        return isProtected(block.getWorld(), block.getX() + 0.5d, block.getY() + 0.5d, block.getZ() + 0.5d, entity);
+    public boolean isProtected(Block block, ProtectionFlag flag, @Nullable HumanEntity entity) {
+        return isProtected(block.getWorld(), block.getX() + 0.5d, block.getY() + 0.5d, block.getZ() + 0.5d, flag, entity);
     }
 
-    public boolean isProtected(World world, double x, double y, double z, @Nullable HumanEntity entity) {
+    public boolean isProtected(World world, double x, double y, double z, ProtectionFlag flag, @Nullable HumanEntity entity) {
         Set<Location> launchPlates = this.getConfig().getLaunchPlates();
         if (!launchPlates.isEmpty()) {
             int floorX = NumberConversions.floor(x);
@@ -201,6 +202,10 @@ public final class CaManager {
         }
 
         for (ProtectedArea area : this.getConfig().getProtectedAreas()) {
+            if (!area.hasFlag(flag)) {
+                continue;
+            }
+
             CaBoundingBox box = area.getBox();
             if (box.getWorld() != world) {
                 continue;

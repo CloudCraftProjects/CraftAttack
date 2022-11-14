@@ -3,17 +3,20 @@ package dev.booky.craftattack.listener;
 
 import com.destroystokyo.paper.event.entity.EntityPathfindEvent;
 import dev.booky.craftattack.CaManager;
+import dev.booky.craftattack.utils.ProtectionFlag;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockBurnEvent;
 import org.bukkit.event.block.BlockExplodeEvent;
 import org.bukkit.event.block.BlockPistonExtendEvent;
 import org.bukkit.event.block.BlockPistonRetractEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.BlockRedstoneEvent;
+import org.bukkit.event.block.BlockSpreadEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
@@ -34,42 +37,42 @@ public final class ProtectionListener implements Listener {
 
     @EventHandler
     public void onBreak(BlockBreakEvent event) {
-        if (this.manager.isProtected(event.getBlock(), event.getPlayer())) {
+        if (this.manager.isProtected(event.getBlock(), ProtectionFlag.BUILDING, event.getPlayer())) {
             event.setCancelled(true);
         }
     }
 
     @EventHandler
     public void onPlace(BlockPlaceEvent event) {
-        if (this.manager.isProtected(event.getBlock(), event.getPlayer())) {
+        if (this.manager.isProtected(event.getBlock(), ProtectionFlag.BUILDING, event.getPlayer())) {
             event.setCancelled(true);
         }
     }
 
     @EventHandler
     public void onBucketFill(PlayerBucketFillEvent event) {
-        if (this.manager.isProtected(event.getBlock(), event.getPlayer())) {
+        if (this.manager.isProtected(event.getBlock(), ProtectionFlag.BUILDING, event.getPlayer())) {
             event.setCancelled(true);
         }
     }
 
     @EventHandler
     public void onBucketEmpty(PlayerBucketEmptyEvent event) {
-        if (this.manager.isProtected(event.getBlock(), event.getPlayer())) {
+        if (this.manager.isProtected(event.getBlock(), ProtectionFlag.BUILDING, event.getPlayer())) {
             event.setCancelled(true);
         }
     }
 
     @EventHandler
     public void onDamage(EntityDamageEvent event) {
-        if (this.manager.isProtected(event.getEntity().getLocation(), null)) {
+        if (this.manager.isProtected(event.getEntity().getLocation(), ProtectionFlag.HEALTH, null)) {
             event.setCancelled(true);
         }
     }
 
     @EventHandler
     public void onCreatureSpawn(CreatureSpawnEvent event) {
-        if (this.manager.isProtected(event.getEntity().getLocation(), null)) {
+        if (this.manager.isProtected(event.getEntity().getLocation(), ProtectionFlag.MOB_SPAWNING, null)) {
             switch (event.getSpawnReason()) {
                 case JOCKEY, SPAWNER, VILLAGE_DEFENSE, VILLAGE_INVASION, REINFORCEMENTS, MOUNT, LIGHTNING,
                         TRAP, ENDER_PEARL, RAID, PATROL -> event.setCancelled(true);
@@ -79,7 +82,7 @@ public final class ProtectionListener implements Listener {
 
     @EventHandler
     public void onRedstone(BlockRedstoneEvent event) {
-        if (this.manager.isProtected(event.getBlock(), null)) {
+        if (this.manager.isProtected(event.getBlock(), ProtectionFlag.REDSTONE, null)) {
             event.setNewCurrent(0);
         }
     }
@@ -91,7 +94,7 @@ public final class ProtectionListener implements Listener {
             return;
         }
 
-        if (this.manager.isProtected(event.getEntity().getLocation(), event.getEntity())) {
+        if (this.manager.isProtected(event.getEntity().getLocation(), ProtectionFlag.HUNGER, event.getEntity())) {
             event.setCancelled(true);
         }
     }
@@ -104,7 +107,7 @@ public final class ProtectionListener implements Listener {
 
         switch (event.getAction()) {
             case LEFT_CLICK_BLOCK, RIGHT_CLICK_BLOCK -> {
-                if (!this.manager.isProtected(event.getClickedBlock(), event.getPlayer())) {
+                if (!this.manager.isProtected(event.getClickedBlock(), ProtectionFlag.INTERACT, event.getPlayer())) {
                     return;
                 }
                 if (event.getClickedBlock() == null) {
@@ -127,7 +130,7 @@ public final class ProtectionListener implements Listener {
             }
             case PHYSICAL -> {
                 // We use null as an entity, because creative players should still not trample farmland
-                if (this.manager.isProtected(event.getClickedBlock(), null)) {
+                if (this.manager.isProtected(event.getClickedBlock(), ProtectionFlag.INTERACT, null)) {
                     event.setCancelled(true);
                 }
             }
@@ -136,19 +139,19 @@ public final class ProtectionListener implements Listener {
 
     @EventHandler
     public void onInteract(PlayerInteractEntityEvent event) {
-        if (this.manager.isProtected(event.getRightClicked().getLocation(), event.getPlayer())) {
+        if (this.manager.isProtected(event.getRightClicked().getLocation(), ProtectionFlag.INTERACT, event.getPlayer())) {
             event.setCancelled(true);
         }
     }
 
     @EventHandler
     public void onEntityExplosion(EntityExplodeEvent event) {
-        event.blockList().removeIf(block -> this.manager.isProtected(block, null));
+        event.blockList().removeIf(block -> this.manager.isProtected(block, ProtectionFlag.EXPLOSION, null));
     }
 
     @EventHandler
     public void onBlockExplosion(BlockExplodeEvent event) {
-        event.blockList().removeIf(block -> this.manager.isProtected(block, null));
+        event.blockList().removeIf(block -> this.manager.isProtected(block, ProtectionFlag.EXPLOSION, null));
     }
 
     @EventHandler
@@ -162,7 +165,7 @@ public final class ProtectionListener implements Listener {
     @EventHandler
     public void onPistonExtend(BlockPistonExtendEvent event) {
         for (Block block : event.getBlocks()) {
-            if (this.manager.isProtected(block, null)) {
+            if (this.manager.isProtected(block, ProtectionFlag.REDSTONE, null)) {
                 event.setCancelled(true);
                 return;
             }
@@ -172,7 +175,7 @@ public final class ProtectionListener implements Listener {
     @EventHandler
     public void onPistonRetract(BlockPistonRetractEvent event) {
         for (Block block : event.getBlocks()) {
-            if (this.manager.isProtected(block, null)) {
+            if (this.manager.isProtected(block, ProtectionFlag.REDSTONE, null)) {
                 event.setCancelled(true);
                 return;
             }
@@ -181,7 +184,30 @@ public final class ProtectionListener implements Listener {
 
     @EventHandler
     public void onPathfind(EntityPathfindEvent event) {
-        if (this.manager.isProtected(event.getLoc(), null)) {
+        if (this.manager.isProtected(event.getLoc(), ProtectionFlag.MOB_AI, null)) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onFireSpread(BlockSpreadEvent event) {
+        if (event.getSource().getType() != Material.FIRE) {
+            return;
+        }
+        if (event.isCancelled()) {
+            return;
+        }
+
+        if (this.manager.isProtected(event.getBlock(), ProtectionFlag.FIRE, null)) {
+            event.setCancelled(true);
+        } else if (this.manager.isProtected(event.getSource(), ProtectionFlag.FIRE, null)) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onBlockBurn(BlockBurnEvent event) {
+        if (this.manager.isProtected(event.getBlock(), ProtectionFlag.FIRE, null)) {
             event.setCancelled(true);
         }
     }
