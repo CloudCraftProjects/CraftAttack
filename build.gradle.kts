@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "dev.booky"
-version = "1.10.1"
+version = "1.10.2"
 
 repositories {
     // TODO: find an actual repository for this
