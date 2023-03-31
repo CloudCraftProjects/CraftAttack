@@ -2,6 +2,7 @@ package dev.booky.craftattack.listener;
 // Created by booky10 in CraftAttack (14:50 05.10.22)
 
 import dev.booky.craftattack.CaManager;
+import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.SoundCategory;
 import org.bukkit.Tag;
@@ -10,11 +11,11 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
+import org.spigotmc.event.player.PlayerSpawnLocationEvent;
 
 public final class SpawnListener implements Listener {
 
@@ -57,13 +58,14 @@ public final class SpawnListener implements Listener {
     }
 
     @EventHandler
-    public void onJoin(PlayerJoinEvent event) {
-        if (System.currentTimeMillis() - event.getPlayer().getFirstPlayed() >= 500) {
+    public void onSpawn(PlayerSpawnLocationEvent event) {
+        if (event.getPlayer().hasPlayedBefore()) {
             return;
         }
 
-        if (manager.getConfig().getSpawnConfig().getWarpLocation() != null) {
-            event.getPlayer().teleport(manager.getConfig().getSpawnConfig().getWarpLocation());
+        Location spawnWarp = this.manager.getConfig().getSpawnConfig().getWarpLocation();
+        if (spawnWarp != null) {
+            event.setSpawnLocation(spawnWarp);
         }
     }
 
