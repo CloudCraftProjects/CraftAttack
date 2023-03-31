@@ -36,6 +36,10 @@ dependencies {
     compileOnlyApi("dev.booky:cloudchat:1.1.1") {
         exclude("io.papermc.paper")
     }
+    compileOnlyApi("dev.booky:launchplates:1.0.0") {
+        exclude("io.papermc.paper")
+        exclude("org.bstats")
+    }
     compileOnlyApi("dev.booky:cloudcore:1.0.0") {
         exclude("io.papermc.paper")
         exclude("org.bstats")
@@ -58,7 +62,7 @@ bukkit {
     main = "$group.craftattack.CaMain"
     apiVersion = "1.19"
     authors = listOf("booky10")
-    depend = listOf("CloudCore")
+    depend = listOf("CloudCore", "LaunchPlates")
     softDepend = listOf("CloudChat")
     load = net.minecrell.pluginyml.bukkit.BukkitPluginDescription.PluginLoadOrder.POSTWORLD
 }

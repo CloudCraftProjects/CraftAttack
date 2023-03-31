@@ -2,8 +2,8 @@ package dev.booky.craftattack.listener;
 // Created by booky10 in CraftAttack (13:20 06.08.21)
 
 import com.destroystokyo.paper.event.player.PlayerPostRespawnEvent;
-import dev.booky.cloudcore.CloudManager;
 import dev.booky.craftattack.CaManager;
+import dev.booky.launchplates.LaunchPlateManager;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Pose;
@@ -23,9 +23,13 @@ import java.util.Objects;
 public final class ElytraListener implements Listener {
 
     private final CaManager manager;
+    private final LaunchPlateManager plateManager;
 
     public ElytraListener(CaManager manager) {
         this.manager = manager;
+
+        RegisteredServiceProvider<LaunchPlateManager> plateRegistration = Bukkit.getServicesManager().getRegistration(LaunchPlateManager.class);
+        this.plateManager = Objects.requireNonNull(plateRegistration).getProvider();
     }
 
     @EventHandler
@@ -103,9 +107,7 @@ public final class ElytraListener implements Listener {
         }
 
         // the player is still on ground for a tick sometimes
-        RegisteredServiceProvider<CloudManager> cloudRegistration = Bukkit.getServicesManager().getRegistration(CloudManager.class);
-        CloudManager cloudManager = Objects.requireNonNull(cloudRegistration).getProvider();
-        if (System.currentTimeMillis() - cloudManager.getLastLaunchUse(event.getPlayer()) < 100L) {
+        if (System.currentTimeMillis() - this.plateManager.getLastLaunchUse(event.getPlayer()) < 100L) {
             return;
         }
 

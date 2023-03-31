@@ -34,7 +34,6 @@ public final class CaMain extends JavaPlugin {
     @Override
     public void onEnable() {
         this.manager.reloadConfig();
-        this.manager.getConfig().migrateStuff();
 
         Bukkit.getPluginManager().registerEvents(new ElytraListener(this.manager), this);
         Bukkit.getPluginManager().registerEvents(new EndListener(this.manager), this);
