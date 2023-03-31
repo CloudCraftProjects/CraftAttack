@@ -1,11 +1,17 @@
 package dev.booky.craftattack.utils;
 // Created by booky10 in CraftAttack (01:08 30.10.21)
 
+import dev.booky.cloudcore.CloudManager;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.block.Block;
+import org.bukkit.plugin.RegisteredServiceProvider;
+import org.jetbrains.annotations.ApiStatus;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -15,7 +21,9 @@ import java.util.Set;
 public class CaConfig {
 
     private Set<ProtectedArea> protectedAreas = new LinkedHashSet<>();
-    private Set<Location> launchPlates = new LinkedHashSet<>();
+
+    @Deprecated(forRemoval = true)
+    private Set<Location> launchPlates = null;
 
     // I know this name sounds weird, but this is the actual plural of "status"
     // (according to wiktionary)
@@ -79,12 +87,26 @@ public class CaConfig {
         }
     }
 
-    public Set<ProtectedArea> getProtectedAreas() {
-        return this.protectedAreas;
+    @ApiStatus.Internal
+    public boolean migrateStuff() {
+        boolean res = false;
+
+        if (this.launchPlates != null) {
+            RegisteredServiceProvider<CloudManager> registration = Bukkit.getServicesManager().getRegistration(CloudManager.class);
+            if (registration != null) {
+                List<Block> launchPlateBlocks = this.launchPlates.stream().map(Location::getBlock).toList();
+                registration.getProvider().updateConfig(config -> config.getLaunchPlates().addAll(launchPlateBlocks));
+
+                this.launchPlates = null;
+                res = true;
+            }
+        }
+
+        return res;
     }
 
-    public Set<Location> getLaunchPlates() {
-        return launchPlates;
+    public Set<ProtectedArea> getProtectedAreas() {
+        return this.protectedAreas;
     }
 
     public Map<String, Integer> getStatuses() {

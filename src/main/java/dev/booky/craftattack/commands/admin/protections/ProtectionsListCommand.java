@@ -6,6 +6,7 @@ import dev.booky.craftattack.utils.CaBoundingBox;
 import dev.booky.craftattack.utils.ProtectedArea;
 import dev.jorel.commandapi.CommandAPICommand;
 import dev.jorel.commandapi.exceptions.WrapperCommandSyntaxException;
+import dev.jorel.commandapi.executors.CommandArguments;
 import dev.jorel.commandapi.executors.CommandExecutor;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
@@ -27,7 +28,7 @@ public class ProtectionsListCommand extends CommandAPICommand implements Command
     }
 
     @Override
-    public void run(CommandSender sender, Object[] args) throws WrapperCommandSyntaxException {
+    public void run(CommandSender sender, CommandArguments args) throws WrapperCommandSyntaxException {
         if (this.manager.getConfig().getProtectedAreas().isEmpty()) {
             sender.sendMessage(CaManager.getPrefix().append(Component.translatable("ca.command.admin.protections.list.none", NamedTextColor.RED)));
             return;

@@ -11,8 +11,7 @@ public class EndSubCommand extends CommandAPICommand {
         super.withPermission("craftattack.command.admin.end");
 
         super.withSubcommand(new EndWarpLocationGetCommand(manager));
-        super.withSubcommand(new EndWarpLocationSetCommand(manager, true));
-        super.withSubcommand(new EndWarpLocationSetCommand(manager, false));
+        super.withSubcommand(new EndWarpLocationSetCommand(manager));
         super.withSubcommand(new EndActivationGetCommand(manager));
         super.withSubcommand(new EndActivationSetCommand(manager));
     }

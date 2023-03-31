@@ -2,12 +2,13 @@ plugins {
     id("java-library")
     id("maven-publish")
 
+    id("net.minecrell.plugin-yml.bukkit") version "0.5.3"
     id("xyz.jpenilla.run-paper") version "1.0.6"
     id("com.github.johnrengelman.shadow") version "7.1.2"
 }
 
 group = "dev.booky"
-version = "1.10.2"
+version = "1.10.3"
 
 repositories {
     // TODO: find an actual repository for this
@@ -17,20 +18,28 @@ repositories {
         }
     }
 
+    maven("https://s01.oss.sonatype.org/content/repositories/snapshots") {
+        content {
+            includeGroup("dev.jorel")
+        }
+    }
+
     maven("https://papermc.io/repo/repository/maven-public/")
 }
 
 dependencies {
-    compileOnlyApi("io.papermc.paper:paper-api:1.19.2-R0.1-SNAPSHOT")
-    compileOnlyApi("com.mojang:brigadier:1.0.18")
+    compileOnlyApi("io.papermc.paper:paper-api:1.19.4-R0.1-SNAPSHOT")
 
-    compileOnlyApi("org.spongepowered:configurate-yaml:4.1.2")
-    compileOnlyApi("dev.jorel:commandapi-core:8.5.1")
+    api("org.bstats:bstats-bukkit:3.0.2")
 
-    api("org.bstats:bstats-bukkit:3.0.0")
-
-    // needs to be published to maven local manually
-    compileOnlyApi("dev.booky:cloudchat:1.1.1")
+    // need to be published to maven local manually
+    compileOnlyApi("dev.booky:cloudchat:1.1.1") {
+        exclude("io.papermc.paper")
+    }
+    compileOnlyApi("dev.booky:cloudcore:1.0.0") {
+        exclude("io.papermc.paper")
+        exclude("org.bstats")
+    }
 }
 
 java {
@@ -40,14 +49,23 @@ java {
 
 publishing {
     publications.create<MavenPublication>("maven") {
-        artifactId = project.name.toLowerCase()
+        artifactId = project.name.lowercase()
         from(components["java"])
     }
 }
 
+bukkit {
+    main = "$group.craftattack.CaMain"
+    apiVersion = "1.19"
+    authors = listOf("booky10")
+    depend = listOf("CloudCore")
+    softDepend = listOf("CloudChat")
+    load = net.minecrell.pluginyml.bukkit.BukkitPluginDescription.PluginLoadOrder.POSTWORLD
+}
+
 tasks {
     runServer {
-        minecraftVersion("1.19.2")
+        minecraftVersion("1.19.4")
     }
 
     processResources {
@@ -61,7 +79,7 @@ tasks {
         relocate("org.bstats", "dev.booky.craftattack.bstats")
     }
 
-    build {
+    assemble {
         dependsOn(shadowJar)
     }
 }

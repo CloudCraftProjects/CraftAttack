@@ -3,7 +3,7 @@ package dev.booky.craftattack.listener;
 
 import dev.booky.craftattack.CaManager;
 import dev.booky.craftattack.utils.TpResult;
-import io.papermc.paper.entity.RelativeTeleportFlag;
+import io.papermc.paper.entity.TeleportFlag;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -25,7 +25,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.util.BoundingBox;
@@ -155,9 +154,7 @@ public final class SitListener implements Listener {
             unmountLoc.setYaw(player.getLocation().getYaw());
             unmountLoc.setPitch(player.getLocation().getPitch());
 
-            player.teleport(unmountLoc,
-                    PlayerTeleportEvent.TeleportCause.PLUGIN, true, true,
-                    RelativeTeleportFlag.YAW, RelativeTeleportFlag.PITCH);
+            player.teleport(unmountLoc, TeleportFlag.Relative.YAW, TeleportFlag.Relative.PITCH);
             event.getDismounted().remove();
             return;
         }
@@ -175,9 +172,7 @@ public final class SitListener implements Listener {
         unmountLoc.setYaw(player.getLocation().getYaw());
         unmountLoc.setPitch(player.getLocation().getPitch());
 
-        player.teleport(unmountLoc,
-                PlayerTeleportEvent.TeleportCause.PLUGIN, true, true,
-                RelativeTeleportFlag.YAW, RelativeTeleportFlag.PITCH);
+        player.teleport(unmountLoc, TeleportFlag.Relative.YAW, TeleportFlag.Relative.PITCH);
         event.getDismounted().remove();
     }
 }

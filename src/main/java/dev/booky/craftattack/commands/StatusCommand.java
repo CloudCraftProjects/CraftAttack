@@ -6,8 +6,8 @@ import dev.booky.craftattack.CaManager;
 import dev.jorel.commandapi.CommandAPICommand;
 import dev.jorel.commandapi.arguments.ArgumentSuggestions;
 import dev.jorel.commandapi.arguments.GreedyStringArgument;
-import dev.jorel.commandapi.arguments.StringArgument;
 import dev.jorel.commandapi.exceptions.WrapperCommandSyntaxException;
+import dev.jorel.commandapi.executors.CommandArguments;
 import dev.jorel.commandapi.executors.PlayerCommandExecutor;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -20,6 +20,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import java.util.Locale;
+import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -49,8 +50,8 @@ public class StatusCommand extends CommandAPICommand implements PlayerCommandExe
     }
 
     @Override
-    public void run(Player sender, Object[] args) throws WrapperCommandSyntaxException {
-        String statusKey = args[0].toString().toLowerCase(Locale.ROOT);
+    public void run(Player sender, CommandArguments args) throws WrapperCommandSyntaxException {
+        String statusKey = Objects.requireNonNull(args.getUnchecked("status"));
         if ("none".equalsIgnoreCase(statusKey)) {
             LuckPermsProvider.get().getUserManager().modifyUser(sender.getUniqueId(), user -> {
                 user.data().clear(NODE_PREDICATE);

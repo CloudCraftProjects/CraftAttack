@@ -5,10 +5,13 @@ import dev.booky.craftattack.CaManager;
 import dev.jorel.commandapi.CommandAPICommand;
 import dev.jorel.commandapi.arguments.BooleanArgument;
 import dev.jorel.commandapi.exceptions.WrapperCommandSyntaxException;
+import dev.jorel.commandapi.executors.CommandArguments;
 import dev.jorel.commandapi.executors.CommandExecutor;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.command.CommandSender;
+
+import java.util.Objects;
 
 public class EndActivationSetCommand extends CommandAPICommand implements CommandExecutor {
 
@@ -24,8 +27,8 @@ public class EndActivationSetCommand extends CommandAPICommand implements Comman
     }
 
     @Override
-    public void run(CommandSender sender, Object[] args) throws WrapperCommandSyntaxException {
-        boolean activate = (boolean) args[0];
+    public void run(CommandSender sender, CommandArguments args) throws WrapperCommandSyntaxException {
+        boolean activate = Objects.requireNonNull(args.<Boolean>getUnchecked("active"));
 
         if (this.manager.getConfig().getEndConfig().isActivated() == activate) {
             sender.sendMessage(CaManager.getPrefix().append(Component.translatable("ca.command.admin.end.activate.set.already", NamedTextColor.RED)

@@ -7,6 +7,7 @@ import dev.jorel.commandapi.arguments.LocationArgument;
 import dev.jorel.commandapi.arguments.LocationType;
 import dev.jorel.commandapi.arguments.RotationArgument;
 import dev.jorel.commandapi.exceptions.WrapperCommandSyntaxException;
+import dev.jorel.commandapi.executors.CommandArguments;
 import dev.jorel.commandapi.executors.CommandExecutor;
 import dev.jorel.commandapi.wrappers.Rotation;
 import net.kyori.adventure.text.Component;
@@ -14,28 +15,28 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 
+import java.util.Objects;
+
 public class SpawnWarpLocationSetCommand extends CommandAPICommand implements CommandExecutor {
 
     private final CaManager manager;
 
-    public SpawnWarpLocationSetCommand(CaManager manager, boolean withAngles) {
+    public SpawnWarpLocationSetCommand(CaManager manager) {
         super("location");
         this.manager = manager;
 
         super.withArguments(new LocationArgument("location", LocationType.PRECISE_POSITION));
-        if (withAngles) {
-            super.withArguments(new RotationArgument("rotation"));
-        }
+        super.withOptionalArguments(new RotationArgument("rotation"));
 
         super.withPermission("craftattack.command.admin.spawn.location.set");
         super.executes(this);
     }
 
     @Override
-    public void run(CommandSender sender, Object[] args) throws WrapperCommandSyntaxException {
-        Location location = (Location) args[0];
-        if (args.length > 1) {
-            Rotation rotation = (Rotation) args[1];
+    public void run(CommandSender sender, CommandArguments args) throws WrapperCommandSyntaxException {
+        Location location = Objects.requireNonNull(args.getUnchecked("location"));
+        Rotation rotation = args.getUnchecked("rotation");
+        if (rotation != null) {
             location.setYaw(rotation.getYaw());
             location.setPitch(rotation.getPitch());
         }

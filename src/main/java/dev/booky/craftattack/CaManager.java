@@ -1,16 +1,15 @@
 package dev.booky.craftattack;
 // Created by booky10 in CraftAttack (14:51 01.03.21)
 
-import dev.booky.craftattack.config.ConfigLoader;
+import dev.booky.cloudcore.config.ConfigLoader;
+import dev.booky.craftattack.config.CaBoundingBoxSerializer;
+import dev.booky.craftattack.config.ProtectedAreaSerializer;
 import dev.booky.craftattack.utils.CaBoundingBox;
 import dev.booky.craftattack.utils.CaConfig;
 import dev.booky.craftattack.utils.ProtectedArea;
 import dev.booky.craftattack.utils.ProtectionFlag;
 import dev.booky.craftattack.utils.TpResult;
-import dev.booky.craftattack.utils.TranslationLoader;
-import io.papermc.paper.entity.RelativeTeleportFlag;
-import it.unimi.dsi.fastutil.objects.Object2LongMap;
-import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
+import io.papermc.paper.entity.TeleportFlag;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
@@ -31,14 +30,13 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataHolder;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.util.NumberConversions;
 import org.jetbrains.annotations.Nullable;
+import org.spongepowered.configurate.serialize.TypeSerializerCollection;
 
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
@@ -62,14 +60,13 @@ public final class CaManager {
             .append(Component.text(']', NamedTextColor.GRAY))
             .append(Component.space()).build();
 
+    private static final Consumer<TypeSerializerCollection.Builder> CONFIG_SERIALIZERS = builder -> builder
+            .register(CaBoundingBox.class, CaBoundingBoxSerializer.INSTANCE)
+            .register(ProtectedArea.class, ProtectedAreaSerializer.INSTANCE);
+
     private final Map<UUID, CompletableFuture<TpResult>> teleports = new HashMap<>();
     private final NamespacedKey elytraDataKey;
     private final Plugin plugin;
-
-    private final Object2LongMap<UUID> lastBoost = new Object2LongOpenHashMap<>() {{
-        this.defaultReturnValue(0);
-    }};
-    private final TranslationLoader i18n;
 
     private final Path configPath;
     private CaConfig config;
@@ -78,9 +75,6 @@ public final class CaManager {
         this.elytraDataKey = new NamespacedKey(plugin, "elytra_data");
         this.plugin = plugin;
         this.configPath = configDir.resolve("config.yml");
-
-        this.i18n = new TranslationLoader(plugin);
-        this.i18n.load();
     }
 
     public static Component getPrefix() {
@@ -108,8 +102,8 @@ public final class CaManager {
             return target.getWorld().getChunkAtAsync(target, true).thenApply(chunk -> {
                 finalTarget.setYaw(player.getLocation().getYaw());
                 finalTarget.setPitch(player.getLocation().getPitch());
-                player.teleport(finalTarget, PlayerTeleportEvent.TeleportCause.COMMAND, true,
-                        true, RelativeTeleportFlag.YAW, RelativeTeleportFlag.PITCH);
+                player.teleport(finalTarget, PlayerTeleportEvent.TeleportCause.COMMAND,
+                        TeleportFlag.Relative.YAW, TeleportFlag.Relative.PITCH);
                 return TpResult.SUCCESSFUL;
             });
         }
@@ -129,8 +123,8 @@ public final class CaManager {
             finalTarget.getWorld().getChunkAtAsync(finalTarget, true).thenAccept(chunk -> {
                 finalTarget.setYaw(player.getLocation().getYaw());
                 finalTarget.setPitch(player.getLocation().getPitch());
-                player.teleport(finalTarget, PlayerTeleportEvent.TeleportCause.COMMAND, true,
-                        true, RelativeTeleportFlag.YAW, RelativeTeleportFlag.PITCH);
+                player.teleport(finalTarget, PlayerTeleportEvent.TeleportCause.COMMAND,
+                        TeleportFlag.Relative.YAW, TeleportFlag.Relative.PITCH);
                 future.complete(TpResult.SUCCESSFUL);
             });
         }, 5 * 20);
@@ -157,11 +151,11 @@ public final class CaManager {
     }
 
     public void reloadConfig() {
-        this.config = ConfigLoader.loadObject(this.configPath, CaConfig.class);
+        this.config = ConfigLoader.loadObject(this.configPath, CaConfig.class, CONFIG_SERIALIZERS);
     }
 
     public void saveConfig() {
-        ConfigLoader.saveObject(this.configPath, this.getConfig());
+        ConfigLoader.saveObject(this.configPath, this.getConfig(), CONFIG_SERIALIZERS);
     }
 
     public boolean isProtected(Location location, ProtectionFlag flag, @Nullable HumanEntity entity) {
@@ -173,30 +167,6 @@ public final class CaManager {
     }
 
     public boolean isProtected(World world, double x, double y, double z, ProtectionFlag flag, @Nullable HumanEntity entity) {
-        Set<Location> launchPlates = this.getConfig().getLaunchPlates();
-        if (!launchPlates.isEmpty()) {
-            int floorX = NumberConversions.floor(x);
-            int floorY = NumberConversions.floor(y);
-            int floorZ = NumberConversions.floor(z);
-
-            for (Location plate : launchPlates) {
-                if (plate.getX() != floorX) {
-                    continue;
-                }
-                if (plate.getY() != floorY) {
-                    // Prevents people breaking the block below the launch plate.
-                    // Cancelling the physics event didn't work.
-                    if (plate.getY() - 1 != floorY) {
-                        continue;
-                    }
-                }
-                if (plate.getZ() != floorZ) {
-                    continue;
-                }
-                return true;
-            }
-        }
-
         if (entity != null && entity.getGameMode() == GameMode.CREATIVE) {
             return false;
         }
@@ -230,9 +200,9 @@ public final class CaManager {
             return false;
         }
 
-        ItemStack item = entity.getInventory().getChestplate();
-        byte[] itemBytes = (item == null ? new byte[0] : item.serializeAsBytes());
-        entity.getPersistentDataContainer().set(elytraDataKey, PersistentDataType.BYTE_ARRAY, itemBytes);
+        ItemStack item = entity.getEquipment().getChestplate();
+        byte[] itemBytes = (item == null || item.getType().isAir() ? new byte[0] : item.serializeAsBytes());
+        entity.getPersistentDataContainer().set(this.elytraDataKey, PersistentDataType.BYTE_ARRAY, itemBytes);
 
         ItemStack elytra = new ItemStack(Material.ELYTRA);
         elytra.editMeta(meta -> {
@@ -245,7 +215,7 @@ public final class CaManager {
                     .decoration(TextDecoration.ITALIC, false));
         });
 
-        entity.getInventory().setChestplate(elytra);
+        entity.getEquipment().setChestplate(elytra, false);
         return true;
     }
 
@@ -254,40 +224,24 @@ public final class CaManager {
             return false;
         }
 
-        byte[] itemBytes = entity.getPersistentDataContainer().get(elytraDataKey, PersistentDataType.BYTE_ARRAY);
-        Objects.requireNonNull(itemBytes, () -> "Invalid elytra data set for key " + elytraDataKey);
+        byte[] itemBytes = entity.getPersistentDataContainer().get(this.elytraDataKey, PersistentDataType.BYTE_ARRAY);
+        Objects.requireNonNull(itemBytes, () -> "Invalid elytra data set for key " + this.elytraDataKey);
 
         ItemStack item = itemBytes.length == 0 ? new ItemStack(Material.AIR) : ItemStack.deserializeBytes(itemBytes);
-        entity.getPersistentDataContainer().remove(elytraDataKey);
-        entity.getInventory().setChestplate(item);
+        entity.getPersistentDataContainer().remove(this.elytraDataKey);
+        entity.getEquipment().setChestplate(item, false);
         return true;
     }
 
     public boolean hasElytra(PersistentDataHolder holder) {
-        return holder.getPersistentDataContainer().has(elytraDataKey, PersistentDataType.BYTE_ARRAY);
-    }
-
-    public boolean noBoostSince(Player player, long millis) {
-        return System.currentTimeMillis() - this.getLastBoost(player) > millis;
-    }
-
-    public void setLastBoost(Player player) {
-        this.lastBoost.put(player.getUniqueId(), System.currentTimeMillis());
-    }
-
-    public long getLastBoost(Player player) {
-        return this.lastBoost.getLong(player.getUniqueId());
-    }
-
-    public TranslationLoader getI18n() {
-        return i18n;
+        return holder.getPersistentDataContainer().has(this.elytraDataKey, PersistentDataType.BYTE_ARRAY);
     }
 
     public CaConfig getConfig() {
-        return Objects.requireNonNull(config, "Config has not been loaded yet");
+        return Objects.requireNonNull(this.config, "Config has not been loaded yet");
     }
 
     public Plugin getPlugin() {
-        return plugin;
+        return this.plugin;
     }
 }

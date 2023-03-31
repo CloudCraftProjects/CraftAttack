@@ -6,6 +6,7 @@ import dev.booky.craftattack.utils.MobCountUtils;
 import dev.jorel.commandapi.CommandAPICommand;
 import dev.jorel.commandapi.arguments.EntityTypeArgument;
 import dev.jorel.commandapi.exceptions.WrapperCommandSyntaxException;
+import dev.jorel.commandapi.executors.CommandArguments;
 import dev.jorel.commandapi.executors.PlayerCommandExecutor;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
@@ -16,6 +17,7 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 
 import java.util.Map;
+import java.util.Objects;
 
 public class MobCountCommand extends CommandAPICommand implements PlayerCommandExecutor {
 
@@ -28,8 +30,8 @@ public class MobCountCommand extends CommandAPICommand implements PlayerCommandE
     }
 
     @Override
-    public void run(Player sender, Object[] args) throws WrapperCommandSyntaxException {
-        EntityType type = (EntityType) args[0];
+    public void run(Player sender, CommandArguments args) throws WrapperCommandSyntaxException {
+        EntityType type = Objects.requireNonNull(args.getUnchecked("type"));
         Map<Location, Integer> counted = MobCountUtils.run(sender.getWorld(), type);
 
         if (counted.isEmpty()) {

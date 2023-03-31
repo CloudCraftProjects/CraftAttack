@@ -7,11 +7,14 @@ import dev.jorel.commandapi.CommandAPICommand;
 import dev.jorel.commandapi.arguments.LocationArgument;
 import dev.jorel.commandapi.arguments.LocationType;
 import dev.jorel.commandapi.exceptions.WrapperCommandSyntaxException;
+import dev.jorel.commandapi.executors.CommandArguments;
 import dev.jorel.commandapi.executors.CommandExecutor;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
+
+import java.util.Objects;
 
 public class SpawnElytraBoxSetCommand extends CommandAPICommand implements CommandExecutor {
 
@@ -29,8 +32,9 @@ public class SpawnElytraBoxSetCommand extends CommandAPICommand implements Comma
     }
 
     @Override
-    public void run(CommandSender sender, Object[] args) throws WrapperCommandSyntaxException {
-        Location corner1 = (Location) args[0], corner2 = (Location) args[1];
+    public void run(CommandSender sender, CommandArguments args) throws WrapperCommandSyntaxException {
+        Location corner1 = Objects.requireNonNull(args.getUnchecked("corner1"));
+        Location corner2 = Objects.requireNonNull(args.getUnchecked("corner2"));
         CaBoundingBox box = new CaBoundingBox(corner1, corner2);
         box.expand(0d, 0d, 0d, 1d, 1d, 1d);
 

@@ -1,16 +1,14 @@
 package dev.booky.craftattack.listener;
 // Created by booky10 in CraftAttack (14:50 05.10.22)
 
+import dev.booky.cloudcore.events.LaunchPlateUseEvent;
 import dev.booky.craftattack.CaManager;
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.SoundCategory;
-import org.bukkit.Tag;
-import org.bukkit.block.Block;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.Action;
-import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -29,32 +27,14 @@ public final class SpawnListener implements Listener {
         this.manager = manager;
     }
 
-    @EventHandler
-    public void onInteract(PlayerInteractEvent event) {
-        // Physical interact is stepping on farmland or activating tripwire/redstone ore/pressure plate
-        if (event.getAction() != Action.PHYSICAL) {
-            return;
-        }
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
+    public void onLaunchPlateUse(LaunchPlateUseEvent event) {
+        event.setLaunchVelocity(BOOST_VELOCITY);
 
-        Block block = event.getClickedBlock();
-        if (block == null || !Tag.PRESSURE_PLATES.isTagged(block.getType())) {
-            return;
-        }
-
-        if (this.manager.getConfig().getLaunchPlates().contains(block.getLocation())) {
-            event.setCancelled(true);
-
-            // This ensures a player can only activate a pressure plate every second
-            if (this.manager.noBoostSince(event.getPlayer(), 1000)) {
-                event.getPlayer().setVelocity(BOOST_VELOCITY);
-                event.getPlayer().addPotionEffect(BOOST_EFFECT);
-                event.getPlayer().playSound(event.getPlayer(), Sound.ENTITY_FIREWORK_ROCKET_LAUNCH,
-                        SoundCategory.AMBIENT, 1f, 0.75f);
-
-                this.manager.setLastBoost(event.getPlayer());
-                this.manager.giveElytra(event.getPlayer());
-            }
-        }
+        event.getPlayer().addPotionEffect(BOOST_EFFECT);
+        event.getPlayer().playSound(event.getPlayer(), Sound.ENTITY_FIREWORK_ROCKET_LAUNCH,
+                SoundCategory.AMBIENT, 1f, 0.75f);
+        this.manager.giveElytra(event.getPlayer());
     }
 
     @EventHandler

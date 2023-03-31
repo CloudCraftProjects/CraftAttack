@@ -2,7 +2,9 @@ package dev.booky.craftattack.listener;
 // Created by booky10 in CraftAttack (13:20 06.08.21)
 
 import com.destroystokyo.paper.event.player.PlayerPostRespawnEvent;
+import dev.booky.cloudcore.CloudManager;
 import dev.booky.craftattack.CaManager;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Pose;
 import org.bukkit.event.EventHandler;
@@ -14,6 +16,9 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.plugin.RegisteredServiceProvider;
+
+import java.util.Objects;
 
 public final class ElytraListener implements Listener {
 
@@ -35,9 +40,6 @@ public final class ElytraListener implements Listener {
         if (this.manager.inElytraBox(player.getLocation())) {
             return;
         }
-        if (!this.manager.noBoostSince(player, 100)) {
-            return;
-        }
 
         if (this.manager.removeElytra(player)) {
             player.setNoDamageTicks(20);
@@ -55,17 +57,15 @@ public final class ElytraListener implements Listener {
             return;
         }
 
-        if (this.manager.inElytraBox(player.getLocation())) {
-            return;
-        }
-        if (!this.manager.noBoostSince(player, 100)) {
+        if (!this.manager.hasElytra(player)) {
             return;
         }
 
-        if (this.manager.removeElytra(player)) {
-            player.setFallDistance(0f);
-            player.setNoDamageTicks(20);
-            event.setDamage(0);
+        player.setNoDamageTicks(20);
+        event.setDamage(0);
+
+        if (!this.manager.inElytraBox(player.getLocation())) {
+            this.manager.removeElytra(player);
         }
     }
 
@@ -85,8 +85,8 @@ public final class ElytraListener implements Listener {
             return;
         }
 
-        // Yes, this is controlled by the client, but we don't care.
-        // Our anticheat fixes this on the packet level.
+        // this is controlled by the client, but an anticheat
+        // should fix this on packet level
         @SuppressWarnings("deprecation")
         boolean onGround = event.getPlayer().isOnGround();
         if (!onGround) {
@@ -97,7 +97,15 @@ public final class ElytraListener implements Listener {
             this.manager.giveElytra(event.getPlayer());
             return;
         }
-        if (!this.manager.noBoostSince(event.getPlayer(), 100)) {
+
+        if (!this.manager.hasElytra(event.getPlayer())) {
+            return;
+        }
+
+        // the player is still on ground for a tick sometimes
+        RegisteredServiceProvider<CloudManager> cloudRegistration = Bukkit.getServicesManager().getRegistration(CloudManager.class);
+        CloudManager cloudManager = Objects.requireNonNull(cloudRegistration).getProvider();
+        if (System.currentTimeMillis() - cloudManager.getLastLaunchUse(event.getPlayer()) < 100L) {
             return;
         }
 

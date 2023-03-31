@@ -5,6 +5,7 @@ import dev.booky.craftattack.CaManager;
 import dev.booky.craftattack.utils.CaBoundingBox;
 import dev.jorel.commandapi.CommandAPICommand;
 import dev.jorel.commandapi.exceptions.WrapperCommandSyntaxException;
+import dev.jorel.commandapi.executors.CommandArguments;
 import dev.jorel.commandapi.executors.CommandExecutor;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -23,7 +24,7 @@ public class SpawnElytraBoxGetCommand extends CommandAPICommand implements Comma
     }
 
     @Override
-    public void run(CommandSender sender, Object[] args) throws WrapperCommandSyntaxException {
+    public void run(CommandSender sender, CommandArguments args) throws WrapperCommandSyntaxException {
         CaBoundingBox box = this.manager.getConfig().getSpawnConfig().getElytraBox();
         if (box == null) {
             sender.sendMessage(CaManager.getPrefix().append(Component.translatable("ca.command.admin.spawn.elytra-box.get.not-set", NamedTextColor.RED)));

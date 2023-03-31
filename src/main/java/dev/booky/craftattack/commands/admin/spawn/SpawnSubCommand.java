@@ -11,8 +11,7 @@ public class SpawnSubCommand extends CommandAPICommand {
         super.withPermission("craftattack.command.admin.spawn");
 
         super.withSubcommand(new SpawnWarpLocationGetCommand(manager));
-        super.withSubcommand(new SpawnWarpLocationSetCommand(manager, true));
-        super.withSubcommand(new SpawnWarpLocationSetCommand(manager, false));
+        super.withSubcommand(new SpawnWarpLocationSetCommand(manager));
         super.withSubcommand(new SpawnElytraBoxGetCommand(manager));
         super.withSubcommand(new SpawnElytraBoxSetCommand(manager));
     }
