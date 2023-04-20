@@ -1,8 +1,8 @@
 package dev.booky.craftattack.commands.admin.spawn;
 // Created by booky10 in CraftAttack (21:57 05.10.22)
 
+import dev.booky.cloudcore.util.BlockBBox;
 import dev.booky.craftattack.CaManager;
-import dev.booky.craftattack.utils.CaBoundingBox;
 import dev.jorel.commandapi.CommandAPICommand;
 import dev.jorel.commandapi.arguments.LocationArgument;
 import dev.jorel.commandapi.arguments.LocationType;
@@ -35,8 +35,7 @@ public class SpawnElytraBoxSetCommand extends CommandAPICommand implements Comma
     public void run(CommandSender sender, CommandArguments args) throws WrapperCommandSyntaxException {
         Location corner1 = Objects.requireNonNull(args.getUnchecked("corner1"));
         Location corner2 = Objects.requireNonNull(args.getUnchecked("corner2"));
-        CaBoundingBox box = new CaBoundingBox(corner1, corner2);
-        box.expand(0d, 0d, 0d, 1d, 1d, 1d);
+        BlockBBox box = new BlockBBox(corner1, corner2);
 
         if (box.equals(this.manager.getConfig().getSpawnConfig().getElytraBox())) {
             sender.sendMessage(CaManager.getPrefix().append(Component.translatable("ca.command.admin.spawn.elytra-box.set.already", NamedTextColor.RED)));

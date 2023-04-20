@@ -2,12 +2,8 @@ package dev.booky.craftattack;
 // Created by booky10 in CraftAttack (14:51 01.03.21)
 
 import dev.booky.cloudcore.config.ConfigLoader;
-import dev.booky.craftattack.config.CaBoundingBoxSerializer;
-import dev.booky.craftattack.config.ProtectedAreaSerializer;
-import dev.booky.craftattack.utils.CaBoundingBox;
+import dev.booky.cloudcore.util.BlockBBox;
 import dev.booky.craftattack.utils.CaConfig;
-import dev.booky.craftattack.utils.ProtectedArea;
-import dev.booky.craftattack.utils.ProtectionFlag;
 import dev.booky.craftattack.utils.TpResult;
 import io.papermc.paper.entity.TeleportFlag;
 import net.kyori.adventure.text.Component;
@@ -15,12 +11,9 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
-import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
-import org.bukkit.World;
-import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
@@ -30,8 +23,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataHolder;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
-import org.jetbrains.annotations.Nullable;
-import org.spongepowered.configurate.serialize.TypeSerializerCollection;
 
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -59,10 +50,6 @@ public final class CaManager {
             .append(Component.text('k', TextColor.color(0x5df0ec)))
             .append(Component.text(']', NamedTextColor.GRAY))
             .append(Component.space()).build();
-
-    private static final Consumer<TypeSerializerCollection.Builder> CONFIG_SERIALIZERS = builder -> builder
-            .register(CaBoundingBox.class, CaBoundingBoxSerializer.INSTANCE)
-            .register(ProtectedArea.class, ProtectedAreaSerializer.INSTANCE);
 
     private final Map<UUID, CompletableFuture<TpResult>> teleports = new HashMap<>();
     private final NamespacedKey elytraDataKey;
@@ -151,48 +138,19 @@ public final class CaManager {
     }
 
     public void reloadConfig() {
-        this.config = ConfigLoader.loadObject(this.configPath, CaConfig.class, CONFIG_SERIALIZERS);
+        this.config = ConfigLoader.loadObject(this.configPath, CaConfig.class);
     }
 
     public void saveConfig() {
-        ConfigLoader.saveObject(this.configPath, this.getConfig(), CONFIG_SERIALIZERS);
-    }
-
-    public boolean isProtected(Location location, ProtectionFlag flag, @Nullable HumanEntity entity) {
-        return isProtected(location.getWorld(), location.getX(), location.getY(), location.getZ(), flag, entity);
-    }
-
-    public boolean isProtected(Block block, ProtectionFlag flag, @Nullable HumanEntity entity) {
-        return isProtected(block.getWorld(), block.getX() + 0.5d, block.getY() + 0.5d, block.getZ() + 0.5d, flag, entity);
-    }
-
-    public boolean isProtected(World world, double x, double y, double z, ProtectionFlag flag, @Nullable HumanEntity entity) {
-        if (entity != null && entity.getGameMode() == GameMode.CREATIVE) {
-            return false;
-        }
-
-        for (ProtectedArea area : this.getConfig().getProtectedAreas()) {
-            if (!area.hasFlag(flag)) {
-                continue;
-            }
-
-            CaBoundingBox box = area.getBox();
-            if (box.getWorld() != world) {
-                continue;
-            }
-            if (!box.contains(x, y, z)) {
-                continue;
-            }
-            return true;
-        }
-        return false;
+        ConfigLoader.saveObject(this.configPath, this.getConfig());
     }
 
     public boolean inElytraBox(Location location) {
-        if (getConfig().getSpawnConfig().getElytraBox() == null) {
+        BlockBBox box = getConfig().getSpawnConfig().getElytraBox();
+        if (box == null) {
             return false;
         }
-        return getConfig().getSpawnConfig().getElytraBox().contains(location);
+        return box.contains(location.getBlock());
     }
 
     public boolean giveElytra(HumanEntity entity) {

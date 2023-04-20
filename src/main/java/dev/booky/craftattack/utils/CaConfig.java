@@ -1,20 +1,17 @@
 package dev.booky.craftattack.utils;
 // Created by booky10 in CraftAttack (01:08 30.10.21)
 
+import dev.booky.cloudcore.util.BlockBBox;
 import org.bukkit.Location;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.Set;
 
 // Can't be final because of object mapping
 @SuppressWarnings("FieldMayBeFinal")
 @ConfigSerializable
 public class CaConfig {
-
-    private Set<ProtectedArea> protectedAreas = new LinkedHashSet<>();
 
     // I know this name sounds weird, but this is the actual plural of "status"
     // (according to wiktionary)
@@ -59,13 +56,13 @@ public class CaConfig {
     public static class SpawnConfig {
 
         private Location warpLocation;
-        private CaBoundingBox elytraBox;
+        private BlockBBox elytraBox;
 
         public Location getWarpLocation() {
             return this.warpLocation;
         }
 
-        public CaBoundingBox getElytraBox() {
+        public BlockBBox getElytraBox() {
             return this.elytraBox;
         }
 
@@ -73,14 +70,11 @@ public class CaConfig {
             this.warpLocation = warpLocation;
         }
 
-        public void setElytraBox(CaBoundingBox elytraBox) {
+        public void setElytraBox(BlockBBox elytraBox) {
             this.elytraBox = elytraBox;
         }
     }
 
-    public Set<ProtectedArea> getProtectedAreas() {
-        return this.protectedAreas;
-    }
 
     public Map<String, Integer> getStatuses() {
         return statuses;
