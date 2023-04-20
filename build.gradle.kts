@@ -10,6 +10,10 @@ plugins {
 group = "dev.booky"
 version = "1.10.3"
 
+val plugin: Configuration by configurations.creating {
+    isTransitive = false
+}
+
 repositories {
     // TODO: find an actual repository for this
     mavenLocal {
@@ -27,23 +31,34 @@ repositories {
     maven("https://papermc.io/repo/repository/maven-public/")
 }
 
+val cloudChatVersion = "1.1.1"
+val launchPlatesVersion = "1.0.0"
+val cloudProtectionsVersion = "1.0.0"
+val cloudCoreVersion = "1.0.0"
+
 dependencies {
     compileOnlyApi("io.papermc.paper:paper-api:1.19.4-R0.1-SNAPSHOT")
 
     api("org.bstats:bstats-bukkit:3.0.2")
 
     // need to be published to maven local manually
-    compileOnlyApi("dev.booky:cloudchat:1.1.1") {
+    compileOnlyApi("dev.booky:cloudchat:$cloudChatVersion") {
         exclude("io.papermc.paper")
     }
-    compileOnlyApi("dev.booky:launchplates:1.0.0") {
-        exclude("io.papermc.paper")
-        exclude("org.bstats")
-    }
-    compileOnlyApi("dev.booky:cloudcore:1.0.0") {
+    compileOnlyApi("dev.booky:launchplates:$launchPlatesVersion") {
         exclude("io.papermc.paper")
         exclude("org.bstats")
     }
+    compileOnlyApi("dev.booky:cloudcore:$cloudCoreVersion") {
+        exclude("io.papermc.paper")
+        exclude("org.bstats")
+    }
+
+    // testserver dependency plugins (cloudchat needs luckperms additionally)
+    plugin("dev.booky:cloudchat:$cloudChatVersion")
+    plugin("dev.booky:launchplates:$launchPlatesVersion:all")
+    plugin("dev.booky:cloudcore:$cloudCoreVersion:all")
+    plugin("dev.jorel:commandapi-bukkit-plugin:9.0.0-SNAPSHOT")
 }
 
 java {
@@ -70,6 +85,7 @@ bukkit {
 tasks {
     runServer {
         minecraftVersion("1.19.4")
+        pluginJars.from(plugin.resolve())
     }
 
     processResources {
