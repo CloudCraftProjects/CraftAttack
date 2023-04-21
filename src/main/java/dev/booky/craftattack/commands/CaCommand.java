@@ -18,10 +18,10 @@ public class CaCommand extends CommandAPICommand {
         super.withSubcommand(new AdminSubCommand(manager));
         super.withSubcommand(new CraftCommand());
 
-        if (Bukkit.getPluginManager().getPlugin("CloudChat") != null) {
+        if (Bukkit.getPluginManager().getPlugin("LuckPerms") != null) {
             super.withSubcommand(new StatusCommand(manager));
         } else {
-            Bukkit.getLogger().warning("CloudChat is not installed, the status command won't work!");
+            Bukkit.getLogger().warning("LuckPerms is not installed, the status command won't work!");
         }
 
         super.register();

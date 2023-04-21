@@ -1,7 +1,6 @@
 package dev.booky.craftattack.commands;
 // Created by booky10 in CraftAttack (11:47 29.10.22)
 
-import dev.booky.cloudchat.CloudChatApi;
 import dev.booky.craftattack.CaManager;
 import dev.jorel.commandapi.CommandAPICommand;
 import dev.jorel.commandapi.arguments.ArgumentSuggestions;
@@ -12,11 +11,10 @@ import dev.jorel.commandapi.executors.PlayerCommandExecutor;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.luckperms.api.LuckPermsProvider;
 import net.luckperms.api.node.Node;
 import net.luckperms.api.node.types.SuffixNode;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import java.util.Locale;
@@ -26,14 +24,12 @@ import java.util.stream.Stream;
 
 public class StatusCommand extends CommandAPICommand implements PlayerCommandExecutor {
 
-    private static final Predicate<Node> NODE_PREDICATE = node -> node instanceof SuffixNode && node.getContexts().contains("server", "craftattack");
-
-    private final CloudChatApi chatApi;
+    private static final Predicate<Node> NODE_PREDICATE = node -> node instanceof SuffixNode
+            && node.getContexts().contains("server", "craftattack");
     private final CaManager manager;
 
     public StatusCommand(CaManager manager) {
         super("status");
-        this.chatApi = Bukkit.getServicesManager().load(CloudChatApi.class);
         this.manager = manager;
 
         super.withPermission("craftattack.command.status");
@@ -55,14 +51,10 @@ public class StatusCommand extends CommandAPICommand implements PlayerCommandExe
         if ("none".equalsIgnoreCase(statusKey)) {
             LuckPermsProvider.get().getUserManager().modifyUser(sender.getUniqueId(), user -> {
                 user.data().clear(NODE_PREDICATE);
-                user.getCachedData().invalidate();
 
                 sender.sendMessage(CaManager.getPrefix().append(Component.translatable(
                         "ca.command.status.success.remove",
                         NamedTextColor.GREEN)));
-
-                Bukkit.getScheduler().runTaskLater(this.manager.getPlugin(),
-                        () -> this.chatApi.updateTeam(sender), 10);
             });
             return;
         }
@@ -79,7 +71,7 @@ public class StatusCommand extends CommandAPICommand implements PlayerCommandExe
         }
 
         Component suffix = Component.text(realKey, TextColor.color(statusColor));
-        String serializedSuffix = LegacyComponentSerializer.legacySection().serialize(suffix);
+        String serializedSuffix = MiniMessage.miniMessage().serialize(suffix);
 
         LuckPermsProvider.get().getUserManager().modifyUser(sender.getUniqueId(), user -> {
             Node suffixNode = SuffixNode.builder(serializedSuffix, 100)
@@ -88,14 +80,10 @@ public class StatusCommand extends CommandAPICommand implements PlayerCommandExe
 
             user.data().clear(NODE_PREDICATE);
             user.data().add(suffixNode);
-            user.getCachedData().invalidate();
 
             sender.sendMessage(CaManager.getPrefix().append(Component.translatable(
                     "ca.command.status.success.update",
                     NamedTextColor.GREEN).args(suffix)));
-
-            Bukkit.getScheduler().runTaskLater(this.manager.getPlugin(),
-                    () -> this.chatApi.updateTeam(sender), 10);
         });
     }
 }

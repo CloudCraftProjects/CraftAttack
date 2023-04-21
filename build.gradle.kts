@@ -31,20 +31,17 @@ repositories {
     maven("https://papermc.io/repo/repository/maven-public/")
 }
 
-val cloudChatVersion = "1.1.1"
 val launchPlatesVersion = "1.0.0"
 val cloudProtectionsVersion = "1.0.0"
 val cloudCoreVersion = "1.0.0"
 
 dependencies {
     compileOnlyApi("io.papermc.paper:paper-api:1.19.4-R0.1-SNAPSHOT")
+    compileOnlyApi("net.luckperms:api:5.4")
 
     api("org.bstats:bstats-bukkit:3.0.2")
 
     // need to be published to maven local manually
-    compileOnlyApi("dev.booky:cloudchat:$cloudChatVersion") {
-        exclude("io.papermc.paper")
-    }
     compileOnlyApi("dev.booky:launchplates:$launchPlatesVersion") {
         exclude("io.papermc.paper")
         exclude("org.bstats")
@@ -54,8 +51,7 @@ dependencies {
         exclude("org.bstats")
     }
 
-    // testserver dependency plugins (cloudchat needs luckperms additionally)
-    plugin("dev.booky:cloudchat:$cloudChatVersion")
+    // testserver dependency plugins (luckperms not included)
     plugin("dev.booky:launchplates:$launchPlatesVersion:all")
     plugin("dev.booky:cloudcore:$cloudCoreVersion:all")
     plugin("dev.jorel:commandapi-bukkit-plugin:9.0.0-SNAPSHOT")
@@ -77,8 +73,8 @@ bukkit {
     main = "$group.craftattack.CaMain"
     apiVersion = "1.19"
     authors = listOf("booky10")
-    depend = listOf("CloudCore", "LaunchPlates")
-    softDepend = listOf("CloudChat")
+    depend = listOf("CommandAPI", "CloudCore", "LaunchPlates")
+    softDepend = listOf("LuckPerms")
     load = net.minecrell.pluginyml.bukkit.BukkitPluginDescription.PluginLoadOrder.POSTWORLD
 }
 
