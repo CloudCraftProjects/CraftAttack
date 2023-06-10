@@ -22,12 +22,6 @@ repositories {
         }
     }
 
-    maven("https://s01.oss.sonatype.org/content/repositories/snapshots") {
-        content {
-            includeGroup("dev.jorel")
-        }
-    }
-
     maven("https://papermc.io/repo/repository/maven-public/")
 }
 
@@ -36,25 +30,19 @@ val cloudProtectionsVersion = "1.0.0"
 val cloudCoreVersion = "1.0.0"
 
 dependencies {
-    compileOnlyApi("io.papermc.paper:paper-api:1.19.4-R0.1-SNAPSHOT")
+    compileOnly("io.papermc.paper:paper-api:1.20-R0.1-SNAPSHOT")
     compileOnlyApi("net.luckperms:api:5.4")
 
-    api("org.bstats:bstats-bukkit:3.0.2")
+    implementation("org.bstats:bstats-bukkit:3.0.2")
 
     // need to be published to maven local manually
-    compileOnlyApi("dev.booky:launchplates:$launchPlatesVersion") {
-        exclude("io.papermc.paper")
-        exclude("org.bstats")
-    }
-    compileOnlyApi("dev.booky:cloudcore:$cloudCoreVersion") {
-        exclude("io.papermc.paper")
-        exclude("org.bstats")
-    }
+    compileOnlyApi("dev.booky:launchplates:$launchPlatesVersion")
+    compileOnlyApi("dev.booky:cloudcore:$cloudCoreVersion")
 
     // testserver dependency plugins (luckperms not included)
     plugin("dev.booky:launchplates:$launchPlatesVersion:all")
     plugin("dev.booky:cloudcore:$cloudCoreVersion:all")
-    plugin("dev.jorel:commandapi-bukkit-plugin:9.0.0-SNAPSHOT")
+    plugin("dev.jorel:commandapi-bukkit-plugin:9.0.2")
 }
 
 java {
@@ -80,15 +68,8 @@ bukkit {
 
 tasks {
     runServer {
-        minecraftVersion("1.19.4")
+        minecraftVersion("1.20")
         pluginJars.from(plugin.resolve())
-    }
-
-    processResources {
-        inputs.property("version", project.version)
-        filesMatching("plugin.yml") {
-            expand("version" to project.version)
-        }
     }
 
     shadowJar {

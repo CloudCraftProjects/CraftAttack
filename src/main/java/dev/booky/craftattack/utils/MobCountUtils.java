@@ -21,6 +21,9 @@ public final class MobCountUtils {
 
     private static final int SEARCH_RADIUS = Integer.getInteger("ca.mobcount.search_radius", 48);
 
+    private MobCountUtils() {
+    }
+
     public static Map<Location, Integer> run(World world, EntityType type) {
         Class<? extends Entity> entityClass = Objects.requireNonNull(type.getEntityClass());
         Collection<? extends Entity> entities = world.getEntitiesByClass(entityClass);
