@@ -18,6 +18,8 @@ import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.type.Slab;
 import org.bukkit.block.data.type.Stairs;
 import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Interaction;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -28,6 +30,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.util.BoundingBox;
+import org.bukkit.util.Vector;
 import org.spigotmc.event.entity.EntityDismountEvent;
 
 import java.util.Collection;
@@ -38,8 +41,13 @@ import java.util.stream.Stream;
 
 public final class SitListener implements Listener {
 
-    private static final Set<Material> VALID_TYPES = Stream.concat(Tag.STAIRS.getValues().stream(),
-            Tag.SLABS.getValues().stream()).collect(Collectors.toUnmodifiableSet());
+    private static final Set<Material> VALID_TYPES = Stream.concat(
+                    Tag.STAIRS.getValues().stream(),
+                    Tag.SLABS.getValues().stream()
+            )
+            .collect(Collectors.toUnmodifiableSet());
+
+    private static final double OFFSET_Y = 0.5d;
 
     private final NamespacedKey chairKey;
     private final CaManager manager;
@@ -72,11 +80,12 @@ public final class SitListener implements Listener {
         }
 
         BlockData data = block.getBlockData();
-        float customYaw = 0f;
+        Float customYaw;
         if (data instanceof Slab slab) {
             if (slab.getType() != Slab.Type.BOTTOM) {
                 return;
             }
+            customYaw = null;
         } else if (data instanceof Stairs stairs) {
             if (stairs.getHalf() == Bisected.Half.TOP) {
                 return;
@@ -93,26 +102,38 @@ public final class SitListener implements Listener {
             return;
         }
 
-        Location location = block.getLocation().add(0.5d, 0.3d, 0.5d);
-        if (!location.getNearbyEntitiesByType(ArmorStand.class, 0.1d).isEmpty()) {
-            return;
+        Location location = block.getLocation().add(0.5d, OFFSET_Y, 0.5d);
+        for (Entity entity : location.getNearbyEntities(Vector.getEpsilon(), Vector.getEpsilon(), Vector.getEpsilon())) {
+            if (entity.getPersistentDataContainer().has(this.chairKey)) {
+                // chair already spawned there
+                return;
+            }
         }
 
-        location.setYaw(customYaw);
-        location.getWorld().spawn(location, ArmorStand.class, stand -> {
-            PersistentDataContainer container = stand.getPersistentDataContainer();
-            container.set(this.chairKey, PersistentDataType.BYTE, (byte) 1);
+        Entity seat;
+        if (customYaw != null) {
+            location.setYaw(customYaw);
+            seat = location.getWorld().spawn(location, ArmorStand.class, stand -> {
+                stand.addPassenger(event.getPlayer());
+                stand.setInvisible(true);
+                stand.setMarker(true);
+                stand.setSmall(true);
 
-            stand.addPassenger(event.getPlayer());
-            stand.setInvisible(true);
-            stand.setMarker(true);
-            stand.setSmall(true);
+                // Yes, this actually works for hiding the vehicle health bar
+                // Additionally, I didn't notice any side effects!
+                AttributeInstance maxHealth = stand.getAttribute(Attribute.GENERIC_MAX_HEALTH);
+                Objects.requireNonNull(maxHealth).setBaseValue(0d);
+            });
+        } else {
+            seat = location.getWorld().spawn(location, Interaction.class, interaction -> {
+                interaction.addPassenger(event.getPlayer());
+                interaction.setInteractionWidth(0f);
+                interaction.setInteractionHeight(0f);
+            });
+        }
 
-            // Yes, this actually works for hiding the vehicle health bar
-            // Additionally, I didn't notice any side effects!
-            AttributeInstance maxHealth = stand.getAttribute(Attribute.GENERIC_MAX_HEALTH);
-            Objects.requireNonNull(maxHealth).setBaseValue(0d);
-        });
+        PersistentDataContainer container = seat.getPersistentDataContainer();
+        container.set(this.chairKey, PersistentDataType.BOOLEAN, true);
 
         // Hides the "Press Left Shift to Dismount" message
         event.getPlayer().sendActionBar(Component.empty());
@@ -131,10 +152,10 @@ public final class SitListener implements Listener {
             return;
         }
 
-        Location location = event.getBlock().getLocation().add(0.5d, 0.3d, 0.5d);
-        for (ArmorStand stand : location.getNearbyEntitiesByType(ArmorStand.class, 0.1d)) {
-            if (stand.getPersistentDataContainer().has(this.chairKey)) {
-                stand.remove();
+        Location location = event.getBlock().getLocation().add(0.5d, OFFSET_Y, 0.5d);
+        for (Entity entity : location.getNearbyEntities(Vector.getEpsilon(), Vector.getEpsilon(), Vector.getEpsilon())) {
+            if (entity.getPersistentDataContainer().has(this.chairKey)) {
+                entity.remove();
             }
         }
     }
