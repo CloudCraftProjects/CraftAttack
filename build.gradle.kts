@@ -2,9 +2,9 @@ plugins {
     id("java-library")
     id("maven-publish")
 
-    id("net.minecrell.plugin-yml.bukkit") version "0.6.0"
-    id("xyz.jpenilla.run-paper") version "1.0.6"
-    id("com.github.johnrengelman.shadow") version "8.1.1"
+    alias(libs.plugins.pluginyml.bukkit)
+    alias(libs.plugins.run.paper)
+    alias(libs.plugins.shadow)
 }
 
 group = "dev.booky"
@@ -25,24 +25,20 @@ repositories {
     maven("https://papermc.io/repo/repository/maven-public/")
 }
 
-val launchPlatesVersion = "1.0.0"
-val cloudProtectionsVersion = "1.0.0"
-val cloudCoreVersion = "1.0.0"
-
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:1.20.2-R0.1-SNAPSHOT")
-    compileOnlyApi("net.luckperms:api:5.4")
+    compileOnly(libs.paper.api)
+    compileOnlyApi(libs.luckperms.api)
 
-    implementation("org.bstats:bstats-bukkit:3.0.2")
+    implementation(libs.bstats.bukkit)
 
     // need to be published to maven local manually
-    compileOnlyApi("dev.booky:launchplates:$launchPlatesVersion")
-    compileOnlyApi("dev.booky:cloudcore:$cloudCoreVersion")
+    compileOnlyApi(libs.cloudcore)
+    compileOnlyApi(libs.launchplates)
 
     // testserver dependency plugins (luckperms not included)
-    plugin("dev.booky:launchplates:$launchPlatesVersion:all")
-    plugin("dev.booky:cloudcore:$cloudCoreVersion:all")
-    plugin("dev.jorel:commandapi-bukkit-plugin:9.2.0")
+    plugin(variantOf(libs.cloudcore) { classifier("all") })
+    plugin(variantOf(libs.launchplates) { classifier("all") })
+    plugin(libs.commandapi.bukkit.plugin)
 }
 
 java {
