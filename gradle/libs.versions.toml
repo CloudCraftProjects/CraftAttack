@@ -1,15 +1,17 @@
 [versions]
 pluginyml = "0.6.0"
-runtask = "1.0.6"
+runtask = "2.2.0"
 shadow = "8.1.1"
 
 paper = "1.20.2-R0.1-SNAPSHOT"
 luckperms-api = "5.4"
 bstats = "3.0.2"
 
-cloudcore = "1.0.0"
+cloudcore = "1.0.2-SNAPSHOT"
 launchplates = "1.0.0"
+
 commandapi = "9.2.0"
+debuggery = "1.5.1"
 
 [plugins]
 pluginyml-bukkit = { id = "net.minecrell.plugin-yml.bukkit", version.ref = "pluginyml" }
@@ -23,4 +25,3 @@ bstats-bukkit = { module = "org.bstats:bstats-bukkit", version.ref = "bstats" }
 
 cloudcore = { module = "dev.booky:cloudcore", version.ref = "cloudcore" }
 launchplates = { module = "dev.booky:launchplates", version.ref = "launchplates" }
-commandapi-bukkit-plugin = { module = "dev.jorel:commandapi-bukkit-plugin", version.ref = "commandapi" }

@@ -15,10 +15,15 @@ val plugin: Configuration by configurations.creating {
 }
 
 repositories {
-    // TODO: find an actual repository for this
+    maven("https://maven.pkg.github.com/CloudCraftProjects/*/") {
+        name = "github"
+        credentials(PasswordCredentials::class.java)
+    }
+
+    // TODO: publish to github package registry
     mavenLocal {
         content {
-            includeGroup("dev.booky")
+            includeModule("dev.booky", "launchplates")
         }
     }
 
@@ -35,10 +40,9 @@ dependencies {
     compileOnlyApi(libs.cloudcore)
     compileOnlyApi(libs.launchplates)
 
-    // testserver dependency plugins (luckperms not included)
+    // testserver dependency plugins (maven)
     plugin(variantOf(libs.cloudcore) { classifier("all") })
     plugin(variantOf(libs.launchplates) { classifier("all") })
-    plugin(libs.commandapi.bukkit.plugin)
 }
 
 java {
@@ -68,11 +72,23 @@ bukkit {
 tasks {
     runServer {
         minecraftVersion("1.20.2")
+
         pluginJars.from(plugin.resolve())
+        downloadPlugins {
+            hangar("CommandAPI", libs.versions.commandapi.get())
+            github(
+                "PaperMC", "Debuggery",
+                "v${libs.versions.debuggery.get()}",
+                "debuggery-bukkit-${libs.versions.debuggery.get()}.jar"
+            )
+
+            // not available on modrinth, github or hangar
+            url("https://download.luckperms.net/1515/bukkit/loader/LuckPerms-Bukkit-5.4.102.jar")
+        }
     }
 
     shadowJar {
-        relocate("org.bstats", "dev.booky.craftattack.bstats")
+        relocate("org.bstats", "${project.group}.craftattack.bstats")
     }
 
     assemble {
