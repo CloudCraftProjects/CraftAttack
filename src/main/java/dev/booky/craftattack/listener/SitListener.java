@@ -94,7 +94,7 @@ public final class SitListener implements Listener {
         }
 
         Location location = block.getLocation().add(0.5d, 0.3d, 0.5d);
-        if (location.getNearbyEntitiesByType(ArmorStand.class, 0.1d).size() != 0) {
+        if (!location.getNearbyEntitiesByType(ArmorStand.class, 0.1d).isEmpty()) {
             return;
         }
 
