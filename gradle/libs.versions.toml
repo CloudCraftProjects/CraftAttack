@@ -8,7 +8,7 @@ luckperms-api = "5.4"
 bstats = "3.0.2"
 
 cloudcore = "1.0.2-SNAPSHOT"
-launchplates = "1.0.0"
+launchplates = "1.0.1-SNAPSHOT"
 
 commandapi = "9.2.0"
 debuggery = "1.5.1"

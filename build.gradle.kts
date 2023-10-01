@@ -19,14 +19,6 @@ repositories {
         name = "github"
         credentials(PasswordCredentials::class.java)
     }
-
-    // TODO: publish to github package registry
-    mavenLocal {
-        content {
-            includeModule("dev.booky", "launchplates")
-        }
-    }
-
     maven("https://papermc.io/repo/repository/maven-public/")
 }
 
