@@ -28,6 +28,7 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.OptionalInt;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
@@ -51,8 +52,10 @@ public final class CaManager {
             .append(Component.text(']', NamedTextColor.GRAY))
             .append(Component.space()).build();
 
-    private final Map<UUID, CompletableFuture<TpResult>> teleports = new HashMap<>();
     private final NamespacedKey elytraDataKey;
+    private final NamespacedKey elytraBoostsKey;
+
+    private final Map<UUID, CompletableFuture<TpResult>> teleports = new HashMap<>();
     private final Plugin plugin;
 
     private final Path configPath;
@@ -60,6 +63,8 @@ public final class CaManager {
 
     public CaManager(Plugin plugin, Path configDir) {
         this.elytraDataKey = new NamespacedKey(plugin, "elytra_data");
+        this.elytraBoostsKey = new NamespacedKey(plugin, "elytra_boosts");
+
         this.plugin = plugin;
         this.configPath = configDir.resolve("config.yml");
     }
@@ -159,8 +164,11 @@ public final class CaManager {
         }
 
         ItemStack item = entity.getEquipment().getChestplate();
-        byte[] itemBytes = (item == null || item.getType().isAir() ? new byte[0] : item.serializeAsBytes());
+        byte[] itemBytes = item == null || item.isEmpty() ? new byte[0] : item.serializeAsBytes();
         entity.getPersistentDataContainer().set(this.elytraDataKey, PersistentDataType.BYTE_ARRAY, itemBytes);
+
+        OptionalInt boosts = OptionalInt.of(this.config.getSpawnConfig().getElytraBoosts());
+        this.setRemainingElytraBoosts(entity, boosts);
 
         ItemStack elytra = new ItemStack(Material.ELYTRA);
         elytra.editMeta(meta -> {
@@ -181,11 +189,12 @@ public final class CaManager {
         if (!this.hasElytra(entity)) {
             return false;
         }
+        this.setRemainingElytraBoosts(entity, OptionalInt.empty());
 
         byte[] itemBytes = entity.getPersistentDataContainer().get(this.elytraDataKey, PersistentDataType.BYTE_ARRAY);
         Objects.requireNonNull(itemBytes, () -> "Invalid elytra data set for key " + this.elytraDataKey);
 
-        ItemStack item = itemBytes.length == 0 ? new ItemStack(Material.AIR) : ItemStack.deserializeBytes(itemBytes);
+        ItemStack item = itemBytes.length == 0 ? ItemStack.empty() : ItemStack.deserializeBytes(itemBytes);
         entity.getPersistentDataContainer().remove(this.elytraDataKey);
         entity.getEquipment().setChestplate(item, false);
         return true;
@@ -193,6 +202,34 @@ public final class CaManager {
 
     public boolean hasElytra(PersistentDataHolder holder) {
         return holder.getPersistentDataContainer().has(this.elytraDataKey, PersistentDataType.BYTE_ARRAY);
+    }
+
+    public OptionalInt getRemainingElytraBoosts(PersistentDataHolder holder) {
+        Integer boosts = holder.getPersistentDataContainer().get(this.elytraBoostsKey, PersistentDataType.INTEGER);
+        return boosts == null ? OptionalInt.empty() : OptionalInt.of(boosts);
+    }
+
+    public void setRemainingElytraBoosts(PersistentDataHolder holder, OptionalInt boosts) {
+        if (boosts.isEmpty()) {
+            holder.getPersistentDataContainer().remove(this.elytraBoostsKey);
+        } else {
+            holder.getPersistentDataContainer().set(this.elytraBoostsKey,
+                    PersistentDataType.INTEGER, boosts.getAsInt());
+        }
+    }
+
+    public boolean canBoostElytra(PersistentDataHolder holder) {
+        return this.getRemainingElytraBoosts(holder).orElse(0) > 0;
+    }
+
+    public OptionalInt consumeElytraBoost(PersistentDataHolder holder) {
+        int boosts = this.getRemainingElytraBoosts(holder).orElse(0);
+        if (boosts > 0) {
+            OptionalInt newBoosts = OptionalInt.of(boosts - 1);
+            this.setRemainingElytraBoosts(holder, newBoosts);
+            return newBoosts;
+        }
+        return OptionalInt.empty();
     }
 
     public CaConfig getConfig() {

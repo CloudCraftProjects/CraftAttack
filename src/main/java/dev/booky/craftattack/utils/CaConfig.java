@@ -58,6 +58,9 @@ public class CaConfig {
         private Location warpLocation;
         private BlockBBox elytraBox;
 
+        private int elytraBoosts = 5;
+        private int elytraBoostDuration = 2; // seconds
+
         public Location getWarpLocation() {
             return this.warpLocation;
         }
@@ -73,8 +76,23 @@ public class CaConfig {
         public void setElytraBox(BlockBBox elytraBox) {
             this.elytraBox = elytraBox;
         }
-    }
 
+        public int getElytraBoosts() {
+            return this.elytraBoosts;
+        }
+
+        public void setElytraBoosts(int elytraBoosts) {
+            this.elytraBoosts = elytraBoosts;
+        }
+
+        public int getElytraBoostDuration() {
+            return this.elytraBoostDuration;
+        }
+
+        public void setElytraBoostDuration(int elytraBoostDuration) {
+            this.elytraBoostDuration = elytraBoostDuration;
+        }
+    }
 
     public Map<String, Integer> getStatuses() {
         return statuses;
