@@ -84,6 +84,7 @@ public final class ElytraListener implements Listener {
             return;
         }
 
+        player.setFallDistance(0f);
         player.setNoDamageTicks(20);
         event.setDamage(0);
 
