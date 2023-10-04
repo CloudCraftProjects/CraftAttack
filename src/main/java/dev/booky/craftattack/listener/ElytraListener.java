@@ -2,14 +2,18 @@ package dev.booky.craftattack.listener;
 // Created by booky10 in CraftAttack (13:20 06.08.21)
 
 import com.destroystokyo.paper.event.player.PlayerPostRespawnEvent;
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.Expiry;
 import dev.booky.craftattack.CaManager;
-import dev.booky.launchplates.LaunchPlateManager;
+import dev.booky.launchplates.events.LaunchPlateUseEvent;
+import io.papermc.paper.util.Tick;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.util.Ticks;
 import org.bukkit.Bukkit;
+import org.bukkit.Sound;
+import org.bukkit.SoundCategory;
 import org.bukkit.entity.Firework;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Pose;
@@ -23,27 +27,62 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.player.PlayerToggleSneakEvent;
-import org.bukkit.plugin.RegisteredServiceProvider;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
+import org.checkerframework.checker.index.qual.NonNegative;
 
-import java.util.Objects;
 import java.util.OptionalInt;
 import java.util.concurrent.TimeUnit;
 
 public final class ElytraListener implements Listener {
 
-    private final CaManager manager;
-    private final LaunchPlateManager plateManager;
+    private static final PotionEffect BOOST_EFFECT = new PotionEffect(PotionEffectType.SLOW_FALLING,
+            20 * 5, 255, false, false, false);
 
-    private final Cache<Player, Boolean> boostTimeout = CacheBuilder.newBuilder()
+    private final CaManager manager;
+
+    private final Cache<Player, Boolean> launchPlateDelay = Caffeine.newBuilder()
+            .<Player, Boolean>expireAfter(new Expiry<>() {
+                @Override
+                public long expireAfterCreate(Player key, Boolean value, long currentTime) {
+                    long pingNs = TimeUnit.MILLISECONDS.toNanos(key.getPing());
+                    return pingNs + Tick.of(Ticks.TICKS_PER_SECOND / 2).toNanos();
+                }
+
+                @Override
+                public long expireAfterUpdate(Player key, Boolean value, long currentTime, @NonNegative long currentDuration) {
+                    return currentDuration;
+                }
+
+                @Override
+                public long expireAfterRead(Player key, Boolean value, long currentTime, @NonNegative long currentDuration) {
+                    return currentDuration;
+                }
+            })
+            .weakKeys()
+            .build();
+
+    private final Cache<Player, Boolean> boostTimeout = Caffeine.newBuilder()
             .expireAfterWrite(1L, TimeUnit.SECONDS)
             .weakKeys()
             .build();
 
     public ElytraListener(CaManager manager) {
         this.manager = manager;
+    }
 
-        RegisteredServiceProvider<LaunchPlateManager> plateRegistration = Bukkit.getServicesManager().getRegistration(LaunchPlateManager.class);
-        this.plateManager = Objects.requireNonNull(plateRegistration).getProvider();
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
+    public void onLaunchPlateUse(LaunchPlateUseEvent event) {
+        if (this.launchPlateDelay.getIfPresent(event.getPlayer()) != null) {
+            event.setCancelled(true);
+            return;
+        }
+        this.launchPlateDelay.put(event.getPlayer(), true);
+
+        event.getPlayer().addPotionEffect(BOOST_EFFECT);
+        event.getPlayer().playSound(event.getPlayer(), Sound.ENTITY_FIREWORK_ROCKET_LAUNCH,
+                SoundCategory.AMBIENT, 1f, 0.75f);
+        this.manager.giveElytra(event.getPlayer());
     }
 
     @EventHandler
@@ -60,7 +99,8 @@ public final class ElytraListener implements Listener {
             return;
         }
 
-        if (this.manager.inElytraBox(player.getLocation())) {
+        if (this.manager.inElytraBox(player.getLocation())
+                || this.launchPlateDelay.getIfPresent(player) != null) {
             return;
         }
 
@@ -80,7 +120,8 @@ public final class ElytraListener implements Listener {
             return;
         }
 
-        if (!this.manager.hasElytra(player)) {
+        if (!this.manager.hasElytra(player)
+                || this.launchPlateDelay.getIfPresent(player) != null) {
             return;
         }
 
@@ -124,12 +165,8 @@ public final class ElytraListener implements Listener {
             return;
         }
 
-        if (!this.manager.hasElytra(event.getPlayer())) {
-            return;
-        }
-
-        // the player is still on ground for a tick sometimes
-        if (System.currentTimeMillis() - this.plateManager.getLastLaunchUse(event.getPlayer()) < 100L) {
+        if (!this.manager.hasElytra(event.getPlayer())
+                || this.launchPlateDelay.getIfPresent(event.getPlayer()) != null) {
             return;
         }
 

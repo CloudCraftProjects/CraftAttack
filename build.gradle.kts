@@ -28,7 +28,14 @@ dependencies {
 
     implementation(libs.bstats.bukkit)
 
-    // need to be published to maven local manually
+    // downloaded at runtime using library loader
+    sequenceOf(
+        libs.caffeine
+    ).forEach {
+        compileOnlyApi(it)
+        library(it)
+    }
+
     compileOnlyApi(libs.cloudcore)
     compileOnlyApi(libs.launchplates)
 
