@@ -118,6 +118,8 @@ public final class ElytraListener implements Listener {
         }
 
         if (this.manager.inElytraBox(event.getPlayer().getLocation())) {
+            this.manager.setRemainingElytraBoosts(event.getPlayer(),
+                    OptionalInt.of(this.manager.getConfig().getSpawnConfig().getElytraBoosts()));
             this.manager.giveElytra(event.getPlayer());
             return;
         }
