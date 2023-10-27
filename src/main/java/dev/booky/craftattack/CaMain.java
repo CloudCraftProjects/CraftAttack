@@ -5,6 +5,7 @@ import dev.booky.craftattack.commands.CaCommand;
 import dev.booky.craftattack.listener.ElytraListener;
 import dev.booky.craftattack.listener.EndListener;
 import dev.booky.craftattack.listener.ExplosionListener;
+import dev.booky.craftattack.listener.MineStatListener;
 import dev.booky.craftattack.listener.SitListener;
 import dev.booky.craftattack.listener.SpawnListener;
 import dev.booky.craftattack.listener.TeleportListener;
@@ -37,6 +38,7 @@ public final class CaMain extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new ElytraListener(this.manager), this);
         Bukkit.getPluginManager().registerEvents(new EndListener(this.manager), this);
         Bukkit.getPluginManager().registerEvents(new ExplosionListener(), this);
+        Bukkit.getPluginManager().registerEvents(new MineStatListener(this.manager), this);
         Bukkit.getPluginManager().registerEvents(new SitListener(this.manager), this);
         Bukkit.getPluginManager().registerEvents(new SpawnListener(this.manager), this);
         Bukkit.getPluginManager().registerEvents(new TeleportListener(this.manager), this);

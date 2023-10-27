@@ -3,10 +3,15 @@ package dev.booky.craftattack.utils;
 
 import dev.booky.cloudcore.util.BlockBBox;
 import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
+import org.bukkit.block.Block;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 // Can't be final because of object mapping
 @SuppressWarnings("FieldMayBeFinal")
@@ -94,6 +99,35 @@ public class CaConfig {
         }
     }
 
+    private List<MineStatEntry> mineStats = List.of();
+
+    @ConfigSerializable
+    public static final class MineStatEntry {
+
+        private String objectiveName;
+        private Set<NamespacedKey> blocks = Set.of();
+        private boolean preventAbuse = true;
+
+        private MineStatEntry() {
+        }
+
+        public boolean hasBlock(Block block) {
+            return this.hasBlock(block.getType());
+        }
+
+        public boolean hasBlock(Material material) {
+            return this.blocks.contains(material.getKey());
+        }
+
+        public String getObjectiveName() {
+            return this.objectiveName;
+        }
+
+        public boolean isPreventAbuse() {
+            return this.preventAbuse;
+        }
+    }
+
     public Map<String, Integer> getStatuses() {
         return statuses;
     }
@@ -104,5 +138,9 @@ public class CaConfig {
 
     public SpawnConfig getSpawnConfig() {
         return this.spawn;
+    }
+
+    public List<MineStatEntry> getMineStats() {
+        return this.mineStats;
     }
 }
