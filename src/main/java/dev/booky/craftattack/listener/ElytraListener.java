@@ -85,6 +85,7 @@ public final class ElytraListener implements Listener {
         this.manager.giveElytra(event.getPlayer());
     }
 
+    @SuppressWarnings("deprecation") // doesn't matter
     @EventHandler
     public void onElytraChange(EntityPoseChangeEvent event) {
         if (!(event.getEntity() instanceof Player player)) {
@@ -97,6 +98,10 @@ public final class ElytraListener implements Listener {
                         Component.text(boosts.getAsInt(), NamedTextColor.WHITE)));
             }
             return;
+        }
+
+        if (player.getPose() != Pose.FALL_FLYING && !player.isOnGround()) {
+            return; // prevents elytra being removed when sneaking while falling
         }
 
         if (this.manager.inElytraBox(player.getLocation())
