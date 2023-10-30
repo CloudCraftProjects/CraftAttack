@@ -2,6 +2,7 @@ package dev.booky.craftattack.commands;
 // Created by booky10 in CraftAttack (21:08 17.07.22)
 
 import dev.booky.craftattack.CaManager;
+import dev.jorel.commandapi.CommandAPI;
 import dev.jorel.commandapi.CommandAPICommand;
 import dev.jorel.commandapi.exceptions.WrapperCommandSyntaxException;
 import dev.jorel.commandapi.executors.CommandArguments;
@@ -19,6 +20,7 @@ public class CraftCommand extends CommandAPICommand implements PlayerCommandExec
         super.executesPlayer(this);
 
         // Additionally register just /craft as a command
+        CommandAPI.unregister(this.getName(), true);
         super.register();
     }
 

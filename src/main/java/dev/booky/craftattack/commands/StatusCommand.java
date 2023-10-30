@@ -2,6 +2,7 @@ package dev.booky.craftattack.commands;
 // Created by booky10 in CraftAttack (11:47 29.10.22)
 
 import dev.booky.craftattack.CaManager;
+import dev.jorel.commandapi.CommandAPI;
 import dev.jorel.commandapi.CommandAPICommand;
 import dev.jorel.commandapi.arguments.ArgumentSuggestions;
 import dev.jorel.commandapi.arguments.GreedyStringArgument;
@@ -42,6 +43,7 @@ public class StatusCommand extends CommandAPICommand implements PlayerCommandExe
                                 Stream.of("none")).toArray(String[]::new))));
 
         // Additionally register just /status as a command
+        CommandAPI.unregister(this.getName(), true);
         super.register();
     }
 

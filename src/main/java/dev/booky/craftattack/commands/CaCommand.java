@@ -5,6 +5,7 @@ import dev.booky.craftattack.CaManager;
 import dev.booky.craftattack.commands.admin.AdminSubCommand;
 import dev.booky.craftattack.commands.teleport.TeleportSubCommand;
 import dev.booky.craftattack.utils.CaConfig;
+import dev.jorel.commandapi.CommandAPI;
 import dev.jorel.commandapi.CommandAPICommand;
 import org.bukkit.Bukkit;
 
@@ -27,6 +28,11 @@ public class CaCommand extends CommandAPICommand {
 
         for (CaConfig.MineStatEntry entry : manager.getConfig().getMineStats()) {
             this.withSubcommand(new MineStatsCommand(entry));
+        }
+
+        CommandAPI.unregister(this.getName(), true);
+        for (String alias : this.getAliases()) {
+            CommandAPI.unregister(alias, true);
         }
 
         this.register();

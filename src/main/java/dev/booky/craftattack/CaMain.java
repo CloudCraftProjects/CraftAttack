@@ -60,6 +60,9 @@ public final class CaMain extends JavaPlugin {
 
         if (this.command != null) {
             CommandAPI.unregister(this.command.getName(), true);
+            for (String alias : this.command.getAliases()) {
+                CommandAPI.unregister(alias, true);
+            }
 
             // Additional command "aliases"
             CommandAPI.unregister("spawn", true);
