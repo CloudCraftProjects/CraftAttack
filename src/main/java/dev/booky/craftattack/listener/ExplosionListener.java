@@ -7,7 +7,6 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
-import org.bukkit.event.entity.ExplosionPrimeEvent;
 
 public final class ExplosionListener implements Listener {
 
@@ -23,10 +22,5 @@ public final class ExplosionListener implements Listener {
         if (event.getEntity() instanceof Creeper) {
             event.blockList().clear();
         }
-    }
-
-    @EventHandler
-    public void onExplosionPrime(ExplosionPrimeEvent event) {
-        event.setRadius(event.getRadius() * 1.5f);
     }
 }
