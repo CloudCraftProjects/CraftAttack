@@ -34,16 +34,18 @@ dependencies {
 
     compileOnlyApi(libs.cloudcore)
     compileOnlyApi(libs.launchplates)
+    compileOnly(libs.commandapi.bukkit.core)
 
     // testserver dependency plugins (maven)
     plugin(variantOf(libs.cloudcore) { classifier("all") })
     plugin(variantOf(libs.launchplates) { classifier("all") })
+    plugin(libs.commandapi.bukkit.plugin)
 }
 
 java {
     withSourcesJar()
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(17))
+        languageVersion.set(JavaLanguageVersion.of(21))
         vendor.set(JvmVendorSpec.ADOPTIUM)
     }
 }
