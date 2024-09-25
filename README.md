@@ -4,7 +4,7 @@ A re-creation of the German Minecraft "CraftAttack" project as paper plugin made
 
 ## Download
 
-https://nightly.link/CloudCraftProjects/CraftAttack/workflows/build/master/CraftAttack-Artifacts.zip
+https://dl.cloudcraftmc.de/download/tool/craftattack
 
 **Note: Depends
 on [CommandAPI](https://commandapi.jorel.dev/), [LaunchPlates](https://github.com/CloudCraftProjects/LaunchPlates/),
