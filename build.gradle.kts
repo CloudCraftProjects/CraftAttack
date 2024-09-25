@@ -45,8 +45,8 @@ dependencies {
 java {
     withSourcesJar()
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
-        vendor.set(JvmVendorSpec.ADOPTIUM)
+        languageVersion = JavaLanguageVersion.of(21)
+        vendor = JvmVendorSpec.ADOPTIUM
     }
 }
 
@@ -68,7 +68,7 @@ bukkit {
 
 tasks {
     runServer {
-        minecraftVersion("1.20.2")
+        minecraftVersion("1.21.1")
 
         pluginJars.from(plugin.resolve())
         downloadPlugins {
@@ -80,7 +80,7 @@ tasks {
             )
 
             // not available on modrinth, github or hangar
-            url("https://download.luckperms.net/1515/bukkit/loader/LuckPerms-Bukkit-5.4.102.jar")
+            url("https://download.luckperms.net/1556/bukkit/loader/LuckPerms-Bukkit-5.4.141.jar")
         }
     }
 
