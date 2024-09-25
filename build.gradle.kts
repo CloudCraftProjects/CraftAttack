@@ -8,18 +8,14 @@ plugins {
 }
 
 group = "dev.booky"
-version = "1.10.3"
+version = "1.10.4-SNAPSHOT"
 
 val plugin: Configuration by configurations.creating {
     isTransitive = false
 }
 
 repositories {
-    maven("https://maven.pkg.github.com/CloudCraftProjects/*/") {
-        name = "github"
-        credentials(PasswordCredentials::class.java)
-    }
-    maven("https://papermc.io/repo/repository/maven-public/")
+    maven("https://repo.cloudcraftmc.de/public/")
 }
 
 dependencies {
