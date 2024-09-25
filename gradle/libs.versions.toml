@@ -7,7 +7,7 @@ paper = "1.20.2-R0.1-SNAPSHOT"
 luckperms-api = "5.4"
 bstats = "3.0.2"
 
-cloudcore = "1.0.2-SNAPSHOT"
+cloudcore = "1.1.0-SNAPSHOT"
 launchplates = "1.0.1-SNAPSHOT"
 
 caffeine = "3.1.8"
