@@ -1,7 +1,7 @@
 package dev.booky.craftattack;
 // Created by booky10 in CraftAttack (14:51 01.03.21)
 
-import dev.booky.cloudcore.config.ConfigLoader;
+import dev.booky.cloudcore.config.ConfigurateLoader;
 import dev.booky.cloudcore.util.BlockBBox;
 import dev.booky.craftattack.utils.CaConfig;
 import dev.booky.craftattack.utils.TpResult;
@@ -32,6 +32,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
+import static dev.booky.cloudcore.config.ConfigurateLoader.yamlLoader;
 import static net.kyori.adventure.text.Component.empty;
 import static net.kyori.adventure.text.Component.translatable;
 import static net.kyori.adventure.text.minimessage.MiniMessage.miniMessage;
@@ -41,6 +42,7 @@ public final class CaManager {
     private static final Component PREFIX = empty()
             .append(miniMessage().deserialize("<gray>[<gradient:#aaffdd:#55eeee>CraftAttack</gradient>] </gray>"))
             .compact();
+    private static final ConfigurateLoader<?, ?> CONFIG_LOADER = yamlLoader().withAllDefaultSerializers().build();
 
     private final NamespacedKey elytraDataKey;
     private final NamespacedKey elytraBoostsKey;
@@ -57,6 +59,20 @@ public final class CaManager {
 
         this.plugin = plugin;
         this.configPath = configDir.resolve("config.yml");
+    }
+
+    private static ItemStack buildElytraStack() {
+        ItemStack elytra = ItemStack.of(Material.ELYTRA);
+        elytra.editMeta(meta -> {
+            meta.addEnchant(Enchantment.VANISHING_CURSE, 1, true);
+            meta.addEnchant(Enchantment.BINDING_CURSE, 1, true);
+            meta.addItemFlags(ItemFlag.HIDE_UNBREAKABLE, ItemFlag.HIDE_ENCHANTS);
+
+            meta.setUnbreakable(true);
+            meta.displayName(translatable(Material.ELYTRA.translationKey(), NamedTextColor.WHITE)
+                    .decoration(TextDecoration.ITALIC, false));
+        });
+        return elytra;
     }
 
     public static Component getPrefix() {
@@ -133,11 +149,11 @@ public final class CaManager {
     }
 
     public void reloadConfig() {
-        this.config = ConfigLoader.loadObject(this.configPath, CaConfig.class);
+        this.config = CONFIG_LOADER.loadObject(this.configPath, CaConfig.class, CaConfig::new);
     }
 
     public void saveConfig() {
-        ConfigLoader.saveObject(this.configPath, this.getConfig());
+        CONFIG_LOADER.saveObject(this.configPath, this.getConfig(), CaConfig.class);
     }
 
     public boolean inElytraBox(Location location) {
@@ -159,19 +175,7 @@ public final class CaManager {
 
         OptionalInt boosts = OptionalInt.of(this.config.getSpawnConfig().getElytraBoosts());
         this.setRemainingElytraBoosts(entity, boosts);
-
-        ItemStack elytra = new ItemStack(Material.ELYTRA);
-        elytra.editMeta(meta -> {
-            meta.addEnchant(Enchantment.VANISHING_CURSE, 1, true);
-            meta.addEnchant(Enchantment.BINDING_CURSE, 1, true);
-            meta.addItemFlags(ItemFlag.HIDE_UNBREAKABLE, ItemFlag.HIDE_ENCHANTS);
-
-            meta.setUnbreakable(true);
-            meta.displayName(translatable(Material.ELYTRA.translationKey(), NamedTextColor.WHITE)
-                    .decoration(TextDecoration.ITALIC, false));
-        });
-
-        entity.getEquipment().setChestplate(elytra, false);
+        entity.getEquipment().setChestplate(buildElytraStack(), false);
         return true;
     }
 
