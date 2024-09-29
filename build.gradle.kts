@@ -20,7 +20,7 @@ repositories {
 
 dependencies {
     compileOnly(libs.paper.api)
-    compileOnlyApi(libs.luckperms.api)
+    compileOnly(libs.luckperms.api)
 
     implementation(libs.bstats.bukkit)
 
@@ -33,7 +33,7 @@ dependencies {
     }
 
     compileOnlyApi(libs.cloudcore)
-    compileOnlyApi(libs.launchplates)
+    compileOnly(libs.launchplates)
     compileOnly(libs.commandapi.bukkit.core)
 
     // testserver dependency plugins (maven)
@@ -61,8 +61,8 @@ bukkit {
     main = "$group.craftattack.CaMain"
     apiVersion = "1.20"
     authors = listOf("booky10")
-    depend = listOf("CommandAPI", "CloudCore", "LaunchPlates")
-    softDepend = listOf("LuckPerms")
+    depend = listOf("CommandAPI", "CloudCore")
+    softDepend = listOf("LuckPerms", "LaunchPlates")
     load = net.minecrell.pluginyml.bukkit.BukkitPluginDescription.PluginLoadOrder.POSTWORLD
 }
 
@@ -72,7 +72,6 @@ tasks {
 
         pluginJars.from(plugin.resolve())
         downloadPlugins {
-            hangar("CommandAPI", libs.versions.commandapi.get())
             github(
                 "PaperMC", "Debuggery",
                 "v${libs.versions.debuggery.get()}",

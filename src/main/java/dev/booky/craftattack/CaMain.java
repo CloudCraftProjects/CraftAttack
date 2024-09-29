@@ -70,6 +70,8 @@ public final class CaMain extends JavaPlugin {
             }
 
             // Additional command "aliases"
+            CommandAPI.unregister("bed", true);
+            CommandAPI.unregister("end", true);
             CommandAPI.unregister("spawn", true);
             CommandAPI.unregister("craft", true);
         }

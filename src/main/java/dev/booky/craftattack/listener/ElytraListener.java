@@ -6,14 +6,11 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.Expiry;
 import dev.booky.craftattack.CaManager;
-import dev.booky.launchplates.events.LaunchPlateUseEvent;
 import io.papermc.paper.util.Tick;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.util.Ticks;
 import org.bukkit.Bukkit;
-import org.bukkit.Sound;
-import org.bukkit.SoundCategory;
 import org.bukkit.entity.Firework;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Pose;
@@ -27,17 +24,12 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.player.PlayerToggleSneakEvent;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
 import org.checkerframework.checker.index.qual.NonNegative;
 
 import java.util.OptionalInt;
 import java.util.concurrent.TimeUnit;
 
 public final class ElytraListener implements Listener {
-
-    private static final PotionEffect BOOST_EFFECT = new PotionEffect(PotionEffectType.SLOW_FALLING,
-            20 * 5, 255, false, false, false);
 
     private final CaManager manager;
 
@@ -69,20 +61,7 @@ public final class ElytraListener implements Listener {
 
     public ElytraListener(CaManager manager) {
         this.manager = manager;
-    }
-
-    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
-    public void onLaunchPlateUse(LaunchPlateUseEvent event) {
-        if (this.launchPlateDelay.getIfPresent(event.getPlayer()) != null) {
-            event.setCancelled(true);
-            return;
-        }
-        this.launchPlateDelay.put(event.getPlayer(), true);
-
-        event.getPlayer().addPotionEffect(BOOST_EFFECT);
-        event.getPlayer().playSound(event.getPlayer(), Sound.ENTITY_FIREWORK_ROCKET_LAUNCH,
-                SoundCategory.AMBIENT, 1f, 0.75f);
-        this.manager.giveElytra(event.getPlayer());
+        ElytraLaunchHandler.tryRegister(manager, this.launchPlateDelay);
     }
 
     @SuppressWarnings("deprecation") // doesn't matter
