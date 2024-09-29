@@ -1,6 +1,6 @@
 # CraftAttack (CloudCraft)
 
-A minecraft paper plugin used for managing CraftAttack projects for the CloudCraft network.
+A heavily configurable minecraft paper plugin for managing survival servers with vanilla-like features.
 
 ## Features
 
