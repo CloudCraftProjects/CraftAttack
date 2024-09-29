@@ -8,7 +8,6 @@ import dev.booky.craftattack.utils.TpResult;
 import io.papermc.paper.entity.TeleportFlag;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -33,24 +32,15 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
+import static net.kyori.adventure.text.Component.empty;
+import static net.kyori.adventure.text.Component.translatable;
+import static net.kyori.adventure.text.minimessage.MiniMessage.miniMessage;
+
 public final class CaManager {
 
-    // <gray>[<gradient:#aaffdd:#55eeee>CraftAttack</gradient>]</gray><space>
-    private static final Component PREFIX = Component.text()
-            .append(Component.text('[', NamedTextColor.GRAY))
-            .append(Component.text('C', TextColor.color(0xaaffdd)))
-            .append(Component.text('r', TextColor.color(0xa2fddf)))
-            .append(Component.text('a', TextColor.color(0x9bfce0)))
-            .append(Component.text('f', TextColor.color(0x93fae2)))
-            .append(Component.text('t', TextColor.color(0x8bf9e3)))
-            .append(Component.text('A', TextColor.color(0x83f7e5)))
-            .append(Component.text('t', TextColor.color(0x7cf6e6)))
-            .append(Component.text('t', TextColor.color(0x74f4e8)))
-            .append(Component.text('a', TextColor.color(0x6cf3e9)))
-            .append(Component.text('c', TextColor.color(0x64f1eb)))
-            .append(Component.text('k', TextColor.color(0x5df0ec)))
-            .append(Component.text(']', NamedTextColor.GRAY))
-            .append(Component.space()).build();
+    private static final Component PREFIX = empty()
+            .append(miniMessage().deserialize("<gray>[<gradient:#aaffdd:#55eeee>CraftAttack</gradient>] </gray>"))
+            .compact();
 
     private final NamespacedKey elytraDataKey;
     private final NamespacedKey elytraBoostsKey;
@@ -75,7 +65,7 @@ public final class CaManager {
 
     public CompletableFuture<TpResult> teleportRequest(Player player, Location target) {
         if (this.teleports.containsKey(player.getUniqueId())) {
-            player.sendMessage(getPrefix().append(Component.translatable("ca.teleport.already", NamedTextColor.RED)));
+            player.sendMessage(getPrefix().append(translatable("ca.teleport.already", NamedTextColor.RED)));
             return CompletableFuture.completedFuture(TpResult.ALREADY_TELEPORTING);
         }
 
@@ -84,11 +74,11 @@ public final class CaManager {
             if (target == null) {
                 target = player.getWorld().getSpawnLocation();
             }
-            player.sendMessage(getPrefix().append(Component.translatable("ca.teleport.spawn-warning", NamedTextColor.RED)));
+            player.sendMessage(getPrefix().append(translatable("ca.teleport.spawn-warning", NamedTextColor.RED)));
         }
 
         if (player.getAllowFlight()) {
-            player.sendMessage(getPrefix().append(Component.translatable("ca.teleport.teleporting", NamedTextColor.GRAY)));
+            player.sendMessage(getPrefix().append(translatable("ca.teleport.teleporting", NamedTextColor.GRAY)));
 
             Location finalTarget = target;
             return target.getWorld().getChunkAtAsync(target, true).thenApply(chunk -> {
@@ -100,7 +90,7 @@ public final class CaManager {
             });
         }
 
-        player.sendMessage(getPrefix().append(Component.translatable("ca.teleport.please-wait", NamedTextColor.GRAY)));
+        player.sendMessage(getPrefix().append(translatable("ca.teleport.please-wait", NamedTextColor.GRAY)));
         CompletableFuture<TpResult> future = new CompletableFuture<>();
 
         Location finalTarget = target;
@@ -110,7 +100,7 @@ public final class CaManager {
             }
 
             CaManager.this.teleports.remove(player.getUniqueId());
-            player.sendMessage(getPrefix().append(Component.translatable("ca.teleport.teleporting", NamedTextColor.GRAY)));
+            player.sendMessage(getPrefix().append(translatable("ca.teleport.teleporting", NamedTextColor.GRAY)));
 
             finalTarget.getWorld().getChunkAtAsync(finalTarget, true).thenAccept(chunk -> {
                 finalTarget.setYaw(player.getLocation().getYaw());
@@ -132,7 +122,7 @@ public final class CaManager {
         }
 
         if (player.isOnline()) {
-            player.sendMessage(CaManager.getPrefix().append(Component.translatable("ca.teleport.moved", NamedTextColor.RED)));
+            player.sendMessage(CaManager.getPrefix().append(translatable("ca.teleport.moved", NamedTextColor.RED)));
         }
         future.complete(result);
     }
@@ -177,7 +167,7 @@ public final class CaManager {
             meta.addItemFlags(ItemFlag.HIDE_UNBREAKABLE, ItemFlag.HIDE_ENCHANTS);
 
             meta.setUnbreakable(true);
-            meta.displayName(Component.translatable(Material.ELYTRA.translationKey(), NamedTextColor.WHITE)
+            meta.displayName(translatable(Material.ELYTRA.translationKey(), NamedTextColor.WHITE)
                     .decoration(TextDecoration.ITALIC, false));
         });
 
