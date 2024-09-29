@@ -41,6 +41,9 @@ public class ElytraLaunchHandler {
                 event.setCancelled(true);
                 return;
             }
+            if (!this.manager.getConfig().getSpawnConfig().isElytraOnLaunch()) {
+                return;
+            }
             this.launchPlateDelay.put(event.getPlayer(), true);
 
             event.getPlayer().addPotionEffect(BOOST_EFFECT);

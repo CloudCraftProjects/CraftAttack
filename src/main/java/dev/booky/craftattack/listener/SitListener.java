@@ -68,6 +68,9 @@ public final class SitListener implements Listener {
         if (event.getPlayer().isSneaking()) {
             return;
         }
+        if (!this.manager.getConfig().getFeatures().isSitting()) {
+            return;
+        }
 
         // Could annoy players who are building roofs, so players must have nothing in their hand
         if (!event.getMaterial().isAir()) {

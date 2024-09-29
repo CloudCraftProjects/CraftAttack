@@ -42,7 +42,7 @@ public final class CaMain extends JavaPlugin {
 
         Bukkit.getPluginManager().registerEvents(new ElytraListener(this.manager), this);
         Bukkit.getPluginManager().registerEvents(new EndListener(this.manager), this);
-        Bukkit.getPluginManager().registerEvents(new ExplosionListener(), this);
+        Bukkit.getPluginManager().registerEvents(new ExplosionListener(this.manager), this);
         Bukkit.getPluginManager().registerEvents(new MineStatListener(this.manager), this);
         Bukkit.getPluginManager().registerEvents(new SitListener(this.manager), this);
         Bukkit.getPluginManager().registerEvents(new SpawnListener(this.manager), this);

@@ -30,6 +30,28 @@ public class CaConfig {
         put("REC", 0xfc2a0f);
     }};
 
+    private FeaturesConfig features = new FeaturesConfig();
+
+    @ConfigSerializable
+    public static class FeaturesConfig {
+
+        private boolean sitting = true;
+        private boolean creeperNoBlockDamage = true;
+        private double creeperDamageMultiplier = 0.5d;
+
+        public boolean isSitting() {
+            return this.sitting;
+        }
+
+        public boolean isCreeperNoBlockDamage() {
+            return this.creeperNoBlockDamage;
+        }
+
+        public double getCreeperDamageMultiplier() {
+            return this.creeperDamageMultiplier;
+        }
+    }
+
     private EndConfig end = new EndConfig();
 
     @ConfigSerializable
@@ -63,6 +85,8 @@ public class CaConfig {
         private Location warpLocation;
         private BlockBBox elytraBox;
 
+        private boolean elytraOnLaunch = true;
+        private boolean elytraNoDamage = true;
         private int elytraBoosts = 5;
         private int elytraBoostDuration = 2; // seconds
 
@@ -80,6 +104,14 @@ public class CaConfig {
 
         public void setElytraBox(BlockBBox elytraBox) {
             this.elytraBox = elytraBox;
+        }
+
+        public boolean isElytraOnLaunch() {
+            return this.elytraOnLaunch;
+        }
+
+        public boolean isElytraNoDamage() {
+            return this.elytraNoDamage;
         }
 
         public int getElytraBoosts() {
@@ -130,6 +162,10 @@ public class CaConfig {
 
     public Map<String, Integer> getStatuses() {
         return statuses;
+    }
+
+    public FeaturesConfig getFeatures() {
+        return this.features;
     }
 
     public EndConfig getEndConfig() {
