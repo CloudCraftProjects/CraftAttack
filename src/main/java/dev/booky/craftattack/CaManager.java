@@ -62,7 +62,7 @@ public final class CaManager {
     }
 
     private static ItemStack buildElytraStack() {
-        ItemStack elytra = ItemStack.of(Material.ELYTRA);
+        ItemStack elytra = new ItemStack(Material.ELYTRA);
         elytra.editMeta(meta -> {
             meta.addEnchant(Enchantment.VANISHING_CURSE, 1, true);
             meta.addEnchant(Enchantment.BINDING_CURSE, 1, true);
