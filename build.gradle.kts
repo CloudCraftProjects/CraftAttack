@@ -1,3 +1,6 @@
+import me.modmuss50.mpp.ModPublishExtension
+import me.modmuss50.mpp.PublishModTask
+
 plugins {
     id("java-library")
     id("maven-publish")
@@ -5,10 +8,10 @@ plugins {
     alias(libs.plugins.pluginyml.bukkit)
     alias(libs.plugins.run.paper)
     alias(libs.plugins.shadow)
+    alias(libs.plugins.publishing)
 }
 
 group = "dev.booky"
-version = "1.10.4-SNAPSHOT"
 
 val plugin: Configuration by configurations.creating {
     isTransitive = false
@@ -90,4 +93,52 @@ tasks {
     assemble {
         dependsOn(shadowJar)
     }
+}
+
+configure<ModPublishExtension> {
+    val repositoryName = "CloudCraftProjects/CraftAttack"
+    changelog = "See https://github.com/$repositoryName/releases/tag/v${project.version}"
+    type = if (project.version.toString().endsWith("-SNAPSHOT")) BETA else STABLE
+    dryRun = !hasProperty("noDryPublish")
+
+    file = tasks.named<Jar>("shadowJar").flatMap { it.archiveFile }
+    additionalFiles.from(tasks.named<Jar>("sourcesJar"))
+
+    github {
+        accessToken = providers.environmentVariable("GITHUB_API_TOKEN")
+            .orElse(providers.gradleProperty("ccGithubToken"))
+
+        displayName = "${rootProject.name} v${project.version}"
+
+        repository = repositoryName
+        commitish = "master"
+        tagName = "v${project.version}"
+
+        if (project != rootProject) {
+            parent(rootProject.tasks.named("publishGithub"))
+        }
+    }
+    modrinth {
+        accessToken = providers.environmentVariable("MODRINTH_API_TOKEN")
+            .orElse(providers.gradleProperty("ccModrinthToken"))
+
+        version = "${project.version}"
+        displayName = "${rootProject.name} v${project.version}"
+        modLoaders.add("paper")
+
+        projectId = "xA2xhZUF"
+        minecraftVersionRange {
+            start = rootProject.libs.versions.paper.get().split("-")[0]
+            end = "latest"
+        }
+
+        requires("commandapi", "cloudcore")
+        // even though luckperms doesn't publish paper jars on modrinth, add it as optional
+        optional("launchplates", "luckperms")
+    }
+}
+
+tasks.withType<PublishModTask> {
+    dependsOn(tasks.named<Jar>("shadowJar"))
+    dependsOn(tasks.named<Jar>("sourcesJar"))
 }

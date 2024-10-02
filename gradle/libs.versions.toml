@@ -2,6 +2,7 @@
 pluginyml = "0.6.0"
 runtask = "2.3.1"
 shadow = "8.3.0"
+publishing = "0.7.4"
 
 paper = "1.21.1-R0.1-SNAPSHOT"
 luckperms-api = "5.4"
@@ -19,6 +20,7 @@ debuggery = "1.5.1"
 pluginyml-bukkit = { id = "net.minecrell.plugin-yml.bukkit", version.ref = "pluginyml" }
 run-paper = { id = "xyz.jpenilla.run-paper", version.ref = "runtask" }
 shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
+publishing = { id = "me.modmuss50.mod-publish-plugin", version.ref = "publishing" }
 
 [libraries]
 paper-api = { module = "io.papermc.paper:paper-api", version.ref = "paper" }

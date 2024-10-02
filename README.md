@@ -29,10 +29,14 @@ A heavily configurable minecraft paper plugin for managing survival servers with
 
 ## Download
 
-https://dl.cloudcraftmc.de/download/tool/craftattack
+https://dl.cloudcraftmc.de/craftattack
 
-**Note: Depends on [CommandAPI](https://commandapi.jorel.dev/) and [CloudCore](https://github.com/CloudCraftProjects/CloudCore/).**
-Some features may require [LaunchPlates](https://github.com/CloudCraftProjects/LaunchPlates/) or [LuckPerms](https://luckperms.net/) to be installed.
+> [!NOTE]
+> Depends
+> on [CommandAPI](https://modrinth.com/project/commandapi) and
+> [CloudCore](https://modrinth.com/project/cloudcore).<br>
+> Some features may require [LaunchPlates](https://modrinth.com/project/launchplates)
+> or [LuckPerms](https://luckperms.net/) to be installed.
 
 ## License
 
