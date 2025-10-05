@@ -37,12 +37,12 @@ dependencies {
 
     compileOnlyApi(libs.cloudcore)
     compileOnly(libs.launchplates)
-    compileOnly(libs.commandapi.bukkit.core)
+    compileOnly(libs.commandapi.paper.core)
 
     // testserver dependency plugins (maven)
     plugin(variantOf(libs.cloudcore) { classifier("all") })
     plugin(variantOf(libs.launchplates) { classifier("all") })
-    plugin(libs.commandapi.bukkit.plugin)
+    plugin(libs.commandapi.paper.plugin)
 }
 
 java {
@@ -62,7 +62,7 @@ publishing {
 
 bukkit {
     main = "$group.craftattack.CaMain"
-    apiVersion = "1.20"
+    apiVersion = "1.21.9"
     authors = listOf("booky10")
     depend = listOf("CommandAPI", "CloudCore")
     softDepend = listOf("LuckPerms", "LaunchPlates")
@@ -71,7 +71,7 @@ bukkit {
 
 tasks {
     runServer {
-        minecraftVersion("1.21.1")
+        minecraftVersion("1.21.9")
 
         pluginJars.from(plugin.resolve())
         downloadPlugins {
@@ -82,7 +82,7 @@ tasks {
             )
 
             // not available on modrinth, github or hangar
-            url("https://download.luckperms.net/1556/bukkit/loader/LuckPerms-Bukkit-5.4.141.jar")
+            url("https://download.luckperms.net/1605/bukkit/loader/LuckPerms-Bukkit-5.5.16.jar")
         }
     }
 

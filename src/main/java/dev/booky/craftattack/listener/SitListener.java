@@ -124,7 +124,7 @@ public final class SitListener implements Listener {
 
                 // Yes, this actually works for hiding the vehicle health bar
                 // Additionally, I didn't notice any side effects!
-                AttributeInstance maxHealth = stand.getAttribute(Attribute.GENERIC_MAX_HEALTH);
+                AttributeInstance maxHealth = stand.getAttribute(Attribute.MAX_HEALTH);
                 Objects.requireNonNull(maxHealth).setBaseValue(0d);
             });
         } else {
@@ -178,7 +178,7 @@ public final class SitListener implements Listener {
             unmountLoc.setYaw(player.getLocation().getYaw());
             unmountLoc.setPitch(player.getLocation().getPitch());
 
-            player.teleport(unmountLoc, TeleportFlag.Relative.YAW, TeleportFlag.Relative.PITCH);
+            player.teleport(unmountLoc, TeleportFlag.Relative.VELOCITY_ROTATION);
             event.getDismounted().remove();
             return;
         }
@@ -196,7 +196,7 @@ public final class SitListener implements Listener {
         unmountLoc.setYaw(player.getLocation().getYaw());
         unmountLoc.setPitch(player.getLocation().getPitch());
 
-        player.teleport(unmountLoc, TeleportFlag.Relative.YAW, TeleportFlag.Relative.PITCH);
+        player.teleport(unmountLoc, TeleportFlag.Relative.VELOCITY_ROTATION);
         event.getDismounted().remove();
     }
 }

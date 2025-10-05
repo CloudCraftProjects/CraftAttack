@@ -2,11 +2,11 @@ package dev.booky.craftattack.listener;
 // Created by booky10 in CraftAttack (14:50 05.10.22)
 
 import dev.booky.craftattack.CaManager;
+import io.papermc.paper.event.player.AsyncPlayerSpawnLocationEvent;
 import org.bukkit.Location;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerRespawnEvent;
-import org.spigotmc.event.player.PlayerSpawnLocationEvent;
 
 public final class SpawnListener implements Listener {
 
@@ -17,8 +17,8 @@ public final class SpawnListener implements Listener {
     }
 
     @EventHandler
-    public void onSpawn(PlayerSpawnLocationEvent event) {
-        if (event.getPlayer().hasPlayedBefore()) {
+    public void onSpawn(AsyncPlayerSpawnLocationEvent event) {
+        if (!event.isNewPlayer()) {
             return;
         }
 

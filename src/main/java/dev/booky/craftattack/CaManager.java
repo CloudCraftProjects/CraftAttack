@@ -101,7 +101,7 @@ public final class CaManager {
                 finalTarget.setYaw(player.getLocation().getYaw());
                 finalTarget.setPitch(player.getLocation().getPitch());
                 player.teleport(finalTarget, PlayerTeleportEvent.TeleportCause.COMMAND,
-                        TeleportFlag.Relative.YAW, TeleportFlag.Relative.PITCH);
+                        TeleportFlag.Relative.VELOCITY_ROTATION);
                 return TpResult.SUCCESSFUL;
             });
         }
@@ -122,7 +122,7 @@ public final class CaManager {
                 finalTarget.setYaw(player.getLocation().getYaw());
                 finalTarget.setPitch(player.getLocation().getPitch());
                 player.teleport(finalTarget, PlayerTeleportEvent.TeleportCause.COMMAND,
-                        TeleportFlag.Relative.YAW, TeleportFlag.Relative.PITCH);
+                        TeleportFlag.Relative.VELOCITY_ROTATION);
                 future.complete(TpResult.SUCCESSFUL);
             });
         }, 5 * 20);

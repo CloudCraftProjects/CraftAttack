@@ -1,10 +1,11 @@
 package dev.booky.craftattack.commands;
 // Created by booky10 in CraftAttack (15:36 29.10.23)
 
+import com.destroystokyo.paper.profile.PlayerProfile;
 import dev.booky.craftattack.CaManager;
 import dev.booky.craftattack.utils.CaConfig;
 import dev.jorel.commandapi.CommandAPICommand;
-import dev.jorel.commandapi.arguments.OfflinePlayerArgument;
+import dev.jorel.commandapi.arguments.PlayerProfileArgument;
 import dev.jorel.commandapi.exceptions.WrapperCommandSyntaxException;
 import dev.jorel.commandapi.executors.CommandArguments;
 import dev.jorel.commandapi.executors.PlayerCommandExecutor;
@@ -23,6 +24,7 @@ import org.bukkit.util.NumberConversions;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -44,7 +46,7 @@ public class MineStatsCommand extends CommandAPICommand implements PlayerCommand
         super(objectiveName);
         this.objectiveName = objectiveName;
 
-        this.withOptionalArguments(new OfflinePlayerArgument("target"));
+        this.withOptionalArguments(new PlayerProfileArgument("target"));
 
         this.withPermission("craftattack.command.minestats." + objectiveName);
         this.executesPlayer(this);
@@ -76,13 +78,16 @@ public class MineStatsCommand extends CommandAPICommand implements PlayerCommand
         }
 
         // if there was an explicit target specified, look up only itself
-        Optional<Integer> targetScore = args.<OfflinePlayer>getOptionalUnchecked("target")
-                .map(objective::getScore)
-                .map(Score::getScore);
-        if (targetScore.isPresent()) {
-            sender.sendMessage(CaManager.getPrefix().append(translatable(
-                    "ca.command.mine-stats.value", NamedTextColor.GREEN,
-                    text(this.objectiveName), text(targetScore.get()))));
+        Optional<List<PlayerProfile>> targets = args.<List<PlayerProfile>>getOptionalUnchecked("target")
+                .filter(list -> !list.isEmpty());
+        if (targets.isPresent()) {
+            for (PlayerProfile target : targets.get()) {
+                String name = Objects.requireNonNull(target.getName());
+                int score = objective.getScore(name).getScore();
+                sender.sendMessage(CaManager.getPrefix().append(translatable(
+                        "ca.command.mine-stats.value", NamedTextColor.GREEN,
+                        text(this.objectiveName), text(score))));
+            }
             return;
         }
 
