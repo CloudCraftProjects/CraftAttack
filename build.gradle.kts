@@ -18,6 +18,11 @@ val plugin: Configuration by configurations.creating {
 }
 
 repositories {
+    mavenLocal {
+        content {
+            includeGroup("dev.jorel")
+        }
+    }
     maven("https://repo.cloudcraftmc.de/public/")
 }
 

@@ -30,11 +30,10 @@ public class CaCommand extends CommandAPICommand {
             this.withSubcommand(new MineStatsCommand(entry));
         }
 
-        // TODO commandapi unregistration is broken
-        // CommandAPI.unregister(this.getName(), true);
-        // for (String alias : this.getAliases()) {
-        //     CommandAPI.unregister(alias, true);
-        // }
+        CommandAPI.unregister(this.getName(), true);
+        for (String alias : this.getAliases()) {
+            CommandAPI.unregister(alias, true);
+        }
 
         this.register();
     }

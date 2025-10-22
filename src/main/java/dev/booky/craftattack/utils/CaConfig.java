@@ -2,12 +2,14 @@ package dev.booky.craftattack.utils;
 // Created by booky10 in CraftAttack (01:08 30.10.21)
 
 import dev.booky.cloudcore.util.BlockBBox;
+import net.kyori.adventure.key.Key;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,10 +54,10 @@ public class CaConfig {
         }
     }
 
-    private EndConfig end = new EndConfig();
+    private Map<Key, DimensionConfig> dimensions = new HashMap<>();
 
     @ConfigSerializable
-    public static class EndConfig {
+    public static class DimensionConfig {
 
         private Location warpLocation;
         private boolean activated = true;
@@ -168,8 +170,8 @@ public class CaConfig {
         return this.features;
     }
 
-    public EndConfig getEndConfig() {
-        return this.end;
+    public DimensionConfig getDimensionConfig(Key dimension) {
+        return this.dimensions.computeIfAbsent(dimension, __ -> new DimensionConfig());
     }
 
     public SpawnConfig getSpawnConfig() {

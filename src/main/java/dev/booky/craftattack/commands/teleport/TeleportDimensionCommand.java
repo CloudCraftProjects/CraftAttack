@@ -7,19 +7,24 @@ import dev.jorel.commandapi.CommandAPICommand;
 import dev.jorel.commandapi.exceptions.WrapperCommandSyntaxException;
 import dev.jorel.commandapi.executors.CommandArguments;
 import dev.jorel.commandapi.executors.PlayerCommandExecutor;
+import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.entity.Player;
 
-public class TeleportEndCommand extends CommandAPICommand implements PlayerCommandExecutor {
+public class TeleportDimensionCommand extends CommandAPICommand implements PlayerCommandExecutor {
 
     private final CaManager manager;
+    private final String id;
+    private final Key dimension;
 
-    public TeleportEndCommand(CaManager manager) {
-        super("end");
+    public TeleportDimensionCommand(CaManager manager, String id, Key dimension) {
+        super(id);
         this.manager = manager;
+        this.id = id;
+        this.dimension = dimension;
 
-        super.withPermission("craftattack.command.teleport.end");
+        super.withPermission("craftattack.command.teleport." + id);
         super.executesPlayer(this);
 
         // Additionally register just /end as a command
@@ -28,9 +33,9 @@ public class TeleportEndCommand extends CommandAPICommand implements PlayerComma
 
     @Override
     public void run(Player sender, CommandArguments args) throws WrapperCommandSyntaxException {
-        this.manager.teleportRequest(sender, this.manager.getConfig().getEndConfig().getWarpLocation()).thenAccept(result -> {
+        this.manager.teleportRequest(sender, this.manager.getConfig().getDimensionConfig(this.dimension).getWarpLocation()).thenAccept(result -> {
             if (result == TpResult.SUCCESSFUL) {
-                sender.sendMessage(CaManager.getPrefix().append(Component.translatable("ca.teleport.end", NamedTextColor.GREEN)));
+                sender.sendMessage(CaManager.getPrefix().append(Component.translatable("ca.teleport." + this.id, NamedTextColor.GREEN)));
             }
         });
     }
