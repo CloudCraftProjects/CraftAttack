@@ -5,7 +5,9 @@ import dev.booky.craftattack.CaManager;
 import dev.jorel.commandapi.CommandAPICommand;
 
 import static dev.booky.craftattack.utils.CaConstants.DIMENSION_END;
+import static dev.booky.craftattack.utils.CaConstants.DIMENSION_END_ID;
 import static dev.booky.craftattack.utils.CaConstants.DIMENSION_NETHER;
+import static dev.booky.craftattack.utils.CaConstants.DIMENSION_NETHER_ID;
 
 public class TeleportSubCommand extends CommandAPICommand {
 
@@ -14,8 +16,8 @@ public class TeleportSubCommand extends CommandAPICommand {
         super.withPermission("craftattack.command.teleport");
 
         super.withSubcommand(new TeleportBedCommand(manager));
-        super.withSubcommand(new TeleportDimensionCommand(manager, "nether", DIMENSION_NETHER));
-        super.withSubcommand(new TeleportDimensionCommand(manager, "end", DIMENSION_END));
+        super.withSubcommand(new TeleportDimensionCommand(manager, DIMENSION_NETHER_ID, DIMENSION_NETHER));
+        super.withSubcommand(new TeleportDimensionCommand(manager, DIMENSION_END_ID, DIMENSION_END));
         super.withSubcommand(new TeleportSpawnCommand(manager));
     }
 }

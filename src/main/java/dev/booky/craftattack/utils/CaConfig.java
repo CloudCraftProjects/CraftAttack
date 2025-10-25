@@ -2,11 +2,13 @@ package dev.booky.craftattack.utils;
 // Created by booky10 in CraftAttack (01:08 30.10.21)
 
 import dev.booky.cloudcore.util.BlockBBox;
+import io.papermc.paper.math.BlockPosition;
 import net.kyori.adventure.key.Key;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
+import org.jspecify.annotations.Nullable;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
 import java.util.HashMap;
@@ -160,6 +162,12 @@ public class CaConfig {
         public boolean isPreventAbuse() {
             return this.preventAbuse;
         }
+    }
+
+    private Map<BlockPosition, String> warpPlates = new HashMap<>();
+
+    public @Nullable String getWarpPlateTarget(BlockPosition pos) {
+        return this.warpPlates.get(pos);
     }
 
     public Map<String, Integer> getStatuses() {

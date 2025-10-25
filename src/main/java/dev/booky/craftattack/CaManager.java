@@ -143,6 +143,10 @@ public final class CaManager {
         future.complete(result);
     }
 
+    public boolean hasTeleport(Player player) {
+        return this.teleports.containsKey(player.getUniqueId());
+    }
+
     public void updateConfig(Consumer<CaConfig> updater) {
         updater.accept(this.getConfig());
         this.saveConfig();

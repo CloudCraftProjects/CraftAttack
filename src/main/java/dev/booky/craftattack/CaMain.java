@@ -2,13 +2,14 @@ package dev.booky.craftattack;
 
 import dev.booky.cloudcore.i18n.CloudTranslator;
 import dev.booky.craftattack.commands.CaCommand;
-import dev.booky.craftattack.listener.ElytraListener;
 import dev.booky.craftattack.listener.DimensionListener;
+import dev.booky.craftattack.listener.ElytraListener;
 import dev.booky.craftattack.listener.ExplosionListener;
 import dev.booky.craftattack.listener.MineStatListener;
 import dev.booky.craftattack.listener.SitListener;
 import dev.booky.craftattack.listener.SpawnListener;
 import dev.booky.craftattack.listener.TeleportListener;
+import dev.booky.craftattack.listener.WarpPlateListener;
 import dev.jorel.commandapi.CommandAPI;
 import dev.jorel.commandapi.CommandAPICommand;
 import org.bstats.bukkit.Metrics;
@@ -47,6 +48,7 @@ public final class CaMain extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new SitListener(this.manager), this);
         Bukkit.getPluginManager().registerEvents(new SpawnListener(this.manager), this);
         Bukkit.getPluginManager().registerEvents(new TeleportListener(this.manager), this);
+        Bukkit.getPluginManager().registerEvents(new WarpPlateListener(this.manager), this);
 
         Bukkit.getServicesManager().register(CaManager.class, this.manager, this, ServicePriority.Normal);
 

@@ -8,7 +8,9 @@ import org.jspecify.annotations.NullMarked;
 public final class CaConstants {
 
     public static final Key DIMENSION_OVERWORLD = Key.key("overworld");
+    public static final String DIMENSION_NETHER_ID = "nether";
     public static final Key DIMENSION_NETHER = Key.key("the_nether");
+    public static final String DIMENSION_END_ID = "end";
     public static final Key DIMENSION_END = Key.key("the_end");
 
     private CaConstants() {
