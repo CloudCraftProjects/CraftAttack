@@ -5,8 +5,6 @@ import it.unimi.dsi.fastutil.objects.Object2IntArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Score;
 import org.bukkit.scoreboard.Scoreboard;
@@ -44,32 +42,24 @@ public final class LeaderboardUtil {
         return entry.withPlacement(placement);
     }
 
-    public static LeaderboardResult buildLeaderboard(Objective objective, int size, @Nullable OfflinePlayer self) {
+    public static LeaderboardResult buildLeaderboard(Objective objective, int size, @Nullable String self) {
         Scoreboard scoreboard = objective.getScoreboard();
         if (scoreboard == null) {
             throw new IllegalArgumentException("Objective " + objective + " has no assigned scoreboard, can't build leaderboard");
         }
         // request all entries from scoreboard objective
         Set<String> entryNames = scoreboard.getEntries();
-        Object2IntMap<OfflinePlayer> entries = new Object2IntArrayMap<>(entryNames.size());
+        Object2IntMap<String> entries = new Object2IntArrayMap<>(entryNames.size());
         for (String entryName : entryNames) {
-            OfflinePlayer target = Bukkit.getOfflinePlayerIfCached(entryName);
-            if (target == null) {
-                try {
-                    UUID.fromString(entryName);
-                    continue; // skip looking for player, is an entity
-                } catch (IllegalArgumentException ignored) {
-                    target = Bukkit.getOfflinePlayer(entryName);
-                }
+            try {
+                UUID.fromString(entryName);
+                continue; // ignore entity entries
+            } catch (IllegalArgumentException ignored) {
             }
 
-            if (!target.hasPlayedBefore()) {
-                continue; // unknown player
-            }
-
-            Score score = objective.getScore(target);
+            Score score = objective.getScore(entryName);
             if (score.getScore() > 0) {
-                entries.put(target, score.getScore());
+                entries.put(entryName, score.getScore());
             }
         }
 
@@ -79,7 +69,7 @@ public final class LeaderboardUtil {
 
         // build sorted entries from raw entries
         List<UnplacedLeaderboardEntry> unplacedEntries = entries.object2IntEntrySet().stream()
-                .sorted(Comparator.<Object2IntMap.Entry<OfflinePlayer>>comparingInt(Object2IntMap.Entry::getIntValue).reversed())
+                .sorted(Comparator.<Object2IntMap.Entry<String>>comparingInt(Object2IntMap.Entry::getIntValue).reversed())
                 .map(entry -> new UnplacedLeaderboardEntry(entry.getKey(), entry.getIntValue()))
                 .toList();
         int avgScore = unplacedEntries.stream()
@@ -122,18 +112,18 @@ public final class LeaderboardUtil {
         return new LeaderboardResult(leaderboard, avgScore);
     }
 
-    private record UnplacedLeaderboardEntry(OfflinePlayer player, int score) {
+    private record UnplacedLeaderboardEntry(String entry, int score) {
 
         public LeaderboardEntry withPlacement(int place) {
-            return new LeaderboardEntry(this.player, place, this.score);
+            return new LeaderboardEntry(this.entry, place, this.score);
         }
     }
 
-    public record LeaderboardEntry(OfflinePlayer player, int place, int score) {
+    public record LeaderboardEntry(String entry, int place, int score) {
 
         public Component buildLine() {
             return translatable("ca.command.mine-stats.leaderboard.entry", NamedTextColor.GREEN,
-                    text(this.place), text(String.valueOf(this.player.getName())), text(this.score));
+                    text(this.place), text(this.entry), text(this.score));
         }
     }
 

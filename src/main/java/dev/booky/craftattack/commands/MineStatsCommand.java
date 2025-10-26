@@ -69,7 +69,8 @@ public class MineStatsCommand extends CommandAPICommand implements PlayerCommand
             return;
         }
 
-        LeaderboardResult leaderboard = LeaderboardUtil.buildLeaderboard(objective, LEADERBOARD_COUNT, sender);
+        LeaderboardResult leaderboard = LeaderboardUtil.buildLeaderboard(
+                objective, LEADERBOARD_COUNT, sender.getName());
 
         sender.sendMessage(CaManager.getPrefix().append(translatable(
                 "ca.command.mine-stats.leaderboard.header", NamedTextColor.GREEN,
