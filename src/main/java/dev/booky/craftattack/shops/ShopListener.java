@@ -8,10 +8,13 @@ import com.github.benmanes.caffeine.cache.Ticker;
 import dev.booky.craftattack.CaManager;
 import io.papermc.paper.event.player.PlayerTradeEvent;
 import org.bukkit.NamespacedKey;
+import org.bukkit.Sound;
 import org.bukkit.entity.AbstractVillager;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.inventory.ItemStack;
 import org.jspecify.annotations.NullMarked;
 
@@ -19,6 +22,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+
+import static net.kyori.adventure.text.Component.translatable;
 
 @NullMarked
 public final class ShopListener implements Listener {
@@ -41,11 +46,45 @@ public final class ShopListener implements Listener {
                         new ShopVillager(manager, villager, this.villagerSaveQueue::add));
     }
 
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onEntityInteract(PlayerInteractEntityEvent event) {
+        if (!(event.getRightClicked() instanceof AbstractVillager villager)
+                || !villager.getPersistentDataContainer().has(this.shopKey)) {
+            return; // not a shop villager
+        }
+        Player player = event.getPlayer();
+        if (!player.isSneaking()) {
+            return; // pass on to normal interaction // TODO multi-player shops?
+        }
+        event.setCancelled(true);
+        ShopVillager shop = this.villagerCache.get(villager);
+        // set player as owner if this shop doesn't have an owner yet
+        if (shop.getOwnerId() == null) {
+            shop.setOwnerId(player.getUniqueId());
+        }
+        if (!shop.isOwner(player)) {
+            player.playSound(villager, Sound.ENTITY_VILLAGER_NO, 1f, 1f);
+            return;
+        }
+        // TODO management ui
+        if (shop.hasProfit()) {
+            boolean dumpedEverything = shop.dumpProfit(player.getInventory());
+            if (dumpedEverything) {
+                player.playSound(player, Sound.ENTITY_PLAYER_LEVELUP, 1f, 1f);
+            } else {
+                player.playSound(villager, Sound.ENTITY_VILLAGER_NO, 1f, 1f);
+                player.sendMessage(CaManager.getPrefix().append(translatable("ca.shop.manage.dump.inventory-full")));
+            }
+        } else {
+            player.playSound(villager, Sound.ENTITY_VILLAGER_NO, 1f, 1f);
+        }
+    }
+
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPlayerTrade(PlayerTradeEvent event) {
         AbstractVillager villager = event.getVillager();
         if (!villager.getPersistentDataContainer().has(this.shopKey)) {
-            return; // not a shop npc
+            return; // not a shop villager
         }
         List<ItemStack> ingredients = event.getTrade().getIngredients();
         if (ingredients.isEmpty()) {
