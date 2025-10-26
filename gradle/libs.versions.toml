@@ -3,6 +3,7 @@ pluginyml = "0.6.0"
 runtask = "3.0.0"
 shadow = "8.3.9"
 publishing = "0.7.4"
+paperweight = "2.0.0-beta.19"
 
 paper = "1.21.9-R0.1-SNAPSHOT"
 luckperms-api = "5.4"
@@ -21,9 +22,9 @@ pluginyml-bukkit = { id = "net.minecrell.plugin-yml.bukkit", version.ref = "plug
 run-paper = { id = "xyz.jpenilla.run-paper", version.ref = "runtask" }
 shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
 publishing = { id = "me.modmuss50.mod-publish-plugin", version.ref = "publishing" }
+paperweight-userdev = { id = "io.papermc.paperweight.userdev", version.ref = "paperweight" }
 
 [libraries]
-paper-api = { module = "io.papermc.paper:paper-api", version.ref = "paper" }
 luckperms-api = { module = "net.luckperms:api", version.ref = "luckperms-api" }
 bstats-bukkit = { module = "org.bstats:bstats-bukkit", version.ref = "bstats" }
 

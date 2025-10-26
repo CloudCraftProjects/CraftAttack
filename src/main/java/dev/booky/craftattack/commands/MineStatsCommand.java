@@ -3,20 +3,18 @@ package dev.booky.craftattack.commands;
 
 import com.destroystokyo.paper.profile.PlayerProfile;
 import dev.booky.craftattack.CaManager;
-import dev.booky.craftattack.utils.CaConfig;
 import dev.booky.craftattack.utils.LeaderboardUtil;
 import dev.booky.craftattack.utils.LeaderboardUtil.LeaderboardEntry;
 import dev.booky.craftattack.utils.LeaderboardUtil.LeaderboardResult;
 import dev.jorel.commandapi.CommandAPICommand;
+import dev.jorel.commandapi.arguments.ObjectiveArgument;
 import dev.jorel.commandapi.arguments.PlayerProfileArgument;
 import dev.jorel.commandapi.exceptions.WrapperCommandSyntaxException;
 import dev.jorel.commandapi.executors.CommandArguments;
 import dev.jorel.commandapi.executors.PlayerCommandExecutor;
 import net.kyori.adventure.text.format.NamedTextColor;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.Objective;
-import org.bukkit.scoreboard.Scoreboard;
 
 import java.util.List;
 import java.util.Objects;
@@ -29,26 +27,19 @@ public class MineStatsCommand extends CommandAPICommand implements PlayerCommand
 
     private static final int LEADERBOARD_COUNT = 10;
 
-    private final String objectiveName;
+    public MineStatsCommand() {
+        super("minestats");
 
-    public MineStatsCommand(CaConfig.MineStatEntry entry) {
-        this(entry.getObjectiveName());
-    }
-
-    public MineStatsCommand(String objectiveName) {
-        super(objectiveName);
-        this.objectiveName = objectiveName;
-
+        this.withArguments(new ObjectiveArgument("objective"));
         this.withOptionalArguments(new PlayerProfileArgument("target"));
 
-        this.withPermission("craftattack.command.minestats." + objectiveName);
+        this.withPermission("craftattack.command.minestats");
         this.executesPlayer(this);
     }
 
     @Override
     public void run(Player sender, CommandArguments args) throws WrapperCommandSyntaxException {
-        Scoreboard scoreboard = Bukkit.getScoreboardManager().getMainScoreboard();
-        Objective objective = scoreboard.getObjective(this.objectiveName);
+        Objective objective = args.<Objective>getOptionalUnchecked("objective").orElse(null);
         if (objective == null) {
             sender.sendMessage(CaManager.getPrefix().append(translatable(
                     "ca.command.mine-stats.internal-error", NamedTextColor.RED)));
@@ -64,7 +55,7 @@ public class MineStatsCommand extends CommandAPICommand implements PlayerCommand
                 int score = objective.getScore(name).getScore();
                 sender.sendMessage(CaManager.getPrefix().append(translatable(
                         "ca.command.mine-stats.value", NamedTextColor.GREEN,
-                        text(this.objectiveName), text(score))));
+                        text(objective.getName()), text(score))));
             }
             return;
         }
@@ -74,7 +65,7 @@ public class MineStatsCommand extends CommandAPICommand implements PlayerCommand
 
         sender.sendMessage(CaManager.getPrefix().append(translatable(
                 "ca.command.mine-stats.leaderboard.header", NamedTextColor.GREEN,
-                text(this.objectiveName),
+                text(objective.getName()),
                 text(leaderboard.entries().size()),
                 text(leaderboard.average()))));
         for (LeaderboardEntry entry : leaderboard.entries()) {

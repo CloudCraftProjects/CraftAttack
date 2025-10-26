@@ -9,6 +9,7 @@ plugins {
     alias(libs.plugins.run.paper)
     alias(libs.plugins.shadow)
     alias(libs.plugins.publishing)
+    alias(libs.plugins.paperweight.userdev)
 }
 
 group = "dev.booky"
@@ -27,7 +28,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly(libs.paper.api)
+    paperweight.paperDevBundle(libs.versions.paper.get())
     compileOnly(libs.luckperms.api)
 
     implementation(libs.bstats.bukkit)
@@ -152,3 +153,5 @@ tasks.withType<PublishModTask> {
     dependsOn(tasks.named<Jar>("shadowJar"))
     dependsOn(tasks.named<Jar>("sourcesJar"))
 }
+
+paperweight.reobfArtifactConfiguration = io.papermc.paperweight.userdev.ReobfArtifactConfiguration.MOJANG_PRODUCTION

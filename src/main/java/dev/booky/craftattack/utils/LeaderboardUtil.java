@@ -1,22 +1,23 @@
 package dev.booky.craftattack.utils;
 // Created by booky10 in CraftAttack (02:58 26.10.2025)
 
-import it.unimi.dsi.fastutil.objects.Object2IntArrayMap;
-import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.minecraft.world.scores.PlayerScoreEntry;
+import org.bukkit.craftbukkit.scoreboard.CraftScoreboard;
 import org.bukkit.scoreboard.Objective;
-import org.bukkit.scoreboard.Score;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.util.NumberConversions;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.Map;
+import java.util.Objects;
 
 import static net.kyori.adventure.text.Component.text;
 import static net.kyori.adventure.text.Component.translatable;
@@ -47,30 +48,28 @@ public final class LeaderboardUtil {
         if (scoreboard == null) {
             throw new IllegalArgumentException("Objective " + objective + " has no assigned scoreboard, can't build leaderboard");
         }
-        // request all entries from scoreboard objective
-        Set<String> entryNames = scoreboard.getEntries();
-        Object2IntMap<String> entries = new Object2IntArrayMap<>(entryNames.size());
-        for (String entryName : entryNames) {
-            try {
-                UUID.fromString(entryName);
-                continue; // ignore entity entries
-            } catch (IllegalArgumentException ignored) {
-            }
+        // use nms to extract player scores for scoreboard to prevent
+        // bukkit from wrapping our player scores 10x or more
+        net.minecraft.world.scores.Scoreboard mcScoreboard = ((CraftScoreboard) scoreboard).getHandle();
+        net.minecraft.world.scores.Objective mcObjective = mcScoreboard.getObjective(objective.getName());
+        Collection<PlayerScoreEntry> playerScores = mcScoreboard.listPlayerScores(Objects.requireNonNull(mcObjective));
 
-            Score score = objective.getScore(entryName);
-            if (score.getScore() > 0) {
-                entries.put(entryName, score.getScore());
+        // build a map out of the player score list
+        Map<String, Integer> entries = new HashMap<>(playerScores.size());
+        for (PlayerScoreEntry score : playerScores) {
+            if (score.value() > 0) {
+                entries.put(score.owner(), score.value());
             }
         }
 
         // extract self entry
         UnplacedLeaderboardEntry unplacedSelfEntry = self == null ? null :
-                new UnplacedLeaderboardEntry(self, entries.getInt(self));
+                new UnplacedLeaderboardEntry(self, entries.getOrDefault(self, 0));
 
         // build sorted entries from raw entries
-        List<UnplacedLeaderboardEntry> unplacedEntries = entries.object2IntEntrySet().stream()
-                .sorted(Comparator.<Object2IntMap.Entry<String>>comparingInt(Object2IntMap.Entry::getIntValue).reversed())
-                .map(entry -> new UnplacedLeaderboardEntry(entry.getKey(), entry.getIntValue()))
+        List<UnplacedLeaderboardEntry> unplacedEntries = entries.entrySet().stream()
+                .sorted(Comparator.<Map.Entry<String, Integer>>comparingInt(Map.Entry::getValue).reversed())
+                .map(entry -> new UnplacedLeaderboardEntry(entry.getKey(), entry.getValue()))
                 .toList();
         int avgScore = unplacedEntries.stream()
                 .mapToInt(UnplacedLeaderboardEntry::score).average() // calc average
