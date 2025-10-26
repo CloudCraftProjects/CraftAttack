@@ -2,9 +2,12 @@ package dev.booky.craftattack.utils;
 // Created by booky10 in CraftAttack (02:58 26.10.2025)
 
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.minecraft.world.scores.PlayerScoreEntry;
+import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.scoreboard.CraftScoreboard;
+import org.bukkit.entity.TextDisplay;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.util.NumberConversions;
@@ -41,6 +44,28 @@ public final class LeaderboardUtil {
         }
 
         return entry.withPlacement(placement);
+    }
+
+    public static void applyLeaderboard(TextDisplay display, CaConfig.LeaderboardConfig config) {
+        LeaderboardResult leaderboard = buildLeaderboard(config);
+        if (leaderboard == null) {
+            return; // objective can't be found
+        }
+        TextComponent.Builder builder = text();
+        for (LeaderboardEntry line : leaderboard.entries()) {
+            Component wrappedComp = config.getWrapper().append(line.buildLine());
+            builder.append(wrappedComp).appendNewline();
+        }
+        display.text(builder.build());
+    }
+
+    public static @Nullable LeaderboardResult buildLeaderboard(CaConfig.LeaderboardConfig config) {
+        Scoreboard scoreboard = Bukkit.getScoreboardManager().getMainScoreboard();
+        Objective objective = scoreboard.getObjective(config.getObjective());
+        if (objective != null) {
+            return buildLeaderboard(objective, config.getEntries(), null);
+        }
+        return null;
     }
 
     public static LeaderboardResult buildLeaderboard(Objective objective, int size, @Nullable String self) {

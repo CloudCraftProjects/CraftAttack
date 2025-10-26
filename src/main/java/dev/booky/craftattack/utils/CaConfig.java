@@ -4,6 +4,7 @@ package dev.booky.craftattack.utils;
 import dev.booky.cloudcore.util.BlockBBox;
 import io.papermc.paper.math.BlockPosition;
 import net.kyori.adventure.key.Key;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -11,11 +12,13 @@ import org.bukkit.block.Block;
 import org.jspecify.annotations.Nullable;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 // Can't be final because of object mapping
 @SuppressWarnings("FieldMayBeFinal")
@@ -165,6 +168,37 @@ public class CaConfig {
     }
 
     private Map<BlockPosition, String> warpPlates = new HashMap<>();
+
+    private List<LeaderboardConfig> leaderboards = new ArrayList<>();
+
+    @ConfigSerializable
+    public static final class LeaderboardConfig {
+
+        private String objective;
+        private UUID entityId;
+        private int entries = 10;
+        private Component wrapper = Component.text("");
+
+        public String getObjective() {
+            return this.objective;
+        }
+
+        public UUID getEntityId() {
+            return this.entityId;
+        }
+
+        public int getEntries() {
+            return this.entries;
+        }
+
+        public Component getWrapper() {
+            return this.wrapper;
+        }
+    }
+
+    public List<LeaderboardConfig> getLeaderboards() {
+        return this.leaderboards;
+    }
 
     public @Nullable String getWarpPlateTarget(BlockPosition pos) {
         return this.warpPlates.get(pos);

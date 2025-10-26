@@ -5,6 +5,7 @@ import dev.booky.craftattack.commands.CaCommand;
 import dev.booky.craftattack.listener.DimensionListener;
 import dev.booky.craftattack.listener.ElytraListener;
 import dev.booky.craftattack.listener.ExplosionListener;
+import dev.booky.craftattack.listener.LeaderboardListener;
 import dev.booky.craftattack.listener.MineStatListener;
 import dev.booky.craftattack.listener.SitListener;
 import dev.booky.craftattack.listener.SpawnListener;
@@ -49,6 +50,7 @@ public final class CaMain extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new SpawnListener(this.manager), this);
         Bukkit.getPluginManager().registerEvents(new TeleportListener(this.manager), this);
         Bukkit.getPluginManager().registerEvents(new WarpPlateListener(this.manager), this);
+        Bukkit.getPluginManager().registerEvents(new LeaderboardListener(this.manager), this);
 
         Bukkit.getServicesManager().register(CaManager.class, this.manager, this, ServicePriority.Normal);
 
@@ -57,10 +59,6 @@ public final class CaMain extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        if (this.manager != null) {
-            this.manager.saveConfig();
-        }
-
         if (this.i18n != null) {
             this.i18n.unload();
         }
