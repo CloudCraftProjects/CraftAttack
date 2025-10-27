@@ -5,14 +5,16 @@ import dev.booky.craftattack.menu.AbstractMenu;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
+import java.util.HashMap;
 import java.util.Map;
-import java.util.WeakHashMap;
+import java.util.UUID;
 
 @NullMarked
 public final class MenuManager {
 
-    private final Map<Player, AbstractMenuHandler<?>> menus = new WeakHashMap<>();
+    private final Map<UUID, AbstractMenuHandler<?>> menus = new HashMap<>();
 
     public void open(AbstractMenu menu, Player player) {
         AbstractMenuHandler<?> handler = menu.createHandler(this, player);
@@ -23,13 +25,21 @@ public final class MenuManager {
         player.openInventory(handler.inventory);
         // after inventory has been opened, save handler in map
         // (we need to wait until after the inventory has been opened because of close events)
-        this.menus.put(player, handler);
+        this.menus.put(player.getUniqueId(), handler);
     }
 
     public void updateContent(AbstractMenu menu, Player player) {
-        AbstractMenuHandler<?> handler = this.menus.get(player);
+        AbstractMenuHandler<?> handler = this.menus.get(player.getUniqueId());
         if (handler != null && handler.menu == menu) {
             handler.refreshContent();
         }
+    }
+
+    public @Nullable AbstractMenuHandler<?> getHandler(UUID playerId) {
+        return this.menus.get(playerId);
+    }
+
+    public @Nullable AbstractMenuHandler<?> clearHandler(UUID playerId) {
+        return this.menus.remove(playerId);
     }
 }
