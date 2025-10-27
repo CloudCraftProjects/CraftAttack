@@ -22,13 +22,13 @@ public final class Menu extends AbstractMenu {
     private final Consumer<MenuSlotsArrayContext> slots;
 
     private Menu(
-            Component title, int rows,
+            Component title, int rows, boolean storage,
             Function<MenuCloseContext, MenuResult> closeHandler,
             Function<MenuClickContext, MenuClickResult> clickHandler,
             Function<MenuClickContext, MenuClickResult> backHandler,
             Consumer<MenuSlotsArrayContext> slots
     ) {
-        super(title, rows, closeHandler, clickHandler, backHandler);
+        super(title, rows, storage, closeHandler, clickHandler, backHandler);
         this.slots = slots;
     }
 
@@ -72,7 +72,7 @@ public final class Menu extends AbstractMenu {
 
         @Override
         public Menu build() {
-            return new Menu(this.title, this.rows, this.closeHandler, this.clickHandler, this.backHandler, this.slots);
+            return new Menu(this.title, this.rows, this.storage, this.closeHandler, this.clickHandler, this.backHandler, this.slots);
         }
     }
 }

@@ -22,13 +22,13 @@ public final class PagedMenu extends AbstractMenu {
     private final Consumer<MenuSlotsListContext> slots;
 
     private PagedMenu(
-            Component title, int rows,
+            Component title, int rows, boolean storage,
             Function<MenuCloseContext, MenuResult> closeHandler,
             Function<MenuClickContext, MenuClickResult> clickHandler,
             Function<MenuClickContext, MenuClickResult> backHandler,
             Consumer<MenuSlotsListContext> slots
     ) {
-        super(title, rows, closeHandler, clickHandler, backHandler);
+        super(title, rows, storage, closeHandler, clickHandler, backHandler);
         this.slots = slots;
     }
 
@@ -72,7 +72,7 @@ public final class PagedMenu extends AbstractMenu {
 
         @Override
         public PagedMenu build() {
-            return new PagedMenu(this.title, this.rows, this.closeHandler, this.clickHandler, this.backHandler, this.slots);
+            return new PagedMenu(this.title, this.rows, this.storage, this.closeHandler, this.clickHandler, this.backHandler, this.slots);
         }
     }
 }

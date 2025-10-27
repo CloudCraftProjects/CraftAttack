@@ -33,19 +33,21 @@ public class MenuListener implements Listener {
         if (!(topInventory.getHolder(false) instanceof AbstractMenuHandler<?> handler)) {
             return; // not our problem
         }
+        // determines whether this is a storage menu, where we allow some potentially unsafe actions
+        boolean storage = handler.getMenu().isStorage();
 
         boolean cancel = false;
         boolean handle = event.getSlotType() == InventoryType.SlotType.CONTAINER;
 
         if (event.getClick() == ClickType.DOUBLE_CLICK) {
             // double clicks may move items from the top inventory to the cursor
-            cancel = true;
+            cancel |= !storage;
             // don't handle double clicks, they occur at the same time as other types of clicks
             handle = false;
         }
-        if (!cancel && (event.getClick() == ClickType.SHIFT_LEFT || event.getClick() == ClickType.SHIFT_RIGHT)) {
+        if (event.getClick() == ClickType.SHIFT_LEFT || event.getClick() == ClickType.SHIFT_RIGHT) {
             // always cancel shift clicks, prevent players from shifting items in/out of menus
-            cancel = true;
+            cancel |= !storage;
         }
         if (handle && event.getClickedInventory() != event.getInventory()) {
             handle = false; // don't handle clicks in the players inventory
@@ -105,8 +107,12 @@ public class MenuListener implements Listener {
     @EventHandler(priority = EventPriority.LOW)
     public void onInventoryDrag(InventoryDragEvent event) {
         Inventory topInventory = event.getView().getTopInventory();
-        if (!(topInventory.getHolder(false) instanceof AbstractMenuHandler<?>)) {
+        if (!(topInventory.getHolder(false) instanceof AbstractMenuHandler<?> handler)) {
             return; // not our problem
+        }
+
+        if (handler.getMenu().isStorage()) {
+            return; // allow dragging in storage menus
         }
 
         // if any of the dragged slots are in the top inventory,

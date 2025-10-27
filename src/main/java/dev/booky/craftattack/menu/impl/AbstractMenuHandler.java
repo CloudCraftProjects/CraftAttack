@@ -70,7 +70,12 @@ public abstract class AbstractMenuHandler<T extends AbstractMenu> implements Inv
 
     public final MenuSlot[] provideContent() {
         MenuSlot[] slots = new MenuSlot[this.inventorySize];
-        Arrays.fill(slots, MenuSlot.createEmptySlot());
+
+        // fill with empty slots
+        MenuSlot emptySlot = !this.menu.isStorage() ? MenuSlot.createEmptySlot() :
+                MenuSlot.createEmptySlot(__ -> MenuClickResult.ALLOW);
+        Arrays.fill(slots, emptySlot);
+
         this.provideContent(slots); // fill the actual content
         return slots;
     }

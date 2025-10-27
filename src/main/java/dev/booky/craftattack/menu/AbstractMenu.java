@@ -25,19 +25,21 @@ public abstract class AbstractMenu {
 
     private final Component title;
     private final int rows;
+    private final boolean storage;
 
     private final Function<MenuCloseContext, MenuResult> closeHandler;
     private final Function<MenuClickContext, MenuClickResult> clickHandler;
     private final Function<MenuClickContext, MenuClickResult> backHandler;
 
     protected AbstractMenu(
-            Component title, int rows,
+            Component title, int rows, boolean storage,
             Function<MenuCloseContext, MenuResult> closeHandler,
             Function<MenuClickContext, MenuClickResult> clickHandler,
             Function<MenuClickContext, MenuClickResult> backHandler
     ) {
         this.title = title;
         this.rows = rows;
+        this.storage = storage;
         this.closeHandler = closeHandler;
         this.clickHandler = clickHandler;
         this.backHandler = backHandler;
@@ -85,11 +87,16 @@ public abstract class AbstractMenu {
         return this.rows * SLOTS_PER_ROW;
     }
 
+    public boolean isStorage() {
+        return this.storage;
+    }
+
     public abstract AbstractMenu.Builder<?, ?> copy();
 
     protected void copy0(AbstractMenu.Builder<?, ?> builder) {
         builder.title = this.title;
         builder.rows = this.rows;
+        builder.storage = this.storage;
         builder.closeHandler = this.closeHandler;
         builder.clickHandler = this.clickHandler;
         builder.backHandler = this.backHandler;
@@ -103,6 +110,7 @@ public abstract class AbstractMenu {
 
         protected Component title = Component.empty();
         protected int rows = 3;
+        protected boolean storage = false;
 
         protected Function<MenuCloseContext, MenuResult> closeHandler = DEFAULT_CLOSE_HANDLER;
         protected Function<MenuClickContext, MenuClickResult> clickHandler = DEFAULT_CLICK_HANDLER;
@@ -132,6 +140,11 @@ public abstract class AbstractMenu {
                 throw new IllegalArgumentException("Out-of-bounds row count received: " + rows);
             }
             this.rows = rows;
+            return this.getSelf();
+        }
+
+        public B withStorage(boolean storage) {
+            this.storage = storage;
             return this.getSelf();
         }
 

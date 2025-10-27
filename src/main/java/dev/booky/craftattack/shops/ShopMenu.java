@@ -7,6 +7,7 @@ import dev.booky.craftattack.menu.Menu;
 import dev.booky.craftattack.menu.MenuSlot;
 import dev.booky.craftattack.menu.PagedMenu;
 import dev.booky.craftattack.menu.result.MenuClickResult;
+import dev.booky.craftattack.menu.result.MenuResult;
 import dev.booky.craftattack.utils.PlayerHeadUtil;
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.ItemLore;
@@ -17,6 +18,7 @@ import org.bukkit.Material;
 import org.bukkit.entity.AbstractVillager;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.MenuType;
 import org.bukkit.inventory.MerchantRecipe;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -41,10 +43,24 @@ public final class ShopMenu {
 
     private static final int MAX_PROFIT_ENTRIES = 10;
     private static final int TRADES_PER_PAGE = 4;
-    private static final Material EMPTY_INGREDIENT = Material.STRUCTURE_VOID;
     private static final int MAX_TRADES = 20;
+    public static final Material EMPTY_INGREDIENT = Material.STRUCTURE_VOID;
 
     private ShopMenu() {
+    }
+
+    public static boolean isValidIngredient(@Nullable ItemStack stack) {
+        return stack != null && !stack.isEmpty() && stack.getType() != EMPTY_INGREDIENT;
+    }
+
+    public static void openMerchantMenu(ShopVillager shop, Player player) {
+        // TODO create per-player merchant
+        MenuType.MERCHANT.builder()
+                .merchant(shop.getMerchant())
+                .checkReachable(true)
+                .title(translatable("ca.menu.shop.merchant"))
+                .build(player)
+                .open();
     }
 
     public static void openMenu(ShopVillager shop, Player player) {
@@ -57,8 +73,16 @@ public final class ShopMenu {
                         .set(SLOTS_PER_ROW + 2,
                                 itemStack(Material.REDSTONE_TORCH, translatable("ca.menu.shop.manage-trades")),
                                 clickCtx -> {
-                                    openTradeManageMenu(shop, clickCtx.getPlayer());
+                                    openTradeManageMenu(shop, clickCtx.getPlayer(), clickCtx.getMenu());
                                     return MenuClickResult.SOUND;
+                                })
+                        .set(SLOTS_PER_ROW + SLOTS_PER_ROW / 2,
+                                itemStack(Material.CHEST, translatable("ca.menu.shop.manage-stock")),
+                                clickCtx -> {
+                                    openStockMenu(shop, clickCtx.getPlayer(), clickCtx.getMenu());
+                                    return new MenuClickResult(Sound.sound()
+                                            .type(Key.key("block.chest.open"))
+                                            .build());
                                 })
                         .set(SLOTS_PER_ROW * 2 - 3, supplyCtx -> {
                             List<ItemStack> profit = shop.getProfit();
@@ -105,7 +129,46 @@ public final class ShopMenu {
                 .open(player);
     }
 
-    public static void openTradeManageMenu(ShopVillager shop, Player player) {
+    public static void openStockMenu(ShopVillager shop, Player player, @Nullable AbstractMenu parent) {
+        shop.ensureLoaded();
+        Menu.builder()
+                .withTitle(translatable("ca.menu.shop.manage-stock"))
+                .withRows(6)
+                .withSlots(ctx -> {
+                    shop.ensureLoaded();
+                    List<ItemStack> stock = shop.getStock();
+                    for (int i = 0; i < stock.size(); i++) {
+                        if (i == ctx.getSlots().length - SLOTS_PER_ROW) {
+                            i++; // don't override back button
+                            continue;
+                        }
+                        ctx.set(i, new MenuSlot(stock.get(i),
+                                clickCtx -> MenuClickResult.ALLOW));
+                    }
+                })
+                .onClose(ctx -> {
+                    shop.ensureLoaded();
+                    List<ItemStack> stock = new ArrayList<>();
+                    @Nullable ItemStack[] contents = ctx.getInventory().getContents();
+                    for (int i = 0; i < contents.length; i++) {
+                        if (i == contents.length - SLOTS_PER_ROW) {
+                            i++; // don't override back button
+                            continue;
+                        }
+                        ItemStack stack = contents[i];
+                        if (stack != null && !stack.isEmpty()) {
+                            stock.add(stack.clone());
+                        }
+                    }
+                    shop.setStock(stock);
+                    return MenuResult.NONE;
+                })
+                .withParent(parent)
+                .withStorage(true)
+                .open(player);
+    }
+
+    public static void openTradeManageMenu(ShopVillager shop, Player player, @Nullable AbstractMenu parent) {
         shop.ensureLoaded();
         PagedMenu.builder()
                 .withRows(TRADES_PER_PAGE + 2)
@@ -149,18 +212,19 @@ public final class ShopMenu {
                         }
                     }
                 })
+                .withParent(parent)
                 .open(player);
     }
 
     private static ItemStack wrapIngredient(@Nullable ItemStack stack) {
-        if (stack == null || stack.isEmpty() || stack.getType() == EMPTY_INGREDIENT) {
+        if (!isValidIngredient(stack)) {
             return ItemStack.of(EMPTY_INGREDIENT);
         }
         return stack;
     }
 
     private static ItemStack modifyIngredient(@Nullable ItemStack stack) {
-        if (stack == null || stack.isEmpty() || stack.getType() == EMPTY_INGREDIENT) {
+        if (!isValidIngredient(stack)) {
             stack = itemStack(EMPTY_INGREDIENT, translatable("ca.menu.shop.manage.ingredient.none"));
         }
         // modify lore to include info

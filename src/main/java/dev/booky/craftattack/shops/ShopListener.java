@@ -15,11 +15,9 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
-import org.bukkit.inventory.ItemStack;
 import org.jspecify.annotations.NullMarked;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 @NullMarked
@@ -47,12 +45,13 @@ public final class ShopListener implements Listener {
                 || !villager.getPersistentDataContainer().has(this.shopKey)) {
             return; // not a shop villager
         }
-        Player player = event.getPlayer();
-        if (!player.isSneaking()) {
-            return; // pass on to normal interaction // TODO multi-player shops?
-        }
         event.setCancelled(true);
         ShopVillager shop = this.villagerCache.get(villager);
+        Player player = event.getPlayer();
+        if (!player.isSneaking()) {
+            ShopMenu.openMerchantMenu(shop, player);
+            return;
+        }
         // set player as owner if this shop doesn't have an owner yet
         if (shop.getOwnerId() == null) {
             shop.setOwnerId(player.getUniqueId());
@@ -64,20 +63,15 @@ public final class ShopListener implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onPlayerTrade(PlayerTradeEvent event) {
         AbstractVillager villager = event.getVillager();
         if (!villager.getPersistentDataContainer().has(this.shopKey)) {
             return; // not a shop villager
         }
-        List<ItemStack> ingredients = event.getTrade().getIngredients();
-        if (ingredients.isEmpty()) {
-            return; // free trade, no profit made
-        }
         ShopVillager shop = this.villagerCache.get(villager);
-        // don't adjust ingredient count, we just use raw ingredients here
-        for (ItemStack ingredient : ingredients) {
-            shop.addProfit(ingredient);
+        if (!shop.tryTrade(event.getTrade())) {
+            event.setCancelled(true);
         }
     }
 

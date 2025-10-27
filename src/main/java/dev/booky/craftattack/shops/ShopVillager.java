@@ -9,6 +9,7 @@ import org.bukkit.entity.AbstractVillager;
 import org.bukkit.entity.Entity;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.MerchantRecipe;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -31,6 +32,8 @@ public final class ShopVillager {
 
     private final NamespacedKey profitKey;
     private final List<ItemStack> profit = new ArrayList<>();
+    private final NamespacedKey stockKey;
+    private final List<ItemStack> stock = new ArrayList<>();
 
     private final NamespacedKey ownerKey;
     private @Nullable UUID ownerId;
@@ -41,9 +44,80 @@ public final class ShopVillager {
         this.onDirty = onDirty;
 
         this.profitKey = new NamespacedKey(manager.getPlugin(), "shop/profit");
+        this.stockKey = new NamespacedKey(manager.getPlugin(), "shop/stock");
         this.ownerKey = new NamespacedKey(manager.getPlugin(), "shop/owner");
 
         this.loadData();
+    }
+
+    public boolean tryTrade(MerchantRecipe recipe) {
+        if (this.isTradeAllowed(recipe)) {
+            this.consumeStock(recipe);
+            this.addProfit(recipe);
+            return true;
+        }
+        return false;
+    }
+
+    public boolean isTradeAllowed(MerchantRecipe recipe) {
+        List<ItemStack> ingredients = recipe.getIngredients();
+        for (ItemStack ingredient : ingredients) {
+            if (!ShopMenu.isValidIngredient(ingredient)) {
+                continue; // empty
+            }
+            ingredient = ingredient.clone();
+            for (ItemStack stack : this.stock) {
+                if (!ingredient.isSimilar(stack)) {
+                    continue; // doesn't match
+                }
+                // consume ingredient
+                ingredient.subtract(stack.getAmount());
+                if (ingredient.isEmpty()) {
+                    break;
+                }
+            }
+            if (!ingredient.isEmpty()) {
+                return false; // ingredient didn't get fully consumed
+            }
+        }
+        return true;
+    }
+
+    public void consumeStock(MerchantRecipe recipe) {
+        List<ItemStack> ingredients = recipe.getIngredients();
+        for (ItemStack ingredient : ingredients) {
+            if (ShopMenu.isValidIngredient(ingredient)) {
+                this.consumeStock(ingredient);
+            }
+        }
+    }
+
+    public void consumeStock(ItemStack stack) {
+        stack = stack.clone();
+        boolean mut = false;
+        for (ItemStack stock : this.stock) {
+            if (!stack.isSimilar(stock)) {
+                continue; // doesn't match
+            }
+            int newAmount = Math.max(0, stack.getAmount() - stock.getAmount());
+            stock.subtract(stack.getAmount());
+            stack.setAmount(newAmount);
+            mut = true;
+            if (stack.isEmpty()) {
+                break;
+            }
+        }
+        if (mut) {
+            this.markDirty();
+        }
+    }
+
+    public void addProfit(MerchantRecipe recipe) {
+        for (ItemStack ingredient : recipe.getIngredients()) {
+            if (ShopMenu.isValidIngredient(ingredient)) {
+                this.addProfit(ingredient);
+            }
+        }
     }
 
     public void addProfit(ItemStack profit) {
@@ -72,6 +146,16 @@ public final class ShopVillager {
             this.profit.add(profit);
         }
         // mark as dirty
+        this.markDirty();
+    }
+
+    public List<ItemStack> getStock() {
+        return this.stock;
+    }
+
+    public void setStock(List<ItemStack> stock) {
+        this.stock.clear();
+        this.stock.addAll(stock);
         this.markDirty();
     }
 
@@ -115,9 +199,16 @@ public final class ShopVillager {
     private void loadData() {
         PersistentDataContainer pdc = this.getMerchant().getPersistentDataContainer();
         // load profit stacks
-        ItemStack[] stacks = pdc.get(this.profitKey, ItemStackListDataType.INSTANCE);
-        if (stacks != null && stacks.length > 0) {
-            this.profit.addAll(List.of(stacks));
+        ItemStack[] profitStacks = pdc.get(this.profitKey, ItemStackListDataType.INSTANCE);
+        this.profit.clear();
+        if (profitStacks != null && profitStacks.length > 0) {
+            this.profit.addAll(List.of(profitStacks));
+        }
+        // load stock stacks
+        ItemStack[] stockStacks = pdc.get(this.stockKey, ItemStackListDataType.INSTANCE);
+        this.stock.clear();
+        if (stockStacks != null && stockStacks.length > 0) {
+            this.stock.addAll(List.of(stockStacks));
         }
         // load id of owner
         this.ownerId = pdc.get(this.ownerKey, UniqueIdDataType.INSTANCE);
@@ -131,6 +222,13 @@ public final class ShopVillager {
                     this.profit.toArray(new ItemStack[0]));
         } else {
             pdc.remove(this.profitKey);
+        }
+        // save stock stacks
+        if (!this.stock.isEmpty()) {
+            pdc.set(this.stockKey, ItemStackListDataType.INSTANCE,
+                    this.stock.toArray(new ItemStack[0]));
+        } else {
+            pdc.remove(this.stockKey);
         }
         // save id of owner
         if (this.ownerId != null) {
