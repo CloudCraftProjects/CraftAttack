@@ -22,6 +22,7 @@ public final class PlayerHeadUtil {
 
     public static final String MINECRAFT_TEXTURE_BASE_URL = "http://textures.minecraft.net/texture/";
     public static final String WHITE_ARROW_LEFT_TEXTURE = MINECRAFT_TEXTURE_BASE_URL + "cdc9e4dcfa4221a1fadc1b5b2b11d8beeb57879af1c42362142bae1edd5";
+    public static final String WHITE_ARROW_RIGHT_TEXTURE = MINECRAFT_TEXTURE_BASE_URL + "956a3618459e43b287b22b7e235ec699594546c6fcd6dc84bfca4cf30ab9311";
 
     // use a common profile owner id to prevent clients from resolving textures for this uuid over and over
     public static final UUID STATIC_PROFILE_UUID = UUID.fromString("853c80ef-3c37-39fd-aa49-938b674adae6");
