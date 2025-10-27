@@ -2,6 +2,7 @@ package dev.booky.craftattack.menu.context;
 // Created by booky10 in CraftAttack (00:08 27.10.2025)
 
 import dev.booky.craftattack.menu.AbstractMenu;
+import dev.booky.craftattack.menu.impl.MenuManager;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
@@ -16,8 +17,8 @@ public final class MenuCloseContext extends MenuContext {
     private final InventoryCloseEvent.Reason reason;
 
     @ApiStatus.Internal
-    public MenuCloseContext(AbstractMenu menu, Player player, Inventory inventory, InventoryView view, InventoryCloseEvent.Reason reason) {
-        super(menu, player, inventory);
+    public MenuCloseContext(MenuManager manager, AbstractMenu menu, Player player, Inventory inventory, InventoryView view, InventoryCloseEvent.Reason reason) {
+        super(manager, menu, player, inventory);
         this.view = view;
         this.reason = reason;
     }

@@ -2,6 +2,7 @@ package dev.booky.craftattack.menu.context;
 // Created by booky10 in CraftAttack (00:09 27.10.2025)
 
 import dev.booky.craftattack.menu.AbstractMenu;
+import dev.booky.craftattack.menu.impl.MenuManager;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.Inventory;
@@ -21,8 +22,8 @@ public final class MenuClickContext extends MenuContext {
     private final ClickType clickType;
 
     @ApiStatus.Internal
-    public MenuClickContext(AbstractMenu menu, Player player, Inventory inventory, InventoryView view, int rawSlot, int slot, ItemStack stack, ItemStack cursor, ClickType clickType) {
-        super(menu, player, inventory);
+    public MenuClickContext(MenuManager manager, AbstractMenu menu, Player player, Inventory inventory, InventoryView view, int rawSlot, int slot, ItemStack stack, ItemStack cursor, ClickType clickType) {
+        super(manager, menu, player, inventory);
         this.view = view;
         this.rawSlot = rawSlot;
         this.slot = slot;

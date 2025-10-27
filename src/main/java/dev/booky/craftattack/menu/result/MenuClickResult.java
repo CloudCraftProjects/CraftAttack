@@ -6,6 +6,8 @@ import net.kyori.adventure.sound.Sound;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
+import java.util.Objects;
+
 @NullMarked
 public final class MenuClickResult extends MenuResult {
 
@@ -24,6 +26,9 @@ public final class MenuClickResult extends MenuResult {
     }
 
     public MenuClickResult plus(MenuClickResult other) {
+        if (this.equals(other)) {
+            return this;
+        }
         Sound sound;
         if (this.sound != null) {
             // in the case of both sounds not being empty, we can't properly combine this;
@@ -39,5 +44,19 @@ public final class MenuClickResult extends MenuResult {
 
     public boolean isAllow() {
         return this.allow;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null || getClass() != obj.getClass()) return false;
+        MenuClickResult that = (MenuClickResult) obj;
+        if (this.close != that.close) return false;
+        if (this.allow != that.allow) return false;
+        return Objects.equals(this.sound, that.sound);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.sound, this.close, this.allow);
     }
 }

@@ -4,9 +4,9 @@ package dev.booky.craftattack.menu.context;
 import com.google.common.collect.Iterators;
 import dev.booky.craftattack.menu.AbstractMenu;
 import dev.booky.craftattack.menu.MenuSlot;
+import dev.booky.craftattack.menu.impl.MenuManager;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.InventoryView;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -19,8 +19,8 @@ public final class MenuSlotsArrayContext extends MenuContext implements Iterable
 
     private final @Nullable MenuSlot[] slots;
 
-    public MenuSlotsArrayContext(AbstractMenu menu, Player player, Inventory inventory) {
-        super(menu, player, inventory);
+    public MenuSlotsArrayContext(MenuManager manager, AbstractMenu menu, Player player, Inventory inventory) {
+        super(manager, menu, player, inventory);
         this.slots = new MenuSlot[menu.getRows() * SLOTS_PER_ROW];
     }
 

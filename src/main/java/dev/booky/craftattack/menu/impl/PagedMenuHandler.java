@@ -28,13 +28,13 @@ public class PagedMenuHandler extends AbstractMenuHandler<PagedMenu> {
     private int pages;
     private int page = 0;
 
-    public PagedMenuHandler(PagedMenu menu, Player player) {
-        super(menu, player);
+    public PagedMenuHandler(MenuManager manager, PagedMenu menu, Player player) {
+        super(manager, menu, player);
     }
 
     @Override
     public void refreshContent() {
-        MenuSlotsListContext ctx = new MenuSlotsListContext(this.menu, this.player, this.inventory);
+        MenuSlotsListContext ctx = new MenuSlotsListContext(this.manager, this.menu, this.player, this.inventory);
         this.menu.supplySlots(ctx);
 
         List<MenuSlot> content = ctx.getSlots();

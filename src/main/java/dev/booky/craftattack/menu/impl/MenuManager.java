@@ -14,15 +14,22 @@ public final class MenuManager {
 
     private final Map<Player, AbstractMenuHandler<?>> menus = new WeakHashMap<>();
 
-    public void open(AbstractMenu menu, Player bukkitPlayer) {
-        AbstractMenuHandler<?> handler = menu.createHandler(bukkitPlayer);
+    public void open(AbstractMenu menu, Player player) {
+        AbstractMenuHandler<?> handler = menu.createHandler(this, player);
         handler.inventory = Bukkit.createInventory(handler, menu.getSlots(), menu.getTitle());
 
         // initialize initial inventory content and open inventory
         handler.refreshContent();
-        bukkitPlayer.openInventory(handler.inventory);
+        player.openInventory(handler.inventory);
         // after inventory has been opened, save handler in map
         // (we need to wait until after the inventory has been opened because of close events)
-        this.menus.put(bukkitPlayer, handler);
+        this.menus.put(player, handler);
+    }
+
+    public void updateContent(AbstractMenu menu, Player player) {
+        AbstractMenuHandler<?> handler = this.menus.get(player);
+        if (handler != null && handler.menu == menu) {
+            handler.refreshContent();
+        }
     }
 }
