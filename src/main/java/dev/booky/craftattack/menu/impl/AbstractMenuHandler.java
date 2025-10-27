@@ -9,8 +9,6 @@ import dev.booky.craftattack.menu.context.MenuContext;
 import dev.booky.craftattack.menu.result.MenuClickResult;
 import dev.booky.craftattack.menu.result.MenuResult;
 import dev.booky.craftattack.utils.PlayerHeadUtil;
-import io.papermc.paper.datacomponent.DataComponentTypes;
-import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
@@ -18,7 +16,6 @@ import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.InventoryView;
-import org.bukkit.inventory.ItemRarity;
 import org.bukkit.inventory.ItemStack;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -26,6 +23,8 @@ import org.jspecify.annotations.Nullable;
 import java.util.Arrays;
 
 import static dev.booky.craftattack.menu.AbstractMenu.SLOTS_PER_ROW;
+import static dev.booky.craftattack.utils.PlayerHeadUtil.WHITE_ARROW_LEFT_TEXTURE;
+import static net.kyori.adventure.text.Component.translatable;
 
 @NullMarked
 public abstract class AbstractMenuHandler<T extends AbstractMenu> implements InventoryHolder {
@@ -83,9 +82,7 @@ public abstract class AbstractMenuHandler<T extends AbstractMenu> implements Inv
     }
 
     public MenuSlot provideBack() {
-        ItemStack stack = PlayerHeadUtil.createHeadStack(PlayerHeadUtil.WHITE_ARROW_LEFT_TEXTURE);
-        stack.setData(DataComponentTypes.ITEM_NAME, Component.translatable("ca.menu.back"));
-        stack.setData(DataComponentTypes.RARITY, ItemRarity.COMMON);
+        ItemStack stack = PlayerHeadUtil.createHeadStack(WHITE_ARROW_LEFT_TEXTURE, translatable("ca.menu.back"));
         return new MenuSlot(stack, this.menu::handleBack);
     }
 

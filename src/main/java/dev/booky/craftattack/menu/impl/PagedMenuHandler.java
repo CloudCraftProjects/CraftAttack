@@ -6,10 +6,7 @@ import dev.booky.craftattack.menu.PagedMenu;
 import dev.booky.craftattack.menu.context.MenuSlotsListContext;
 import dev.booky.craftattack.menu.result.MenuClickResult;
 import dev.booky.craftattack.utils.PlayerHeadUtil;
-import io.papermc.paper.datacomponent.DataComponentTypes;
-import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemRarity;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.NumberConversions;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -18,6 +15,8 @@ import org.jspecify.annotations.NullMarked;
 import java.util.List;
 
 import static dev.booky.craftattack.menu.AbstractMenu.SLOTS_PER_ROW;
+import static dev.booky.craftattack.utils.PlayerHeadUtil.WHITE_ARROW_LEFT_TEXTURE;
+import static dev.booky.craftattack.utils.PlayerHeadUtil.WHITE_ARROW_RIGHT_TEXTURE;
 import static net.kyori.adventure.text.Component.text;
 import static net.kyori.adventure.text.Component.translatable;
 
@@ -102,10 +101,8 @@ public class PagedMenuHandler extends AbstractMenuHandler<PagedMenu> {
     }
 
     private MenuSlot providePreviousPage() {
-        ItemStack stack = PlayerHeadUtil.createHeadStack(PlayerHeadUtil.WHITE_ARROW_LEFT_TEXTURE);
-        Component name = translatable("ca.menu.previous", text(this.page));
-        stack.setData(DataComponentTypes.ITEM_NAME, name);
-        stack.setData(DataComponentTypes.RARITY, ItemRarity.COMMON);
+        ItemStack stack = PlayerHeadUtil.createHeadStack(WHITE_ARROW_LEFT_TEXTURE,
+                translatable("ca.menu.previous", text(this.page)));
         return new MenuSlot(stack, ctx -> {
             this.updatePage(-1);
             return MenuClickResult.SOUND;
@@ -113,10 +110,8 @@ public class PagedMenuHandler extends AbstractMenuHandler<PagedMenu> {
     }
 
     private MenuSlot provideNextPage() {
-        ItemStack stack = PlayerHeadUtil.createHeadStack(PlayerHeadUtil.WHITE_ARROW_RIGHT_TEXTURE);
-        Component name = translatable("ca.menu.next", text(this.page + 1 + 1));
-        stack.setData(DataComponentTypes.ITEM_NAME, name);
-        stack.setData(DataComponentTypes.RARITY, ItemRarity.COMMON);
+        ItemStack stack = PlayerHeadUtil.createHeadStack(WHITE_ARROW_RIGHT_TEXTURE,
+                translatable("ca.menu.next", text(this.page + 1 + 1)));
         return new MenuSlot(stack, ctx -> {
             this.updatePage(1);
             return MenuClickResult.SOUND;

@@ -17,11 +17,15 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
 import org.jspecify.annotations.NullMarked;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
 
 @NullMarked
 public class MenuListener implements Listener {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger("CraftAttack");
 
     @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
     public void onInventoryClick(InventoryClickEvent event) {
@@ -51,7 +55,13 @@ public class MenuListener implements Listener {
             ItemStack stack = event.getInventory().getItem(event.getSlot());
             stack = Objects.requireNonNullElseGet(stack, ItemStack::empty);
 
-            MenuClickResult result = handler.handleClick(event.getView(), event.getRawSlot(), stack, event.getClick());
+            MenuClickResult result = MenuClickResult.NONE;
+            try {
+                result = handler.handleClick(event.getView(), event.getRawSlot(), stack, event.getClick());
+            } catch (Throwable throwable) {
+                LOGGER.error("Error while handling inventory close for {} of {}",
+                        event.getView(), event.getWhoClicked(), throwable);
+            }
             if (!result.isAllow()) {
                 cancel = true;
             }
@@ -78,7 +88,13 @@ public class MenuListener implements Listener {
             return; // not our problem
         }
 
-        MenuResult result = handler.handleClose(event.getView(), event.getReason());
+        MenuResult result = MenuResult.NONE;
+        try {
+            result = handler.handleClose(event.getView(), event.getReason());
+        } catch (Throwable throwable) {
+            LOGGER.error("Error while handling inventory close for {} of {}",
+                    event.getView(), event.getPlayer(), throwable);
+        }
         Sound sound = result.getSound();
         if (sound != null) {
             HumanEntity clicker = event.getPlayer();

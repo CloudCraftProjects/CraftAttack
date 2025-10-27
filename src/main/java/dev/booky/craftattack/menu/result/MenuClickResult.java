@@ -14,6 +14,8 @@ public final class MenuClickResult extends MenuResult {
     public static final MenuClickResult NONE = new MenuClickResult(null, false, false);
     public static final MenuClickResult SOUND = new MenuClickResult(
             Sound.sound().type(Key.key("block.note_block.hat")).build(), false, false);
+    public static final MenuClickResult SOUND_FAIL = new MenuClickResult(
+            Sound.sound().type(Key.key("entity.enderman.teleport")).pitch(0f).build(), false, false);
     public static final MenuClickResult CLOSE = new MenuClickResult(null, true, false);
     public static final MenuClickResult CLOSE_SOUND = SOUND.plus(CLOSE);
     public static final MenuClickResult ALLOW = new MenuClickResult(null, false, true);

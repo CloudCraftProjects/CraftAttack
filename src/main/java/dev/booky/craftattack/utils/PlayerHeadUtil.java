@@ -6,8 +6,10 @@ import com.destroystokyo.paper.profile.ProfileProperty;
 import com.google.gson.stream.JsonWriter;
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.ResolvableProfile;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.inventory.ItemRarity;
 import org.bukkit.inventory.ItemStack;
 import org.jspecify.annotations.NullMarked;
 
@@ -23,6 +25,7 @@ public final class PlayerHeadUtil {
     public static final String MINECRAFT_TEXTURE_BASE_URL = "http://textures.minecraft.net/texture/";
     public static final String WHITE_ARROW_LEFT_TEXTURE = MINECRAFT_TEXTURE_BASE_URL + "cdc9e4dcfa4221a1fadc1b5b2b11d8beeb57879af1c42362142bae1edd5";
     public static final String WHITE_ARROW_RIGHT_TEXTURE = MINECRAFT_TEXTURE_BASE_URL + "956a3618459e43b287b22b7e235ec699594546c6fcd6dc84bfca4cf30ab9311";
+    public static final String WHITE_PLUS_TEXTURE = MINECRAFT_TEXTURE_BASE_URL + "60b55f74681c68283a1c1ce51f1c83b52e2971c91ee34efcb598df3990a7e7";
 
     // use a common profile owner id to prevent clients from resolving textures for this uuid over and over
     public static final UUID STATIC_PROFILE_UUID = UUID.fromString("853c80ef-3c37-39fd-aa49-938b674adae6");
@@ -59,6 +62,13 @@ public final class PlayerHeadUtil {
     public static ProfileProperty createProfileProperty(String textureUrl) {
         String encodedTextureUrl = encodeTextureUrl(textureUrl);
         return new ProfileProperty(PROFILE_PROPERTY_TEXTURES, encodedTextureUrl);
+    }
+
+    public static ItemStack createHeadStack(String textureUrl, Component name) {
+        ItemStack stack = createHeadStack(textureUrl);
+        stack.setData(DataComponentTypes.RARITY, ItemRarity.COMMON);
+        stack.setData(DataComponentTypes.ITEM_NAME, name);
+        return stack;
     }
 
     public static ItemStack createHeadStack(String textureUrl) {

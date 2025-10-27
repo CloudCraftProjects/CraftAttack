@@ -47,7 +47,7 @@ public final class ShopVillager {
     }
 
     public void addProfit(ItemStack profit) {
-        this.getMerchant(); // ensure merchant still exists
+        this.ensureLoaded();
         if (profit.isEmpty()) {
             return; // useless
         }
@@ -84,7 +84,7 @@ public final class ShopVillager {
     }
 
     public boolean dumpProfit(Inventory inventory) {
-        this.getMerchant(); // ensure merchant still exists
+        this.ensureLoaded();
         boolean mut = false;
         boolean ret = true;
         Iterator<ItemStack> it = this.profit.iterator();
@@ -142,6 +142,10 @@ public final class ShopVillager {
 
     public void markDirty() {
         this.onDirty.accept(this);
+    }
+
+    public void ensureLoaded() {
+        this.getMerchant();
     }
 
     public AbstractVillager getMerchant() {
