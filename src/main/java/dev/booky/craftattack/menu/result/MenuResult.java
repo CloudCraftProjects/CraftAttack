@@ -1,4 +1,4 @@
-package dev.booky.craftattack.menu;
+package dev.booky.craftattack.menu.result;
 // Created by booky10 in CraftAttack (00:09 27.10.2025)
 
 import net.kyori.adventure.key.Key;

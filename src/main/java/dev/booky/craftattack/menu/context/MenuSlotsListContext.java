@@ -1,6 +1,8 @@
-package dev.booky.craftattack.menu;
+package dev.booky.craftattack.menu.context;
 // Created by booky10 in CraftAttack (00:29 27.10.2025)
 
+import dev.booky.craftattack.menu.AbstractMenu;
+import dev.booky.craftattack.menu.MenuSlot;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryView;
@@ -18,8 +20,8 @@ public final class MenuSlotsListContext extends MenuContext implements Iterable<
 
     private final List<MenuSlot> slots = new ArrayList<>(4 * SLOTS_PER_ROW);
 
-    public MenuSlotsListContext(AbstractMenu menu, Player player, Inventory inventory, InventoryView view) {
-        super(menu, player, inventory, view);
+    public MenuSlotsListContext(AbstractMenu menu, Player player, Inventory inventory) {
+        super(menu, player, inventory);
     }
 
     public void add(MenuSlot slot) {

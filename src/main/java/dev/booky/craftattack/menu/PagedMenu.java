@@ -1,7 +1,15 @@
 package dev.booky.craftattack.menu;
 // Created by booky10 in CraftAttack (00:06 27.10.2025)
 
+import dev.booky.craftattack.menu.context.MenuClickContext;
+import dev.booky.craftattack.menu.context.MenuCloseContext;
+import dev.booky.craftattack.menu.context.MenuSlotsListContext;
+import dev.booky.craftattack.menu.impl.AbstractMenuHandler;
+import dev.booky.craftattack.menu.impl.PagedMenuHandler;
+import dev.booky.craftattack.menu.result.MenuClickResult;
+import dev.booky.craftattack.menu.result.MenuResult;
 import net.kyori.adventure.text.Component;
+import org.bukkit.entity.Player;
 import org.jetbrains.annotations.ApiStatus;
 import org.jspecify.annotations.NullMarked;
 
@@ -31,6 +39,12 @@ public final class PagedMenu extends AbstractMenu {
     @ApiStatus.Internal
     public void supplySlots(MenuSlotsListContext ctx) {
         this.slots.accept(ctx);
+    }
+
+    @ApiStatus.Internal
+    @Override
+    public AbstractMenuHandler<?> createHandler(Player player) {
+        return new PagedMenuHandler(this, player);
     }
 
     @Override

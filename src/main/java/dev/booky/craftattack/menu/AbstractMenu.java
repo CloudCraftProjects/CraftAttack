@@ -1,6 +1,11 @@
 package dev.booky.craftattack.menu;
 // Created by booky10 in CraftAttack (00:05 27.10.2025)
 
+import dev.booky.craftattack.menu.context.MenuClickContext;
+import dev.booky.craftattack.menu.context.MenuCloseContext;
+import dev.booky.craftattack.menu.impl.AbstractMenuHandler;
+import dev.booky.craftattack.menu.result.MenuClickResult;
+import dev.booky.craftattack.menu.result.MenuResult;
 import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 import org.bukkit.util.NumberConversions;
@@ -51,6 +56,9 @@ public abstract class AbstractMenu {
     public final MenuClickResult handleBack(MenuClickContext ctx) {
         return this.backHandler.apply(ctx);
     }
+
+    @ApiStatus.Internal
+    public abstract AbstractMenuHandler<?> createHandler(Player player);
 
     public void open(Player player) {
         // TODO

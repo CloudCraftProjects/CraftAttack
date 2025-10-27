@@ -1,6 +1,9 @@
 package dev.booky.craftattack.menu;
 // Created by booky10 in CraftAttack (00:11 27.10.2025)
 
+import dev.booky.craftattack.menu.context.MenuClickContext;
+import dev.booky.craftattack.menu.context.MenuContext;
+import dev.booky.craftattack.menu.result.MenuClickResult;
 import org.bukkit.inventory.ItemStack;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
