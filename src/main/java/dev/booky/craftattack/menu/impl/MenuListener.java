@@ -30,17 +30,30 @@ public class MenuListener implements Listener {
             return; // not our problem
         }
 
-        // TODO revisit these checks, they don't seem safe
-        if (event.getSlotType() == InventoryType.SlotType.CONTAINER
-                && event.getClickedInventory() == event.getInventory()
-                && event.getClick() != ClickType.DOUBLE_CLICK
-                && event.getClickedInventory() == event.getView().getTopInventory()) {
+        boolean cancel = false;
+        boolean handle = event.getSlotType() == InventoryType.SlotType.CONTAINER;
+
+        if (event.getClick() == ClickType.DOUBLE_CLICK) {
+            // double clicks may move items from the top inventory to the cursor
+            cancel = true;
+            // don't handle double clicks, they occur at the same time as other types of clicks
+            handle = false;
+        }
+        if (!cancel && (event.getClick() == ClickType.SHIFT_LEFT || event.getClick() == ClickType.SHIFT_RIGHT)) {
+            // always cancel shift clicks, prevent players from shifting items in/out of menus
+            cancel = true;
+        }
+        if (handle && event.getClickedInventory() != event.getInventory()) {
+            handle = false; // don't handle clicks in the players inventory
+        }
+
+        if (handle) {
             ItemStack stack = event.getInventory().getItem(event.getSlot());
             stack = Objects.requireNonNullElseGet(stack, ItemStack::empty);
 
             MenuClickResult result = handler.handleClick(event.getView(), event.getRawSlot(), stack, event.getClick());
             if (!result.isAllow()) {
-                event.setCancelled(true);
+                cancel = true;
             }
             HumanEntity clicker = event.getWhoClicked();
             Sound sound = result.getSound();
@@ -53,15 +66,8 @@ public class MenuListener implements Listener {
             }
         }
 
-        // TODO what the fuck are these checks?
-        if (!event.isCancelled() && event.getRawSlot() != InventoryView.OUTSIDE && event.getRawSlot() != -1) {
-            if (event.getRawSlot() < event.getView().getTopInventory().getSize()) {
-                // cancel all clicks targeting the top inventory // TODO WHY
-                event.setCancelled(true);
-            } else if (event.getClick() == ClickType.SHIFT_LEFT || event.getClick() == ClickType.SHIFT_RIGHT) {
-                // always cancel shift clicks // TODO WHY
-                event.setCancelled(true);
-            }
+        if (cancel) {
+            event.setCancelled(true);
         }
     }
 
