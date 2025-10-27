@@ -14,9 +14,11 @@ import io.papermc.paper.datacomponent.item.ItemLore;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.util.Ticks;
 import org.bukkit.Material;
 import org.bukkit.entity.AbstractVillager;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.WanderingTrader;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.MenuType;
 import org.bukkit.inventory.MerchantRecipe;
@@ -45,6 +47,7 @@ public final class ShopMenu {
     private static final int TRADES_PER_PAGE = 4;
     private static final int MAX_TRADES = 20;
     public static final Material EMPTY_INGREDIENT = Material.STRUCTURE_VOID;
+    private static final int PER_PLAYER_TRADER_TTL = Ticks.TICKS_PER_SECOND * 60 * 5;
 
     private ShopMenu() {
     }
@@ -53,14 +56,55 @@ public final class ShopMenu {
         return stack != null && !stack.isEmpty() && stack.getType() != EMPTY_INGREDIENT;
     }
 
-    public static void openMerchantMenu(ShopVillager shop, Player player) {
-        // TODO create per-player merchant
+    public static List<MerchantRecipe> buildRecipes(ShopVillager shop) {
+        List<MerchantRecipe> recipes = shop.getMerchant().getRecipes();
+        List<MerchantRecipe> filtered = new ArrayList<>(recipes.size());
+        for (MerchantRecipe recipe : recipes) {
+            ItemStack result = recipe.getResult();
+            if (!isValidIngredient(result)) {
+                continue; // no result
+            }
+            // filter valid ingredients
+            List<ItemStack> validIngredients = new ArrayList<>();
+            for (ItemStack ingredient : recipe.getIngredients()) {
+                if (isValidIngredient(ingredient)) {
+                    validIngredients.add(ingredient);
+                }
+            }
+            if (validIngredients.isEmpty()) {
+                continue; // no ingredients
+            }
+            // re-build recipe with unlimited uses
+            MerchantRecipe filteredRecipe = new MerchantRecipe(result, Integer.MAX_VALUE);
+            filteredRecipe.setIngredients(validIngredients);
+            filtered.add(filteredRecipe);
+        }
+        return filtered;
+    }
+
+    public static boolean openMerchantMenu(ShopVillager shop, Player player) {
+        List<MerchantRecipe> recipes = buildRecipes(shop);
+        if (recipes.isEmpty()) {
+            return false; // no recipes available
+        }
+        // spawn separate merchant per player to allow multiple players to access one shop at the same time
+        AbstractVillager merchant = shop.getMerchant();
+        WanderingTrader spawnedMerchant = merchant.getWorld().spawn(merchant.getLocation(), WanderingTrader.class, false, trader -> {
+            trader.setPersistent(false);
+            trader.setAI(false);
+            trader.setSilent(true);
+            trader.setVisibleByDefault(false);
+            trader.setCollidable(false);
+            trader.setDespawnDelay(PER_PLAYER_TRADER_TTL);
+            trader.setRecipes(recipes);
+        });
+        // build merchant inventory menu
         MenuType.MERCHANT.builder()
-                .merchant(shop.getMerchant())
+                .merchant(spawnedMerchant)
                 .checkReachable(true)
                 .title(translatable("ca.menu.shop.merchant"))
-                .build(player)
-                .open();
+                .build(player).open();
+        return true; // report success!
     }
 
     public static void openMenu(ShopVillager shop, Player player) {

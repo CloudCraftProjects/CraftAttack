@@ -7,6 +7,8 @@ import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.github.benmanes.caffeine.cache.Ticker;
 import dev.booky.craftattack.CaManager;
 import io.papermc.paper.event.player.PlayerTradeEvent;
+import net.kyori.adventure.text.Component;
+import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Sound;
 import org.bukkit.entity.AbstractVillager;
@@ -15,10 +17,13 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
+import org.bukkit.inventory.view.MerchantView;
 import org.jspecify.annotations.NullMarked;
 
 import java.util.HashSet;
 import java.util.Set;
+
+import static net.kyori.adventure.text.Component.*;
 
 @NullMarked
 public final class ShopListener implements Listener {
@@ -49,7 +54,10 @@ public final class ShopListener implements Listener {
         ShopVillager shop = this.villagerCache.get(villager);
         Player player = event.getPlayer();
         if (!player.isSneaking()) {
-            ShopMenu.openMerchantMenu(shop, player);
+            boolean opened = ShopMenu.openMerchantMenu(shop, player);
+            if (!opened) {
+                player.sendMessage(CaManager.getPrefix().append(translatable("ca.menu.shop.no-trades")));
+            }
             return;
         }
         // set player as owner if this shop doesn't have an owner yet
@@ -70,8 +78,25 @@ public final class ShopListener implements Listener {
             return; // not a shop villager
         }
         ShopVillager shop = this.villagerCache.get(villager);
+        boolean update;
         if (!shop.tryTrade(event.getTrade())) {
             event.setCancelled(true);
+            update = true;
+        } else {
+            update = !shop.isTradeAllowed(event.getTrade());
+        }
+
+        // if e.g. the trade goes out of stock, trigger an update
+        if (update) {
+            Bukkit.getScheduler().runTask(this.manager.getPlugin(), () -> {
+                // if the player still has the merchant inventory menu open, re-open it
+                if (!(event.getPlayer().getOpenInventory() instanceof MerchantView)) {
+                    return; // exited merchant inventory menu
+                }
+                if (!ShopMenu.openMerchantMenu(shop, event.getPlayer())) {
+                    event.getPlayer().closeInventory(); // no trades present
+                }
+            });
         }
     }
 
