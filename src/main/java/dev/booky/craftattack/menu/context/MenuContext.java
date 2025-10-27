@@ -21,6 +21,10 @@ public class MenuContext {
         this.inventory = inventory;
     }
 
+    public void update() {
+        AbstractMenu.updateContent(this.player);
+    }
+
     public AbstractMenu getMenu() {
         return this.menu;
     }

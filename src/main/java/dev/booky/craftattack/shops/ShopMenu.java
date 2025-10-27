@@ -17,10 +17,13 @@ import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.util.Ticks;
+import org.bukkit.Keyed;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.Registry;
 import org.bukkit.entity.AbstractVillager;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Villager;
 import org.bukkit.entity.WanderingTrader;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.MenuType;
@@ -32,8 +35,12 @@ import org.jspecify.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 import static dev.booky.craftattack.menu.AbstractMenu.SLOTS_PER_ROW;
 import static dev.booky.craftattack.utils.ItemStackUtil.itemStack;
@@ -52,6 +59,33 @@ public final class ShopMenu {
     private static final int MAX_TRADES = 20;
     public static final Material EMPTY_INGREDIENT = Material.STRUCTURE_VOID;
     private static final int PER_PLAYER_TRADER_TTL = Ticks.TICKS_PER_SECOND * 60 * 5;
+
+    private static final Map<Villager.Type, Material> VILL_TYPE_ITEMS = Map.ofEntries(
+            Map.entry(Villager.Type.DESERT, Material.SAND),
+            Map.entry(Villager.Type.JUNGLE, Material.JUNGLE_WOOD),
+            Map.entry(Villager.Type.PLAINS, Material.SHORT_GRASS),
+            Map.entry(Villager.Type.SAVANNA, Material.ACACIA_WOOD),
+            Map.entry(Villager.Type.SNOW, Material.SNOW_BLOCK),
+            Map.entry(Villager.Type.SWAMP, Material.MANGROVE_ROOTS),
+            Map.entry(Villager.Type.TAIGA, Material.SPRUCE_WOOD)
+    );
+    private static final Map<Villager.Profession, Material> VILL_PROFESSION_ITEMS = Map.ofEntries(
+            Map.entry(Villager.Profession.ARMORER, Material.BLAST_FURNACE),
+            Map.entry(Villager.Profession.BUTCHER, Material.SMOKER),
+            Map.entry(Villager.Profession.CARTOGRAPHER, Material.CARTOGRAPHY_TABLE),
+            Map.entry(Villager.Profession.CLERIC, Material.BREWING_STAND),
+            Map.entry(Villager.Profession.FARMER, Material.COMPOSTER),
+            Map.entry(Villager.Profession.FISHERMAN, Material.BARREL),
+            Map.entry(Villager.Profession.FLETCHER, Material.FLETCHING_TABLE),
+            Map.entry(Villager.Profession.LEATHERWORKER, Material.CAULDRON),
+            Map.entry(Villager.Profession.LIBRARIAN, Material.LECTERN),
+            Map.entry(Villager.Profession.MASON, Material.STONECUTTER),
+            Map.entry(Villager.Profession.NITWIT, Material.GREEN_BED),
+            Map.entry(Villager.Profession.NONE, Material.STRUCTURE_VOID),
+            Map.entry(Villager.Profession.SHEPHERD, Material.LOOM),
+            Map.entry(Villager.Profession.TOOLSMITH, Material.SMITHING_TABLE),
+            Map.entry(Villager.Profession.WEAPONSMITH, Material.GRINDSTONE)
+    );
 
     private ShopMenu() {
     }
@@ -122,13 +156,19 @@ public final class ShopMenu {
                 .withRows(3)
                 // 00#000#00
                 .withSlots(ctx -> ctx
-                        .set(SLOTS_PER_ROW + 2,
+                        .set(SLOTS_PER_ROW + 1,
+                                itemStack(Material.LIME_HARNESS, translatable("ca.menu.shop.style")),
+                                clickCtx -> {
+                                    openStyleMenu(shop, clickCtx.getPlayer(), clickCtx.getMenu());
+                                    return MenuClickResult.SOUND;
+                                })
+                        .set(SLOTS_PER_ROW + 3,
                                 itemStack(Material.REDSTONE_TORCH, translatable("ca.menu.shop.manage-trades")),
                                 clickCtx -> {
                                     openTradeManageMenu(shop, clickCtx.getPlayer(), clickCtx.getMenu());
                                     return MenuClickResult.SOUND;
                                 })
-                        .set(SLOTS_PER_ROW + SLOTS_PER_ROW / 2,
+                        .set(SLOTS_PER_ROW + SLOTS_PER_ROW - 4,
                                 itemStack(Material.CHEST, translatable("ca.menu.shop.manage-stock")),
                                 clickCtx -> {
                                     openStockMenu(shop, clickCtx.getPlayer(), clickCtx.getMenu());
@@ -136,7 +176,7 @@ public final class ShopMenu {
                                             .type(Key.key("block.chest.open"))
                                             .build());
                                 })
-                        .set(SLOTS_PER_ROW * 2 - 3, buildDumpSlot(shop)))
+                        .set(SLOTS_PER_ROW + SLOTS_PER_ROW - 2, buildDumpSlot(shop)))
                 .open(player);
     }
 
@@ -177,11 +217,64 @@ public final class ShopMenu {
                 clickCtx.getPlayer().sendMessage(CaManager.getPrefix().append(
                         translatable("ca.shop.manage.dump.inventory-full")));
             }
-            AbstractMenu.updateContent(clickCtx.getPlayer());
+            clickCtx.update();
             return new MenuClickResult(Sound.sound()
                     .type(Key.key("entity.player.levelup"))
                     .build());
         });
+    }
+
+    public static void openStyleMenu(ShopVillager shop, Player player, @Nullable AbstractMenu parent) {
+        shop.ensureLoaded();
+        Menu.builder()
+                .withTitle(translatable("ca.menu.shop.style"))
+                .withRows(3)
+                .withSlots(ctx -> {
+                    AbstractVillager merchant = shop.getMerchant();
+                    if (merchant instanceof Villager villager) {
+                        // biome changer
+                        ctx.set(SLOTS_PER_ROW + 3,
+                                itemStack(
+                                        VILL_TYPE_ITEMS.get(villager.getVillagerType()),
+                                        translatable("ca.menu.shop.style.biome",
+                                                translatable("ca.menu.shop.style.biome." + villager.getVillagerType().key().value()))),
+                                buildStyleHandler(
+                                        Registry.VILLAGER_TYPE,
+                                        () -> ((Villager) shop.getMerchant()).getVillagerType(),
+                                        type -> ((Villager) shop.getMerchant()).setVillagerType(type)));
+                        // profession changer
+                        ctx.set(SLOTS_PER_ROW + 3 + 2,
+                                itemStack(
+                                        VILL_PROFESSION_ITEMS.get(villager.getProfession()),
+                                        translatable("ca.menu.shop.style.profession",
+                                                translatable(villager.getProfession()))),
+                                buildStyleHandler(
+                                        Registry.VILLAGER_PROFESSION,
+                                        () -> ((Villager) shop.getMerchant()).getProfession(),
+                                        prof -> {
+                                            // trades reset when changing profession, so temporarily save recipes
+                                            Villager entity = (Villager) shop.getMerchant();
+                                            List<MerchantRecipe> recipes = entity.getRecipes();
+                                            entity.setProfession(prof);
+                                            entity.setRecipes(recipes);
+                                        }));
+                    }
+                })
+                .withParent(parent)
+                .open(player);
+    }
+
+    public static <T extends Keyed> Function<MenuClickContext, MenuClickResult> buildStyleHandler(
+            Registry<T> registry, Supplier<T> getter, Consumer<T> setter
+    ) {
+        List<T> values = registry.stream().toList();
+        return ctx -> {
+            int offset = !ctx.getClickType().isRightClick() ? 1 : values.size() - 1;
+            int newOrdinal = (values.indexOf(getter.get()) + offset) % values.size();
+            setter.accept(values.get(newOrdinal));
+            ctx.update();
+            return MenuClickResult.SOUND;
+        };
     }
 
     public static void openStockMenu(ShopVillager shop, Player player, @Nullable AbstractMenu parent) {
@@ -327,7 +420,7 @@ public final class ShopMenu {
             trade.setIngredients(ingredients);
             merchant.setRecipe(tradeIndex, trade);
             // update inventory content
-            AbstractMenu.updateContent(clickCtx.getPlayer());
+            clickCtx.update();
             return MenuClickResult.SOUND;
         });
     }
@@ -351,7 +444,7 @@ public final class ShopMenu {
             newTrade.setIngredients(trade.getIngredients());
             merchant.setRecipe(tradeIndex, newTrade);
             // update inventory content
-            AbstractMenu.updateContent(clickCtx.getPlayer());
+            clickCtx.update();
             return MenuClickResult.SOUND;
         });
     }
@@ -361,7 +454,7 @@ public final class ShopMenu {
             AbstractVillager merchant = shop.getMerchant();
             int recipeCount = merchant.getRecipeCount();
             if (recipeCount >= MAX_TRADES) {
-                AbstractMenu.updateContent(clickCtx.getPlayer());
+                clickCtx.update();
                 return MenuClickResult.NONE;
             }
             // create dummy recipe
@@ -372,7 +465,7 @@ public final class ShopMenu {
             allRecipes.add(dummyRecipe);
             merchant.setRecipes(allRecipes);
 
-            AbstractMenu.updateContent(clickCtx.getPlayer());
+            clickCtx.update();
             return MenuClickResult.SOUND;
         });
     }
