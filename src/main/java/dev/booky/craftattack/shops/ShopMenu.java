@@ -6,6 +6,7 @@ import dev.booky.craftattack.menu.AbstractMenu;
 import dev.booky.craftattack.menu.Menu;
 import dev.booky.craftattack.menu.MenuSlot;
 import dev.booky.craftattack.menu.PagedMenu;
+import dev.booky.craftattack.menu.context.MenuClickContext;
 import dev.booky.craftattack.menu.result.MenuClickResult;
 import dev.booky.craftattack.menu.result.MenuResult;
 import dev.booky.craftattack.utils.PlayerHeadUtil;
@@ -273,11 +274,15 @@ public final class ShopMenu {
                 .open(player);
     }
 
-    private static ItemStack wrapIngredient(@Nullable ItemStack stack) {
-        if (!isValidIngredient(stack)) {
+    private static ItemStack getCursorStack(MenuClickContext ctx) {
+        ItemStack cursor = ctx.getCursor();
+        if (!isValidIngredient(cursor)) {
             return ItemStack.of(EMPTY_INGREDIENT);
         }
-        return stack;
+        if (ctx.getClickType().isRightClick()) {
+            return cursor.asOne();
+        }
+        return cursor;
     }
 
     private static ItemStack modifyIngredient(@Nullable ItemStack stack) {
@@ -303,6 +308,9 @@ public final class ShopMenu {
             List<ItemStack> ingredients = recipe.getIngredients();
             return modifyIngredient(index >= ingredients.size() ? null : ingredients.get(index));
         }, clickCtx -> {
+            if (!clickCtx.getClickType().isMouseClick()) {
+                return MenuClickResult.NONE; // ignore non-mouse clicks
+            }
             // extract up-to-date ingredients
             AbstractVillager merchant = shop.getMerchant();
             MerchantRecipe trade = merchant.getRecipe(tradeIndex);
@@ -315,7 +323,7 @@ public final class ShopMenu {
                 return MenuClickResult.NONE;
             }
             // update ingredients
-            ingredients.set(index, wrapIngredient(clickCtx.getCursor()));
+            ingredients.set(index, getCursorStack(clickCtx));
             trade.setIngredients(ingredients);
             merchant.setRecipe(tradeIndex, trade);
             // update inventory content
@@ -329,13 +337,16 @@ public final class ShopMenu {
             shop.ensureLoaded();
             return modifyIngredient(recipe.getResult());
         }, clickCtx -> {
+            if (!clickCtx.getClickType().isMouseClick()) {
+                return MenuClickResult.NONE; // ignore non-mouse clicks
+            }
             // we have to re-create the recipe
             AbstractVillager merchant = shop.getMerchant();
             MerchantRecipe trade = merchant.getRecipe(tradeIndex);
             if (clickCtx.getCursor().equals(trade.getResult())) {
                 return MenuClickResult.NONE;
             }
-            ItemStack newResult = wrapIngredient(clickCtx.getCursor());
+            ItemStack newResult = getCursorStack(clickCtx);
             MerchantRecipe newTrade = new MerchantRecipe(newResult, 0);
             newTrade.setIngredients(trade.getIngredients());
             merchant.setRecipe(tradeIndex, newTrade);
