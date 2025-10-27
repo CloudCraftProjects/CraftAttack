@@ -84,49 +84,52 @@ public final class ShopMenu {
                                             .type(Key.key("block.chest.open"))
                                             .build());
                                 })
-                        .set(SLOTS_PER_ROW * 2 - 3, supplyCtx -> {
-                            List<ItemStack> profit = shop.getProfit();
-                            if (profit.isEmpty()) {
-                                return itemStack(Material.STRUCTURE_VOID,
-                                        translatable("ca.menu.shop.dump-profit"),
-                                        translatable("ca.menu.shop.dump-profit.no-profit"));
-                            }
-                            List<Component> lore = new ArrayList<>(profit.size());
-                            List<Material> stackTypes = new ArrayList<>(profit.size());
-                            for (ItemStack stack : profit) {
-                                if (lore.size() == MAX_PROFIT_ENTRIES) {
-                                    lore.add(translatable("ca.menu.shop.dump-profit.more",
-                                            numeric(profit.size() - lore.size())));
-                                } else if (lore.size() < MAX_PROFIT_ENTRIES) {
-                                    lore.add(translatable("ca.menu.shop.dump-profit.profit-entry",
-                                            numeric(stack.getAmount()), stack.effectiveName()));
-                                }
-                                stackTypes.add(stack.getType());
-                            }
-                            Material material = stackTypes.get(ThreadLocalRandom.current().nextInt(stackTypes.size()));
-                            ItemStack stack = itemStack(material, translatable("ca.menu.shop.dump-profit"), lore);
-                            stack.setData(DataComponentTypes.ENCHANTMENT_GLINT_OVERRIDE, true);
-                            return stack;
-                        }, clickCtx -> {
-                            shop.ensureLoaded();
-                            if (!shop.hasProfit()) {
-                                return new MenuClickResult(Sound.sound()
-                                        .type(Key.key("entity.villager.no"))
-                                        .build());
-                            }
-                            boolean dumpedEverything = shop.dumpProfit(player.getInventory());
-                            if (!dumpedEverything) {
-                                player.sendMessage(CaManager.getPrefix().append(
-                                        translatable("ca.shop.manage.dump.inventory-full")));
-                                return new MenuClickResult(Sound.sound()
-                                        .type(Key.key("entity.villager.no"))
-                                        .build(), true, false);
-                            }
-                            return new MenuClickResult(Sound.sound()
-                                    .type(Key.key("entity.player.levelup"))
-                                    .build(), true, false);
-                        }))
+                        .set(SLOTS_PER_ROW * 2 - 3, buildDumpSlot(shop)))
                 .open(player);
+    }
+
+    private static MenuSlot buildDumpSlot(ShopVillager shop) {
+        return new MenuSlot(supplyCtx -> {
+            shop.ensureLoaded();
+            List<ItemStack> profit = shop.getProfit();
+            if (profit.isEmpty()) {
+                return itemStack(Material.STRUCTURE_VOID,
+                        translatable("ca.menu.shop.dump-profit"),
+                        translatable("ca.menu.shop.dump-profit.no-profit"));
+            }
+            List<Component> lore = new ArrayList<>(profit.size());
+            List<Material> stackTypes = new ArrayList<>(profit.size());
+            for (ItemStack stack : profit) {
+                if (lore.size() == MAX_PROFIT_ENTRIES) {
+                    lore.add(translatable("ca.menu.shop.dump-profit.more",
+                            numeric(profit.size() - lore.size())));
+                } else if (lore.size() < MAX_PROFIT_ENTRIES) {
+                    lore.add(translatable("ca.menu.shop.dump-profit.profit-entry",
+                            numeric(stack.getAmount()), stack.effectiveName()));
+                }
+                stackTypes.add(stack.getType());
+            }
+            Material material = stackTypes.get(ThreadLocalRandom.current().nextInt(stackTypes.size()));
+            ItemStack stack = itemStack(material, translatable("ca.menu.shop.dump-profit"), lore);
+            stack.setData(DataComponentTypes.ENCHANTMENT_GLINT_OVERRIDE, true);
+            return stack;
+        }, clickCtx -> {
+            shop.ensureLoaded();
+            if (!shop.hasProfit()) {
+                return new MenuClickResult(Sound.sound()
+                        .type(Key.key("entity.villager.no"))
+                        .build());
+            }
+            boolean dumpedEverything = shop.dumpProfit(clickCtx.getPlayer().getInventory());
+            if (!dumpedEverything) {
+                clickCtx.getPlayer().sendMessage(CaManager.getPrefix().append(
+                        translatable("ca.shop.manage.dump.inventory-full")));
+            }
+            AbstractMenu.updateContent(clickCtx.getPlayer());
+            return new MenuClickResult(Sound.sound()
+                    .type(Key.key("entity.player.levelup"))
+                    .build());
+        });
     }
 
     public static void openStockMenu(ShopVillager shop, Player player, @Nullable AbstractMenu parent) {
@@ -247,7 +250,8 @@ public final class ShopMenu {
             return modifyIngredient(index >= ingredients.size() ? null : ingredients.get(index));
         }, clickCtx -> {
             // extract up-to-date ingredients
-            MerchantRecipe trade = shop.getMerchant().getRecipe(tradeIndex);
+            AbstractVillager merchant = shop.getMerchant();
+            MerchantRecipe trade = merchant.getRecipe(tradeIndex);
             List<ItemStack> ingredients = new ArrayList<>(trade.getIngredients());
             while (ingredients.size() <= index) {
                 ingredients.add(ItemStack.of(EMPTY_INGREDIENT));
@@ -259,6 +263,7 @@ public final class ShopMenu {
             // update ingredients
             ingredients.set(index, wrapIngredient(clickCtx.getCursor()));
             trade.setIngredients(ingredients);
+            merchant.setRecipe(tradeIndex, trade);
             // update inventory content
             AbstractMenu.updateContent(clickCtx.getPlayer());
             return MenuClickResult.SOUND;
