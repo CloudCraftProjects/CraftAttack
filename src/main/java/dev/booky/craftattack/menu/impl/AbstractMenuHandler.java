@@ -18,6 +18,7 @@ import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.InventoryView;
+import org.bukkit.inventory.ItemRarity;
 import org.bukkit.inventory.ItemStack;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -83,7 +84,8 @@ public abstract class AbstractMenuHandler<T extends AbstractMenu> implements Inv
 
     public MenuSlot provideBack() {
         ItemStack stack = PlayerHeadUtil.createHeadStack(PlayerHeadUtil.WHITE_ARROW_LEFT_TEXTURE);
-        stack.setData(DataComponentTypes.CUSTOM_NAME, Component.translatable("ca.menu.back"));
+        stack.setData(DataComponentTypes.ITEM_NAME, Component.translatable("ca.menu.back"));
+        stack.setData(DataComponentTypes.RARITY, ItemRarity.COMMON);
         return new MenuSlot(stack, this.menu::handleBack);
     }
 

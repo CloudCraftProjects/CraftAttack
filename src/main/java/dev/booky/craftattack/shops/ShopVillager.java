@@ -47,6 +47,7 @@ public final class ShopVillager {
     }
 
     public void addProfit(ItemStack profit) {
+        this.getMerchant(); // ensure merchant still exists
         if (profit.isEmpty()) {
             return; // useless
         }
@@ -78,7 +79,12 @@ public final class ShopVillager {
         return !this.profit.isEmpty();
     }
 
+    public List<ItemStack> getProfit() {
+        return this.profit;
+    }
+
     public boolean dumpProfit(Inventory inventory) {
+        this.getMerchant(); // ensure merchant still exists
         boolean mut = false;
         boolean ret = true;
         Iterator<ItemStack> it = this.profit.iterator();

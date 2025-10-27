@@ -17,7 +17,7 @@ public class CaCommand extends CommandAPICommand {
 
         this.withSubcommand(new TeleportSubCommand(manager));
         this.withSubcommand(new AdminSubCommand(manager));
-        this.withSubcommand(new CraftCommand());
+        this.withSubcommand(new CraftCommand(manager));
 
         if (Bukkit.getPluginManager().getPlugin("LuckPerms") != null) {
             super.withSubcommand(new StatusCommand(manager));

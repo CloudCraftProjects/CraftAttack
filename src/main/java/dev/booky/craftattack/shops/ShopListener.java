@@ -21,9 +21,6 @@ import org.jspecify.annotations.NullMarked;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
-
-import static net.kyori.adventure.text.Component.translatable;
 
 @NullMarked
 public final class ShopListener implements Listener {
@@ -39,9 +36,7 @@ public final class ShopListener implements Listener {
         this.manager = manager;
         this.shopKey = new NamespacedKey(manager.getPlugin(), "shop");
         this.villagerCache = Caffeine.newBuilder()
-                .ticker(Ticker.systemTicker()) // automatically remove expired entries
-                // don't keep this around for too long
-                .weakKeys().expireAfterAccess(5L, TimeUnit.SECONDS)
+                .weakKeys().ticker(Ticker.systemTicker()) // automatically remove expired entries
                 .build(villager ->
                         new ShopVillager(manager, villager, this.villagerSaveQueue::add));
     }
@@ -62,19 +57,8 @@ public final class ShopListener implements Listener {
         if (shop.getOwnerId() == null) {
             shop.setOwnerId(player.getUniqueId());
         }
-        if (!shop.isOwner(player)) {
-            player.playSound(villager, Sound.ENTITY_VILLAGER_NO, 1f, 1f);
-            return;
-        }
-        // TODO management ui
-        if (shop.hasProfit()) {
-            boolean dumpedEverything = shop.dumpProfit(player.getInventory());
-            if (dumpedEverything) {
-                player.playSound(player, Sound.ENTITY_PLAYER_LEVELUP, 1f, 1f);
-            } else {
-                player.playSound(villager, Sound.ENTITY_VILLAGER_NO, 1f, 1f);
-                player.sendMessage(CaManager.getPrefix().append(translatable("ca.shop.manage.dump.inventory-full")));
-            }
+        if (shop.isOwner(player)) {
+            ShopMenu.openMenu(shop, player);
         } else {
             player.playSound(villager, Sound.ENTITY_VILLAGER_NO, 1f, 1f);
         }

@@ -20,6 +20,10 @@ public final class MenuClickResult extends MenuResult {
 
     private final boolean allow;
 
+    public MenuClickResult(@Nullable Sound sound) {
+        this(sound, false, false);
+    }
+
     public MenuClickResult(@Nullable Sound sound, boolean close, boolean allow) {
         super(sound, close);
         this.allow = allow && !close; // don't close and allow taking/placing items
