@@ -51,7 +51,7 @@ public final class ShopVillager {
     }
 
     public boolean tryTrade(MerchantRecipe recipe) {
-        if (this.isTradeAllowed(recipe)) {
+        if (this.isTradeStocked(recipe)) {
             this.consumeStock(recipe.getResult());
             this.addProfit(recipe);
             return true;
@@ -59,7 +59,7 @@ public final class ShopVillager {
         return false;
     }
 
-    public boolean isTradeAllowed(MerchantRecipe recipe) {
+    public boolean isTradeStocked(MerchantRecipe recipe) {
         ItemStack result = recipe.getResult();
         if (!ShopMenu.isValidIngredient(result)) {
             return false; // no result set

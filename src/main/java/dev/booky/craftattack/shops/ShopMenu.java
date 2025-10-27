@@ -9,6 +9,7 @@ import dev.booky.craftattack.menu.PagedMenu;
 import dev.booky.craftattack.menu.result.MenuClickResult;
 import dev.booky.craftattack.menu.result.MenuResult;
 import dev.booky.craftattack.utils.PlayerHeadUtil;
+import dev.booky.craftattack.utils.UniqueIdDataType;
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.ItemLore;
 import net.kyori.adventure.key.Key;
@@ -16,12 +17,14 @@ import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.util.Ticks;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.entity.AbstractVillager;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.WanderingTrader;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.MenuType;
 import org.bukkit.inventory.MerchantRecipe;
+import org.bukkit.plugin.Plugin;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -74,15 +77,16 @@ public final class ShopMenu {
             if (validIngredients.isEmpty()) {
                 continue; // no ingredients
             }
-            // re-build recipe with unlimited uses
-            MerchantRecipe filteredRecipe = new MerchantRecipe(result, Integer.MAX_VALUE);
+            // re-build recipe with unlimited uses (if available)
+            int uses = shop.isTradeStocked(recipe) ? Integer.MAX_VALUE : 0;
+            MerchantRecipe filteredRecipe = new MerchantRecipe(result, uses);
             filteredRecipe.setIngredients(validIngredients);
             filtered.add(filteredRecipe);
         }
         return filtered;
     }
 
-    public static boolean openMerchantMenu(ShopVillager shop, Player player) {
+    public static boolean openMerchantMenu(Plugin plugin, ShopVillager shop, Player player) {
         List<MerchantRecipe> recipes = buildRecipes(shop);
         if (recipes.isEmpty()) {
             return false; // no recipes available
@@ -97,6 +101,9 @@ public final class ShopMenu {
             trader.setCollidable(false);
             trader.setDespawnDelay(PER_PLAYER_TRADER_TTL);
             trader.setRecipes(recipes);
+
+            NamespacedKey refKey = new NamespacedKey(plugin, "shop/reference");
+            trader.getPersistentDataContainer().set(refKey, UniqueIdDataType.INSTANCE, merchant.getUniqueId());
         });
         // build merchant inventory menu
         MenuType.MERCHANT.builder()
@@ -184,16 +191,16 @@ public final class ShopMenu {
                 .withSlots(ctx -> {
                     shop.ensureLoaded();
                     List<ItemStack> stock = shop.getStock();
-                    for (int i = 0; i < stock.size(); i++) {
-                        if (i == ctx.getSlots().length - SLOTS_PER_ROW) {
-                            i++; // don't override back button
-                            continue;
-                        }
+                    @Nullable MenuSlot[] slots = ctx.getSlots();
+                    for (int i = 0, j = 0; i < stock.size() && j < slots.length; i++) {
                         ItemStack stack = stock.get(i);
                         if (stack.isEmpty()) {
                             continue; // don't place empty stacks
                         }
-                        ctx.set(i, new MenuSlot(stack, clickCtx -> MenuClickResult.ALLOW));
+                        if (j == slots.length - SLOTS_PER_ROW) {
+                            j++; // don't override back button
+                        }
+                        ctx.set(j++, new MenuSlot(stack, clickCtx -> MenuClickResult.ALLOW));
                     }
                 })
                 .onClose(ctx -> {

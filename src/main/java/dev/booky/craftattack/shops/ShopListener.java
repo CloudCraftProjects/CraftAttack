@@ -6,12 +6,13 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.github.benmanes.caffeine.cache.Ticker;
 import dev.booky.craftattack.CaManager;
+import dev.booky.craftattack.utils.UniqueIdDataType;
 import io.papermc.paper.event.player.PlayerTradeEvent;
-import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Sound;
 import org.bukkit.entity.AbstractVillager;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -22,14 +23,16 @@ import org.jspecify.annotations.NullMarked;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
-import static net.kyori.adventure.text.Component.*;
+import static net.kyori.adventure.text.Component.translatable;
 
 @NullMarked
 public final class ShopListener implements Listener {
 
     private final CaManager manager;
     private final NamespacedKey shopKey;
+    private final NamespacedKey refKey;
 
     // don't always read/save data, add a cache for this
     private final LoadingCache<AbstractVillager, ShopVillager> villagerCache;
@@ -38,6 +41,7 @@ public final class ShopListener implements Listener {
     public ShopListener(CaManager manager) {
         this.manager = manager;
         this.shopKey = new NamespacedKey(manager.getPlugin(), "shop");
+        this.refKey = new NamespacedKey(manager.getPlugin(), "shop/reference");
         this.villagerCache = Caffeine.newBuilder()
                 .weakKeys().ticker(Ticker.systemTicker()) // automatically remove expired entries
                 .build(villager ->
@@ -54,7 +58,7 @@ public final class ShopListener implements Listener {
         ShopVillager shop = this.villagerCache.get(villager);
         Player player = event.getPlayer();
         if (!player.isSneaking()) {
-            boolean opened = ShopMenu.openMerchantMenu(shop, player);
+            boolean opened = ShopMenu.openMerchantMenu(this.manager.getPlugin(), shop, player);
             if (!opened) {
                 player.sendMessage(CaManager.getPrefix().append(translatable("ca.menu.shop.no-trades")));
             }
@@ -74,16 +78,31 @@ public final class ShopListener implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onPlayerTrade(PlayerTradeEvent event) {
         AbstractVillager villager = event.getVillager();
-        if (!villager.getPersistentDataContainer().has(this.shopKey)) {
-            return; // not a shop villager
+        if (villager.getPersistentDataContainer().has(this.shopKey)) {
+            // shop villager should never be traded with directly
+            event.setCancelled(true);
+            return;
         }
-        ShopVillager shop = this.villagerCache.get(villager);
+        UUID refId = villager.getPersistentDataContainer().get(this.refKey, UniqueIdDataType.INSTANCE);
+        if (refId == null) {
+            return; // not a shop villager merchant
+        }
+        Entity realVillager = villager.getWorld().getEntity(refId);
+        if (!(realVillager instanceof AbstractVillager)
+                || !realVillager.getPersistentDataContainer().has(this.shopKey)) {
+            // referenced shop doesn't exist or is not a shop villager; cancel to be safe
+            event.setCancelled(true);
+            return;
+        }
+        // lookup shop villager instance and try to process this trade transaction
+        ShopVillager shop = this.villagerCache.get((AbstractVillager) realVillager);
         boolean update;
         if (!shop.tryTrade(event.getTrade())) {
             event.setCancelled(true);
             update = true;
         } else {
-            update = !shop.isTradeAllowed(event.getTrade());
+            // trade was successful, but verify that there is still stock remaining; if not, trigger update
+            update = !shop.isTradeStocked(event.getTrade());
         }
 
         // if e.g. the trade goes out of stock, trigger an update
@@ -93,7 +112,7 @@ public final class ShopListener implements Listener {
                 if (!(event.getPlayer().getOpenInventory() instanceof MerchantView)) {
                     return; // exited merchant inventory menu
                 }
-                if (!ShopMenu.openMerchantMenu(shop, event.getPlayer())) {
+                if (!ShopMenu.openMerchantMenu(this.manager.getPlugin(), shop, event.getPlayer())) {
                     event.getPlayer().closeInventory(); // no trades present
                 }
             });
