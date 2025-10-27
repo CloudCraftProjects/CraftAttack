@@ -52,7 +52,7 @@ public final class ShopVillager {
 
     public boolean tryTrade(MerchantRecipe recipe) {
         if (this.isTradeAllowed(recipe)) {
-            this.consumeStock(recipe);
+            this.consumeStock(recipe.getResult());
             this.addProfit(recipe);
             return true;
         }
@@ -60,36 +60,20 @@ public final class ShopVillager {
     }
 
     public boolean isTradeAllowed(MerchantRecipe recipe) {
-        List<ItemStack> ingredients = recipe.getIngredients();
-        for (ItemStack ingredient : ingredients) {
-            if (!ShopMenu.isValidIngredient(ingredient)) {
-                continue; // empty
+        ItemStack result = recipe.getResult();
+        if (!ShopMenu.isValidIngredient(result)) {
+            return false; // no result set
+        }
+        for (ItemStack stack : this.stock) {
+            if (!result.isSimilar(stack)) {
+                continue; // doesn't match
             }
-            ingredient = ingredient.clone();
-            for (ItemStack stack : this.stock) {
-                if (!ingredient.isSimilar(stack)) {
-                    continue; // doesn't match
-                }
-                // consume ingredient
-                ingredient.subtract(stack.getAmount());
-                if (ingredient.isEmpty()) {
-                    break;
-                }
-            }
-            if (!ingredient.isEmpty()) {
-                return false; // ingredient didn't get fully consumed
+            result.subtract(stack.getAmount()); // consume
+            if (result.isEmpty()) {
+                break; // finished consuming
             }
         }
-        return true;
-    }
-
-    public void consumeStock(MerchantRecipe recipe) {
-        List<ItemStack> ingredients = recipe.getIngredients();
-        for (ItemStack ingredient : ingredients) {
-            if (ShopMenu.isValidIngredient(ingredient)) {
-                this.consumeStock(ingredient);
-            }
-        }
+        return result.isEmpty(); // check whether result got consumed
     }
 
     public void consumeStock(ItemStack stack) {

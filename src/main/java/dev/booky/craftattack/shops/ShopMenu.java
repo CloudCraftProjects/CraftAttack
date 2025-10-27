@@ -145,8 +145,11 @@ public final class ShopMenu {
                             i++; // don't override back button
                             continue;
                         }
-                        ctx.set(i, new MenuSlot(stock.get(i),
-                                clickCtx -> MenuClickResult.ALLOW));
+                        ItemStack stack = stock.get(i);
+                        if (stack.isEmpty()) {
+                            continue; // don't place empty stacks
+                        }
+                        ctx.set(i, new MenuSlot(stack, clickCtx -> MenuClickResult.ALLOW));
                     }
                 })
                 .onClose(ctx -> {
