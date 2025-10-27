@@ -13,10 +13,12 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.Sound;
 import org.bukkit.entity.AbstractVillager;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.inventory.view.MerchantView;
 import org.jspecify.annotations.NullMarked;
@@ -48,6 +50,30 @@ public final class ShopListener implements Listener {
                         new ShopVillager(manager, villager, this.villagerSaveQueue::add));
     }
 
+    private static void lookAt(LivingEntity source, LivingEntity target) {
+        double diffX = target.getX() - source.getX();
+        double diffY = (target.getY() + target.getEyeHeight()) - (source.getY() + source.getEyeHeight());
+        double diffZ = target.getZ() - source.getZ();
+        double distXZ = Math.sqrt(diffX * diffX + diffZ * diffZ);
+        float yaw = (float) Math.toDegrees(Math.atan2(diffZ, diffX)) - 90f;
+        float pitch = (float) -Math.toDegrees(Math.atan2(diffY, distXZ));
+        source.setRotation(yaw, pitch);
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onAttack(EntityDamageByEntityEvent event) {
+        if (event.getDamager() instanceof Player player
+                && event.getEntity() instanceof AbstractVillager villager
+                && villager.getPersistentDataContainer().has(this.shopKey)) {
+            // make villager look at owner if punched
+            ShopVillager shop = this.villagerCache.get(villager);
+            if (shop.isOwner(player)) {
+                lookAt(villager, player);
+            }
+            event.setDamage(0d);
+        }
+    }
+
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onEntityInteract(PlayerInteractEntityEvent event) {
         if (!(event.getRightClicked() instanceof AbstractVillager villager)
@@ -57,6 +83,7 @@ public final class ShopListener implements Listener {
         event.setCancelled(true);
         ShopVillager shop = this.villagerCache.get(villager);
         Player player = event.getPlayer();
+
         if (!player.isSneaking()) {
             boolean opened = ShopMenu.openMerchantMenu(this.manager.getPlugin(), shop, player);
             if (!opened) {
@@ -64,6 +91,7 @@ public final class ShopListener implements Listener {
             }
             return;
         }
+
         // set player as owner if this shop doesn't have an owner yet
         if (shop.getOwnerId() == null) {
             shop.setOwnerId(player.getUniqueId());
