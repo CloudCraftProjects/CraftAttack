@@ -77,7 +77,7 @@ public abstract class AbstractMenuHandler<T extends AbstractMenu> implements Inv
     public abstract void provideContent(MenuSlot[] slots);
 
     public void setupControls(MenuSlot[] slots) {
-        slots[this.inventorySize - SLOTS_PER_ROW + 1] = this.provideBack();
+        slots[this.inventorySize - SLOTS_PER_ROW] = this.provideBack();
     }
 
     public MenuSlot provideBack() {

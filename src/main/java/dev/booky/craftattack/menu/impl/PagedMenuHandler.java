@@ -20,7 +20,6 @@ import static dev.booky.craftattack.menu.AbstractMenu.SLOTS_PER_ROW;
 import static net.kyori.adventure.text.Component.text;
 import static net.kyori.adventure.text.Component.translatable;
 
-// TODO test with rows = 1 and content = 7, 8, 9
 @NullMarked
 public class PagedMenuHandler extends AbstractMenuHandler<PagedMenu> {
 
@@ -61,7 +60,8 @@ public class PagedMenuHandler extends AbstractMenuHandler<PagedMenu> {
 
     @Override
     public void updateInventory() {
-        super.refreshContent();
+        this.currentSlots = this.provideContent();
+        super.updateInventory();
     }
 
     @Override
@@ -83,7 +83,7 @@ public class PagedMenuHandler extends AbstractMenuHandler<PagedMenu> {
             // insert bottom part between controls
             int copyCount = remainingItems == SLOTS_PER_ROW - 1 ? remainingItems : Math.min(remainingItems, SLOTS_PER_ROW - 2);
             System.arraycopy(this.content, contentOffset, slots,
-                    this.inventorySize - SLOTS_PER_ROW + 2, copyCount);
+                    this.inventorySize - SLOTS_PER_ROW + 1, copyCount);
         }
     }
 
@@ -91,7 +91,7 @@ public class PagedMenuHandler extends AbstractMenuHandler<PagedMenu> {
     public void setupControls(MenuSlot[] slots) {
         super.setupControls(slots);
         if (this.page > 0) {
-            slots[this.inventorySize - SLOTS_PER_ROW + 1] = this.providePreviousPage();
+            slots[this.inventorySize - SLOTS_PER_ROW] = this.providePreviousPage();
         }
         if (this.page < this.pages - 1) {
             slots[this.inventorySize - 1] = this.provideNextPage();
@@ -121,6 +121,7 @@ public class PagedMenuHandler extends AbstractMenuHandler<PagedMenu> {
     public void updatePage(int offset) {
         int newPage = Math.clamp(this.page + offset, 0, this.pages - 1);
         if (this.page != newPage) {
+            this.page = newPage;
             this.updateInventory();
         }
     }
