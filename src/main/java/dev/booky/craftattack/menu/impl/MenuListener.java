@@ -13,6 +13,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
 import org.jspecify.annotations.NullMarked;
@@ -22,17 +23,10 @@ import java.util.Objects;
 @NullMarked
 public class MenuListener implements Listener {
 
-    private final MenuManager manager;
-
-    public MenuListener(MenuManager manager) {
-        this.manager = manager;
-    }
-
     @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
     public void onInventoryClick(InventoryClickEvent event) {
-        HumanEntity clicker = event.getWhoClicked();
-        AbstractMenuHandler<?> handler = this.manager.getHandler(clicker.getUniqueId());
-        if (handler == null) {
+        Inventory topInventory = event.getView().getTopInventory();
+        if (!(topInventory.getHolder(false) instanceof AbstractMenuHandler<?> handler)) {
             return; // not our problem
         }
 
@@ -48,12 +42,13 @@ public class MenuListener implements Listener {
             if (!result.isAllow()) {
                 event.setCancelled(true);
             }
+            HumanEntity clicker = event.getWhoClicked();
             Sound sound = result.getSound();
             if (sound != null) {
                 clicker.playSound(sound, clicker);
             }
             // only close if we are still managing this inventory
-            if (result.isClose() && handler == this.manager.getHandler(clicker.getUniqueId())) {
+            if (result.isClose() && event.getView() == clicker.getOpenInventory()) {
                 clicker.closeInventory(InventoryCloseEvent.Reason.PLUGIN);
             }
         }
@@ -72,32 +67,32 @@ public class MenuListener implements Listener {
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onInventoryClose(InventoryCloseEvent event) {
-        HumanEntity clicker = event.getPlayer();
-        AbstractMenuHandler<?> handler = this.manager.clearHandler(clicker.getUniqueId());
-        if (handler == null) {
+        Inventory topInventory = event.getView().getTopInventory();
+        if (!(topInventory.getHolder(false) instanceof AbstractMenuHandler<?> handler)) {
             return; // not our problem
         }
 
         MenuResult result = handler.handleClose(event.getView(), event.getReason());
         Sound sound = result.getSound();
         if (sound != null) {
+            HumanEntity clicker = event.getPlayer();
             clicker.playSound(sound, clicker);
         }
     }
 
     @EventHandler(priority = EventPriority.LOW)
     public void onInventoryDrag(InventoryDragEvent event) {
-        HumanEntity clicker = event.getWhoClicked();
-        AbstractMenuHandler<?> handler = this.manager.clearHandler(clicker.getUniqueId());
-        if (handler == null) {
+        Inventory topInventory = event.getView().getTopInventory();
+        if (!(topInventory.getHolder(false) instanceof AbstractMenuHandler<?>)) {
             return; // not our problem
         }
 
         // if any of the dragged slots are in the top inventory,
         // cancel the entire quickcraft process, I don't want to deal with this right now
-        int inventorySize = event.getView().getTopInventory().getSize();
+        InventoryView view = event.getView();
+        Inventory topInv = view.getTopInventory();
         for (int slot : event.getRawSlots()) {
-            if (slot < inventorySize) {
+            if (view.getInventory(slot) == topInv) {
                 event.setCancelled(true);
                 break;
             }

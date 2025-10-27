@@ -6,7 +6,6 @@ import dev.booky.craftattack.menu.context.MenuCloseContext;
 import dev.booky.craftattack.menu.context.MenuSlotsArrayContext;
 import dev.booky.craftattack.menu.impl.AbstractMenuHandler;
 import dev.booky.craftattack.menu.impl.MenuHandler;
-import dev.booky.craftattack.menu.impl.MenuManager;
 import dev.booky.craftattack.menu.result.MenuClickResult;
 import dev.booky.craftattack.menu.result.MenuResult;
 import net.kyori.adventure.text.Component;
@@ -44,8 +43,8 @@ public final class Menu extends AbstractMenu {
 
     @ApiStatus.Internal
     @Override
-    public AbstractMenuHandler<?> createHandler(MenuManager manager, Player player) {
-        return new MenuHandler(manager, this, player);
+    public AbstractMenuHandler<?> createHandler(Player player) {
+        return new MenuHandler(this, player);
     }
 
     @Override

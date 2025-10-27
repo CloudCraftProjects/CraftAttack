@@ -11,14 +11,15 @@ import org.jspecify.annotations.Nullable;
 @NullMarked
 public class MenuHandler extends AbstractMenuHandler<Menu> {
 
-    public MenuHandler(MenuManager manager, Menu menu, Player player) {
-        super(manager, menu, player);
+    public MenuHandler(Menu menu, Player player) {
+        super(menu, player);
     }
 
     @Override
     public void provideContent(MenuSlot[] slots) {
         MenuSlotsArrayContext slotsCtx = new MenuSlotsArrayContext(
-                this.manager, this.menu, this.player, this.inventory);
+                this.menu, this.player, this.inventory);
+        this.setupControls(slots);
         this.menu.supplySlots(slotsCtx);
 
         @Nullable MenuSlot[] suppliedSlots = slotsCtx.getSlots();

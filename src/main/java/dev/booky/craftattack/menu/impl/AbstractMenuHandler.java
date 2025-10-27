@@ -11,6 +11,7 @@ import dev.booky.craftattack.menu.result.MenuResult;
 import dev.booky.craftattack.utils.PlayerHeadUtil;
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import net.kyori.adventure.text.Component;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryCloseEvent;
@@ -18,7 +19,6 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -29,21 +29,24 @@ import static dev.booky.craftattack.menu.AbstractMenu.SLOTS_PER_ROW;
 @NullMarked
 public abstract class AbstractMenuHandler<T extends AbstractMenu> implements InventoryHolder {
 
-    protected final MenuManager manager;
     protected final T menu;
     protected final Player player;
-
-    // set after creation
-    protected @MonotonicNonNull Inventory inventory;
+    protected final Inventory inventory;
+    protected final MenuContext ctx;
 
     protected final int inventorySize;
     protected MenuSlot @Nullable [] currentSlots;
 
-    public AbstractMenuHandler(MenuManager manager, T menu, Player player) {
-        this.manager = manager;
+    public AbstractMenuHandler(T menu, Player player) {
         this.menu = menu;
         this.player = player;
         this.inventorySize = menu.getRows() * 9;
+
+        this.inventory = Bukkit.createInventory(this, menu.getSlots(), menu.getTitle());
+        this.ctx = new MenuContext(this.menu, this.player, this.inventory);
+
+        // set initial content in inventory
+        this.refreshContent();
     }
 
     @Override
@@ -59,9 +62,8 @@ public abstract class AbstractMenuHandler<T extends AbstractMenu> implements Inv
     public void updateInventory() {
         MenuSlot[] slots = this.currentSlots;
         if (slots != null) {
-            MenuContext ctx = new MenuContext(this.manager, this.menu, this.player, this.inventory);
             for (int i = 0; i < slots.length; i++) {
-                this.inventory.setItem(i, slots[i].getStack(ctx));
+                this.inventory.setItem(i, slots[i].getStack(this.ctx));
             }
         }
     }
@@ -69,7 +71,6 @@ public abstract class AbstractMenuHandler<T extends AbstractMenu> implements Inv
     public final MenuSlot[] provideContent() {
         MenuSlot[] slots = new MenuSlot[this.inventorySize];
         Arrays.fill(slots, MenuSlot.createEmptySlot());
-        this.setupControls(slots); // setup previous/next/back buttons
         this.provideContent(slots); // fill the actual content
         return slots;
     }
@@ -88,7 +89,7 @@ public abstract class AbstractMenuHandler<T extends AbstractMenu> implements Inv
 
     public MenuClickResult handleClick(InventoryView view, int rawSlot, ItemStack stack, ClickType clickType) {
         int slot = view.convertSlot(rawSlot);
-        MenuClickContext ctx = new MenuClickContext(this.manager, this.menu, this.player, this.inventory, view,
+        MenuClickContext ctx = new MenuClickContext(this.menu, this.player, this.inventory, view,
                 rawSlot, slot, stack, view.getCursor(), clickType);
 
         MenuClickResult result = MenuClickResult.NONE;
@@ -99,7 +100,7 @@ public abstract class AbstractMenuHandler<T extends AbstractMenu> implements Inv
     }
 
     public MenuResult handleClose(InventoryView view, InventoryCloseEvent.Reason reason) {
-        return this.menu.handleClose(new MenuCloseContext(this.manager,
+        return this.menu.handleClose(new MenuCloseContext(
                 this.menu, this.player, this.inventory, view, reason));
     }
 

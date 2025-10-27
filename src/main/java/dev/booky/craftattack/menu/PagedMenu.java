@@ -5,7 +5,6 @@ import dev.booky.craftattack.menu.context.MenuClickContext;
 import dev.booky.craftattack.menu.context.MenuCloseContext;
 import dev.booky.craftattack.menu.context.MenuSlotsListContext;
 import dev.booky.craftattack.menu.impl.AbstractMenuHandler;
-import dev.booky.craftattack.menu.impl.MenuManager;
 import dev.booky.craftattack.menu.impl.PagedMenuHandler;
 import dev.booky.craftattack.menu.result.MenuClickResult;
 import dev.booky.craftattack.menu.result.MenuResult;
@@ -44,8 +43,8 @@ public final class PagedMenu extends AbstractMenu {
 
     @ApiStatus.Internal
     @Override
-    public AbstractMenuHandler<?> createHandler(MenuManager manager, Player player) {
-        return new PagedMenuHandler(manager, this, player);
+    public AbstractMenuHandler<?> createHandler(Player player) {
+        return new PagedMenuHandler(this, player);
     }
 
     @Override

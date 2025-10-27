@@ -3,7 +3,6 @@ package dev.booky.craftattack.menu.context;
 
 import dev.booky.craftattack.menu.AbstractMenu;
 import dev.booky.craftattack.menu.MenuSlot;
-import dev.booky.craftattack.menu.impl.MenuManager;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.jspecify.annotations.NullMarked;
@@ -20,8 +19,8 @@ public final class MenuSlotsListContext extends MenuContext implements Iterable<
 
     private final List<MenuSlot> slots = new ArrayList<>(4 * SLOTS_PER_ROW);
 
-    public MenuSlotsListContext(MenuManager manager, AbstractMenu menu, Player player, Inventory inventory) {
-        super(manager, menu, player, inventory);
+    public MenuSlotsListContext(AbstractMenu menu, Player player, Inventory inventory) {
+        super(menu, player, inventory);
     }
 
     public void add(MenuSlot slot) {

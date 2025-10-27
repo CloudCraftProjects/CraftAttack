@@ -3,7 +3,6 @@ package dev.booky.craftattack;
 
 import dev.booky.cloudcore.config.ConfigurateLoader;
 import dev.booky.cloudcore.util.BlockBBox;
-import dev.booky.craftattack.menu.impl.MenuManager;
 import dev.booky.craftattack.utils.CaConfig;
 import dev.booky.craftattack.utils.LeaderboardTasks;
 import dev.booky.craftattack.utils.TpResult;
@@ -49,7 +48,6 @@ public final class CaManager {
     private final NamespacedKey elytraDataKey;
     private final NamespacedKey elytraBoostsKey;
 
-    private final MenuManager menus = new MenuManager();
     private final LeaderboardTasks leaderboardTasks = new LeaderboardTasks(this);
     private final Map<UUID, CompletableFuture<TpResult>> teleports = new HashMap<>();
     private final Plugin plugin;
@@ -233,10 +231,6 @@ public final class CaManager {
             return newBoosts;
         }
         return OptionalInt.empty();
-    }
-
-    public MenuManager getMenus() {
-        return this.menus;
     }
 
     public LeaderboardTasks getLeaderboardTasks() {

@@ -4,11 +4,11 @@ package dev.booky.craftattack.menu;
 import dev.booky.craftattack.menu.context.MenuClickContext;
 import dev.booky.craftattack.menu.context.MenuCloseContext;
 import dev.booky.craftattack.menu.impl.AbstractMenuHandler;
-import dev.booky.craftattack.menu.impl.MenuManager;
 import dev.booky.craftattack.menu.result.MenuClickResult;
 import dev.booky.craftattack.menu.result.MenuResult;
 import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.util.NumberConversions;
 import org.jetbrains.annotations.ApiStatus;
 import org.jspecify.annotations.NullMarked;
@@ -43,6 +43,13 @@ public abstract class AbstractMenu {
         this.backHandler = backHandler;
     }
 
+    public static void updateContent(Player player) {
+        Inventory inventory = player.getOpenInventory().getTopInventory();
+        if (inventory.getHolder(false) instanceof AbstractMenuHandler<?> handler) {
+            handler.refreshContent();
+        }
+    }
+
     @ApiStatus.Internal
     public final MenuResult handleClose(MenuCloseContext ctx) {
         return this.closeHandler.apply(ctx);
@@ -59,14 +66,11 @@ public abstract class AbstractMenu {
     }
 
     @ApiStatus.Internal
-    public abstract AbstractMenuHandler<?> createHandler(MenuManager manager, Player player);
+    public abstract AbstractMenuHandler<?> createHandler(Player player);
 
-    public void open(MenuManager manager, Player player) {
-        manager.open(this, player);
-    }
-
-    public void updateContent(MenuManager manager, Player player) {
-        manager.updateContent(this, player);
+    public void open(Player player) {
+        AbstractMenuHandler<?> handler = this.createHandler(player);
+        player.openInventory(handler.getInventory());
     }
 
     public Component getTitle() {
@@ -137,7 +141,7 @@ public abstract class AbstractMenu {
             return this.onBack(ctx -> {
                 MenuClickResult ret = handler.apply(ctx);
                 if (parent != null) {
-                    parent.open(ctx.getManager(), ctx.getPlayer());
+                    parent.open(ctx.getPlayer());
                 }
                 return ret;
             });
@@ -158,8 +162,8 @@ public abstract class AbstractMenu {
             return this.getSelf();
         }
 
-        public void open(MenuManager manager, Player player) {
-            this.build().open(manager, player);
+        public void open(Player player) {
+            this.build().open(player);
         }
 
         public abstract T build();
