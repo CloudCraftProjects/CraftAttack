@@ -24,6 +24,7 @@ import org.bukkit.inventory.view.MerchantView;
 import org.jspecify.annotations.NullMarked;
 
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 import java.util.UUID;
 
@@ -151,10 +152,11 @@ public final class ShopListener implements Listener {
     public void onTickEnd(ServerTickEndEvent event) {
         // players may bulk-buy a few items, so we have a queue for saving shop villager data to prevent lags
         if (!this.villagerSaveQueue.isEmpty()) {
-            for (ShopVillager villager : this.villagerSaveQueue) {
-                villager.saveData();
+            for (Iterator<ShopVillager> it = this.villagerSaveQueue.iterator(); it.hasNext(); ) {
+                ShopVillager shop = it.next();
+                it.remove();
+                shop.saveData();
             }
-            this.villagerSaveQueue.clear();
         }
     }
 }

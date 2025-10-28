@@ -95,6 +95,10 @@ public class ConfirmationMenu extends AbstractMenu {
         private Function<MenuClickContext, MenuClickResult> confirmHandler = DEFAULT_HANDLER_NO_PARENT;
         private Function<MenuClickContext, MenuClickResult> cancelHandler = DEFAULT_HANDLER_NO_PARENT;
 
+        public ConfirmationMenuBuilder withQuestion(@Nullable Component question) {
+            return this.withQuestion(question != null ? __ -> question : null);
+        }
+
         public ConfirmationMenuBuilder withQuestion(@Nullable Function<MenuContext, Component> question) {
             this.question = question;
             return this;

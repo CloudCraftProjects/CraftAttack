@@ -133,6 +133,10 @@ public final class ShopVillager {
         this.markDirty();
     }
 
+    public boolean hasStock() {
+        return !this.stock.isEmpty();
+    }
+
     public List<ItemStack> getStock() {
         return this.stock;
     }

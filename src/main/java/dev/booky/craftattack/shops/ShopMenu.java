@@ -3,6 +3,7 @@ package dev.booky.craftattack.shops;
 
 import dev.booky.craftattack.CaManager;
 import dev.booky.craftattack.menu.AbstractMenu;
+import dev.booky.craftattack.menu.ConfirmationMenu;
 import dev.booky.craftattack.menu.Menu;
 import dev.booky.craftattack.menu.MenuSlot;
 import dev.booky.craftattack.menu.PagedMenu;
@@ -176,7 +177,9 @@ public final class ShopMenu {
                                             .type(Key.key("block.chest.open"))
                                             .build());
                                 })
-                        .set(SLOTS_PER_ROW + SLOTS_PER_ROW - 2, buildDumpSlot(shop)))
+                        .set(SLOTS_PER_ROW + SLOTS_PER_ROW - 2, buildDumpSlot(shop))
+                        .set(SLOTS_PER_ROW * 3 - 1, buildDeleteSlot(shop))
+                )
                 .open(player);
     }
 
@@ -222,6 +225,37 @@ public final class ShopMenu {
                     .type(Key.key("entity.player.levelup"))
                     .build());
         });
+    }
+
+    public static MenuSlot buildDeleteSlot(ShopVillager shop) {
+        return new MenuSlot(
+                itemStack(Material.BARRIER, translatable("ca.menu.shop.delete")),
+                clickCtx -> triggerDelete(clickCtx, shop, false)
+        );
+    }
+
+    private static MenuClickResult triggerDelete(MenuClickContext ctx, ShopVillager shop, boolean confirmed) {
+        AbstractVillager merchant = shop.getMerchant();
+        if (shop.hasProfit()) {
+            ctx.getPlayer().sendMessage(CaManager.getPrefix().append(translatable("ca.menu.shop.delete.profit-present")));
+            return MenuClickResult.SOUND_FAIL.plus(MenuClickResult.CLOSE);
+        } else if (shop.hasStock()) {
+            ctx.getPlayer().sendMessage(CaManager.getPrefix().append(translatable("ca.menu.shop.delete.stock-present")));
+            return MenuClickResult.SOUND_FAIL.plus(MenuClickResult.CLOSE);
+        }
+        if (confirmed) {
+            merchant.remove();
+            ctx.getPlayer().sendMessage(CaManager.getPrefix().append(translatable("ca.menu.shop.delete.success")));
+        } else {
+            ConfirmationMenu.builder()
+                    .withRows(3)
+                    .withConfirmHandler(confirmCtx -> triggerDelete(confirmCtx, shop, true))
+                    .withTitle(translatable("ca.menu.shop.delete.confirm.title"))
+                    .withQuestion(translatable("ca.menu.shop.delete.confirm.question"))
+                    .withParent(ctx.getMenu())
+                    .open(ctx.getPlayer());
+        }
+        return MenuClickResult.CLOSE_SOUND;
     }
 
     public static void openStyleMenu(ShopVillager shop, Player player, @Nullable AbstractMenu parent) {

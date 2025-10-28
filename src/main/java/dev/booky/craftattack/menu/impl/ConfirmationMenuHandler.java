@@ -24,15 +24,16 @@ public class ConfirmationMenuHandler extends AbstractMenuHandler<ConfirmationMen
     public void provideContent(MenuSlot[] slots) {
         this.setupControls(slots);
 
-        int centerRow = this.menu.getRows() / 2 + 1;
-        int slotOffset = centerRow + SLOTS_PER_ROW;
+        // center vertically
+        int centerRow = this.menu.getRows() / 2;
+        int slotOffset = centerRow * SLOTS_PER_ROW;
 
         // 00C0Q0C00
         slots[slotOffset + SLOTS_PER_ROW / 2 - 2] = new MenuSlot(
                 itemStack(Material.LIME_DYE, translatable("ca.menu.confirm.confirm")),
                 this.menu::handleConfirm);
         slots[slotOffset + SLOTS_PER_ROW / 2 + 2] = new MenuSlot(
-                itemStack(Material.LIME_DYE, translatable("ca.menu.confirm.cancel")),
+                itemStack(Material.RED_DYE, translatable("ca.menu.confirm.cancel")),
                 this.menu::handleCancel);
 
         Component question = this.menu.getQuestion(this.ctx);
