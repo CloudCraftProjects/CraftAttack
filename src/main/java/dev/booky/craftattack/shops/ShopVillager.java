@@ -4,13 +4,24 @@ package dev.booky.craftattack.shops;
 import dev.booky.craftattack.CaManager;
 import dev.booky.craftattack.utils.ItemStackListDataType;
 import dev.booky.craftattack.utils.UniqueIdDataType;
+import org.bukkit.Color;
+import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.AbstractVillager;
+import org.bukkit.entity.Display;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.TextDisplay;
+import org.bukkit.entity.Villager;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.MerchantRecipe;
 import org.bukkit.persistence.PersistentDataContainer;
+import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.plugin.Plugin;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
+import org.joml.Matrix4f;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -22,6 +33,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Consumer;
+
+import static net.kyori.adventure.text.Component.translatable;
 
 @NullMarked
 public final class ShopVillager {
@@ -48,6 +61,38 @@ public final class ShopVillager {
         this.ownerKey = new NamespacedKey(manager.getPlugin(), "shop/owner");
 
         this.loadData();
+    }
+
+    public static Villager spawnShop(Location location, LivingEntity owner, Plugin plugin) {
+        NamespacedKey shopKey = new NamespacedKey(plugin, "shop");
+        NamespacedKey ownerKey = new NamespacedKey(plugin, "shop/owner");
+        Villager ret = location.getWorld().spawn(location, Villager.class, false, villager -> {
+            PersistentDataContainer pdc = villager.getPersistentDataContainer();
+            pdc.set(shopKey, PersistentDataType.BOOLEAN, true);
+            pdc.set(ownerKey, UniqueIdDataType.INSTANCE, owner.getUniqueId());
+
+            villager.setAI(false);
+            villager.setRemoveWhenFarAway(false);
+            villager.setInvulnerable(true);
+
+            villager.addPotionEffect(new PotionEffect(
+                    PotionEffectType.FIRE_RESISTANCE,
+                    PotionEffect.INFINITE_DURATION,
+                    0, false, false, false
+            ));
+
+            ShopListener.lookAt(villager, owner);
+        });
+        location.getWorld().spawn(location, TextDisplay.class, false, display -> {
+            display.setShadowed(true);
+            display.setBackgroundColor(Color.fromARGB(0x00000000));
+            display.setBillboard(Display.Billboard.CENTER);
+            display.text(translatable("ca.shop.display", owner.teamDisplayName()));
+            display.setTransformationMatrix(new Matrix4f()
+                    .translateLocal(0f, 0.2f, 0f));
+            ret.addPassenger(display);
+        });
+        return ret;
     }
 
     public boolean tryTrade(MerchantRecipe recipe) {

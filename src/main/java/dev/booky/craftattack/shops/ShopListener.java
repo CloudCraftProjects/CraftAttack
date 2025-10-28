@@ -51,7 +51,7 @@ public final class ShopListener implements Listener {
                         new ShopVillager(manager, villager, this.villagerSaveQueue::add));
     }
 
-    private static void lookAt(LivingEntity source, LivingEntity target) {
+    static void lookAt(LivingEntity source, LivingEntity target) {
         double diffX = target.getX() - source.getX();
         double diffY = (target.getY() + target.getEyeHeight()) - (source.getY() + source.getEyeHeight());
         double diffZ = target.getZ() - source.getZ();
