@@ -89,6 +89,9 @@ public final class ShopListener implements Listener {
             boolean opened = ShopMenu.openMerchantMenu(this.manager.getPlugin(), shop, player);
             if (!opened) {
                 player.sendMessage(CaManager.getPrefix().append(translatable("ca.menu.shop.no-trades")));
+                if (shop.isOwner(player)) {
+                    player.sendMessage(CaManager.getPrefix().append(translatable("ca.menu.shop.no-trades.owner-hit")));
+                }
             }
             return;
         }

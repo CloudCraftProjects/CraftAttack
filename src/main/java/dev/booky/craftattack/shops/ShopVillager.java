@@ -179,6 +179,7 @@ public final class ShopVillager {
     }
 
     public boolean hasStock() {
+        this.cleanStock();
         return !this.stock.isEmpty();
     }
 
@@ -190,6 +191,13 @@ public final class ShopVillager {
         this.stock.clear();
         this.stock.addAll(stock);
         this.markDirty();
+    }
+
+    public void cleanStock() {
+        boolean mut = this.stock.removeIf(ItemStack::isEmpty);
+        if (mut) {
+            this.markDirty();
+        }
     }
 
     public boolean hasProfit() {
