@@ -9,6 +9,7 @@ import dev.booky.craftattack.CaManager;
 import dev.booky.craftattack.utils.UniqueIdDataType;
 import io.papermc.paper.event.player.PlayerTradeEvent;
 import io.papermc.paper.event.player.PrePlayerAttackEntityEvent;
+import io.papermc.paper.event.server.ServerResourcesReloadedEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -58,6 +59,11 @@ public final class ShopListener implements Listener {
                 .weakKeys().ticker(Ticker.systemTicker()) // automatically remove expired entries
                 .build(villager ->
                         new ShopVillager(manager, villager, this.villagerSaveQueue::add));
+    }
+
+    @EventHandler
+    public void onResourceReload(ServerResourcesReloadedEvent event) {
+        ShopRecipes.registerRecipe(this.manager.getPlugin());
     }
 
     static void lookAt(LivingEntity source, LivingEntity target) {

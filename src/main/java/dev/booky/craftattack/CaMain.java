@@ -13,6 +13,7 @@ import dev.booky.craftattack.listener.TeleportListener;
 import dev.booky.craftattack.listener.WarpPlateListener;
 import dev.booky.craftattack.menu.impl.MenuListener;
 import dev.booky.craftattack.shops.ShopListener;
+import dev.booky.craftattack.shops.ShopRecipes;
 import dev.jorel.commandapi.CommandAPI;
 import dev.jorel.commandapi.CommandAPICommand;
 import org.bstats.bukkit.Metrics;
@@ -59,6 +60,8 @@ public final class CaMain extends JavaPlugin {
         Bukkit.getServicesManager().register(CaManager.class, this.manager, this, ServicePriority.Normal);
 
         this.command = new CaCommand(this.manager);
+
+        ShopRecipes.registerRecipe(this);
     }
 
     @Override
