@@ -8,19 +8,27 @@ import com.github.benmanes.caffeine.cache.Ticker;
 import dev.booky.craftattack.CaManager;
 import dev.booky.craftattack.utils.UniqueIdDataType;
 import io.papermc.paper.event.player.PlayerTradeEvent;
+import io.papermc.paper.event.player.PrePlayerAttackEntityEvent;
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
+import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Sound;
 import org.bukkit.entity.AbstractVillager;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.view.MerchantView;
+import org.bukkit.util.BoundingBox;
+import org.bukkit.util.Vector;
 import org.jspecify.annotations.NullMarked;
 
 import java.util.HashSet;
@@ -61,17 +69,68 @@ public final class ShopListener implements Listener {
         source.setRotation(yaw, pitch);
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void onAttack(EntityDamageByEntityEvent event) {
-        if (event.getDamager() instanceof Player player
-                && event.getEntity() instanceof AbstractVillager villager
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onInteract(PlayerInteractEvent event) {
+        if (event.getAction() != Action.RIGHT_CLICK_BLOCK) {
+            return;
+        }
+        ItemStack stack = event.getItem();
+        if (stack == null || !stack.hasItemMeta() || !stack.getPersistentDataContainer().has(this.shopKey)) {
+            return;
+        }
+        // replace the real interaction
+        boolean ret = this.onInteract0(event);
+        Player player = event.getPlayer();
+        if (ret) {
+            if (player.getGameMode() != GameMode.CREATIVE) {
+                event.getItem().subtract();
+            }
+            player.playSound(player, Sound.ENTITY_VILLAGER_YES, 1f, 1f);
+        } else {
+            // failed. somehow.
+            player.playSound(player, Sound.ENTITY_ENDERMAN_TELEPORT, 1f, 0f);
+        }
+        // cancel interaction which we just replaced
+        event.setUseItemInHand(Event.Result.DENY);
+    }
+
+    public boolean onInteract0(PlayerInteractEvent event) {
+        if (event.useItemInHand() == Event.Result.DENY) {
+            return false; // don't even check
+        }
+        Location interactPoint = event.getInteractionPoint();
+        if (interactPoint == null) {
+            return false; // just to be safe
+        }
+        // verify there is actually space for the villager
+        float width = 0.6f;
+        float height = 1.95f + 0.5f;
+        BoundingBox bbox = new BoundingBox(
+                interactPoint.getX() - width / 2, interactPoint.getY(), interactPoint.getZ() - width / 2,
+                interactPoint.getX() + width / 2, interactPoint.getY() + height, interactPoint.getZ() + width / 2
+        );
+        if (interactPoint.getWorld().hasCollisionsIn(bbox)) {
+            return false; // no space
+        }
+        // check the villager will be placed on the ground
+        bbox.shift(0d, -Vector.getEpsilon(), 0d);
+        if (!interactPoint.getWorld().hasCollisionsIn(bbox)) {
+            return false; // no ground, don't spawn floating shops
+        }
+        // all checks successful, spawn!
+        ShopVillager.spawnShop(interactPoint, event.getPlayer(), this.manager.getPlugin());
+        return true;
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onAttack(PrePlayerAttackEntityEvent event) {
+        if (event.getAttacked() instanceof AbstractVillager villager
                 && villager.getPersistentDataContainer().has(this.shopKey)) {
             // make villager look at owner if punched
             ShopVillager shop = this.villagerCache.get(villager);
-            if (shop.isOwner(player)) {
-                lookAt(villager, player);
+            if (shop.isOwner(event.getPlayer())) {
+                lookAt(villager, event.getPlayer());
             }
-            event.setDamage(0d);
         }
     }
 
