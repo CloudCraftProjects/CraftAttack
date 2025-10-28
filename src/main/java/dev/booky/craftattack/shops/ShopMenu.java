@@ -23,6 +23,7 @@ import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Registry;
 import org.bukkit.entity.AbstractVillager;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Villager;
 import org.bukkit.entity.WanderingTrader;
@@ -244,7 +245,10 @@ public final class ShopMenu {
             return MenuClickResult.SOUND_FAIL.plus(MenuClickResult.CLOSE);
         }
         if (confirmed) {
-            merchant.remove();
+            merchant.setHealth(0d);
+            for (Entity passenger : merchant.getPassengers()) {
+                passenger.remove();
+            }
             ctx.getPlayer().sendMessage(CaManager.getPrefix().append(translatable("ca.menu.shop.delete.success")));
         } else {
             ConfirmationMenu.builder()

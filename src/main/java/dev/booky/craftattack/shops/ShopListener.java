@@ -23,6 +23,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
@@ -120,6 +121,14 @@ public final class ShopListener implements Listener {
         // all checks successful, spawn!
         ShopVillager.spawnShop(interactPoint, event.getPlayer(), this.manager.getPlugin());
         return true;
+    }
+
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onDeath(EntityDeathEvent event) {
+        if (event.getEntity() instanceof AbstractVillager villager
+                && villager.getPersistentDataContainer().has(this.shopKey)) {
+            event.getDrops().add(ShopVillager.createSpawnEgg(this.manager.getPlugin()));
+        }
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)

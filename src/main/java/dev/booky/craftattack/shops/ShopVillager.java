@@ -6,6 +6,7 @@ import dev.booky.craftattack.utils.ItemStackListDataType;
 import dev.booky.craftattack.utils.UniqueIdDataType;
 import org.bukkit.Color;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.AbstractVillager;
 import org.bukkit.entity.Display;
@@ -63,6 +64,18 @@ public final class ShopVillager {
         this.loadData();
     }
 
+    public static ItemStack createSpawnEgg(Plugin plugin) {
+        NamespacedKey shopKey = new NamespacedKey(plugin, "shop");
+        ItemStack stack = ItemStack.of(Material.VILLAGER_SPAWN_EGG);
+        stack.editMeta(meta -> {
+            meta.itemName(translatable("ca.shop.spawn-egg"));
+            meta.setEnchantmentGlintOverride(true);
+            // can't be set using data components
+            meta.getPersistentDataContainer().set(shopKey, PersistentDataType.BOOLEAN, true);
+        });
+        return stack;
+    }
+
     public static Villager spawnShop(Location location, LivingEntity owner, Plugin plugin) {
         NamespacedKey shopKey = new NamespacedKey(plugin, "shop");
         NamespacedKey ownerKey = new NamespacedKey(plugin, "shop/owner");
@@ -83,7 +96,7 @@ public final class ShopVillager {
 
             ShopListener.lookAt(villager, owner);
         });
-        location.getWorld().spawn(location, TextDisplay.class, false, display -> {
+        TextDisplay shopText = location.getWorld().spawn(location, TextDisplay.class, false, display -> {
             display.setShadowed(true);
             display.setBackgroundColor(Color.fromARGB(0x00000000));
             display.setBillboard(Display.Billboard.CENTER);
@@ -91,7 +104,10 @@ public final class ShopVillager {
             display.setTransformationMatrix(new Matrix4f()
                     .translateLocal(0f, 0.2f, 0f));
             ret.addPassenger(display);
+            // try to prevent flickering of text display by not showing it until it has been spawned
+            display.setVisibleByDefault(false);
         });
+        shopText.setVisibleByDefault(true);
         return ret;
     }
 
