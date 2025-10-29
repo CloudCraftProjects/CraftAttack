@@ -22,5 +22,6 @@ public class AdminSubCommand extends CommandAPICommand {
         super.withSubcommand(new SpawnSubCommand(manager));
         super.withSubcommand(new ReloadConfigCommand(manager));
         super.withSubcommand(new MobCountCommand());
+        super.withSubcommand(new SpawnShopCommand(manager));
     }
 }

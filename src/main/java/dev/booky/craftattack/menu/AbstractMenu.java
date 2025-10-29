@@ -1,0 +1,184 @@
+package dev.booky.craftattack.menu;
+// Created by booky10 in CraftAttack (00:05 27.10.2025)
+
+import dev.booky.craftattack.menu.context.MenuClickContext;
+import dev.booky.craftattack.menu.context.MenuCloseContext;
+import dev.booky.craftattack.menu.impl.AbstractMenuHandler;
+import dev.booky.craftattack.menu.result.MenuClickResult;
+import dev.booky.craftattack.menu.result.MenuResult;
+import net.kyori.adventure.text.Component;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.util.NumberConversions;
+import org.jetbrains.annotations.ApiStatus;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
+
+import java.util.function.Function;
+
+@NullMarked
+public abstract class AbstractMenu {
+
+    public static final int MIN_ROWS = 1;
+    public static final int MAX_ROWS = 6;
+    public static final int SLOTS_PER_ROW = 9;
+
+    private final Component title;
+    private final int rows;
+    private final boolean storage;
+
+    private final Function<MenuCloseContext, MenuResult> closeHandler;
+    private final Function<MenuClickContext, MenuClickResult> clickHandler;
+    private final Function<MenuClickContext, MenuClickResult> backHandler;
+
+    protected AbstractMenu(
+            Component title, int rows, boolean storage,
+            Function<MenuCloseContext, MenuResult> closeHandler,
+            Function<MenuClickContext, MenuClickResult> clickHandler,
+            Function<MenuClickContext, MenuClickResult> backHandler
+    ) {
+        this.title = title;
+        this.rows = rows;
+        this.storage = storage;
+        this.closeHandler = closeHandler;
+        this.clickHandler = clickHandler;
+        this.backHandler = backHandler;
+    }
+
+    public static void updateContent(Player player) {
+        Inventory inventory = player.getOpenInventory().getTopInventory();
+        if (inventory.getHolder(false) instanceof AbstractMenuHandler<?> handler) {
+            handler.refreshContent();
+        }
+    }
+
+    @ApiStatus.Internal
+    public final MenuResult handleClose(MenuCloseContext ctx) {
+        return this.closeHandler.apply(ctx);
+    }
+
+    @ApiStatus.Internal
+    public final MenuClickResult handleClick(MenuClickContext ctx) {
+        return this.clickHandler.apply(ctx);
+    }
+
+    @ApiStatus.Internal
+    public final MenuClickResult handleBack(MenuClickContext ctx) {
+        return this.backHandler.apply(ctx);
+    }
+
+    @ApiStatus.Internal
+    public abstract AbstractMenuHandler<?> createHandler(Player player);
+
+    public void open(Player player) {
+        AbstractMenuHandler<?> handler = this.createHandler(player);
+        player.openInventory(handler.getInventory());
+    }
+
+    public Component getTitle() {
+        return this.title;
+    }
+
+    public int getRows() {
+        return this.rows;
+    }
+
+    public int getSlots() {
+        return this.rows * SLOTS_PER_ROW;
+    }
+
+    public boolean isStorage() {
+        return this.storage;
+    }
+
+    public abstract AbstractMenu.Builder<?, ?> copy();
+
+    protected void copy0(AbstractMenu.Builder<?, ?> builder) {
+        builder.title = this.title;
+        builder.rows = this.rows;
+        builder.storage = this.storage;
+        builder.closeHandler = this.closeHandler;
+        builder.clickHandler = this.clickHandler;
+        builder.backHandler = this.backHandler;
+    }
+
+    public static abstract class Builder<B extends Builder<B, T>, T extends AbstractMenu> {
+
+        private static final Function<MenuCloseContext, MenuResult> DEFAULT_CLOSE_HANDLER = ctx -> MenuResult.NONE;
+        private static final Function<MenuClickContext, MenuClickResult> DEFAULT_CLICK_HANDLER = ctx -> MenuClickResult.NONE;
+        private static final Function<MenuClickContext, MenuClickResult> DEFAULT_BACK_HANDLER = ctx -> MenuClickResult.CLOSE_SOUND;
+
+        protected Component title = Component.empty();
+        protected int rows = 3;
+        protected boolean storage = false;
+
+        protected Function<MenuCloseContext, MenuResult> closeHandler = DEFAULT_CLOSE_HANDLER;
+        protected Function<MenuClickContext, MenuClickResult> clickHandler = DEFAULT_CLICK_HANDLER;
+        protected Function<MenuClickContext, MenuClickResult> backHandler = DEFAULT_BACK_HANDLER;
+
+        protected Builder() {
+        }
+
+        @SuppressWarnings("unchecked")
+        protected B getSelf() {
+            return (B) this;
+        }
+
+        public B withTitle(Component title) {
+            this.title = title;
+            return this.getSelf();
+        }
+
+        public B withSlots(int slots) {
+            int rows = NumberConversions.ceil(slots / (double) SLOTS_PER_ROW);
+            int clampedRows = Math.clamp(rows, MIN_ROWS, MAX_ROWS);
+            return this.withRows(clampedRows);
+        }
+
+        public B withRows(int rows) {
+            if (rows < MIN_ROWS || rows > MAX_ROWS) {
+                throw new IllegalArgumentException("Out-of-bounds row count received: " + rows);
+            }
+            this.rows = rows;
+            return this.getSelf();
+        }
+
+        public B withStorage(boolean storage) {
+            this.storage = storage;
+            return this.getSelf();
+        }
+
+        public B withParent(@Nullable AbstractMenu parent) {
+            // don't discard existing back handler
+            Function<MenuClickContext, MenuClickResult> handler = this.backHandler;
+            return this.onBack(ctx -> {
+                MenuClickResult ret = handler.apply(ctx);
+                if (parent != null) {
+                    parent.open(ctx.getPlayer());
+                }
+                return ret;
+            });
+        }
+
+        public B onClose(Function<MenuCloseContext, MenuResult> handler) {
+            this.closeHandler = handler;
+            return this.getSelf();
+        }
+
+        public B onClick(Function<MenuClickContext, MenuClickResult> handler) {
+            this.clickHandler = handler;
+            return this.getSelf();
+        }
+
+        public B onBack(Function<MenuClickContext, MenuClickResult> handler) {
+            this.backHandler = handler;
+            return this.getSelf();
+        }
+
+        public void open(Player player) {
+            this.build().open(player);
+        }
+
+        public abstract T build();
+    }
+}

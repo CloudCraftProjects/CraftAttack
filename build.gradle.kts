@@ -90,6 +90,11 @@ tasks {
             // not available on modrinth, github or hangar
             url("https://download.luckperms.net/1605/bukkit/loader/LuckPerms-Bukkit-5.5.16.jar")
         }
+
+        val serverJarFile = runDirectory.file("custom-server.jar")
+        if (serverJarFile.get().asFile.exists()) {
+            serverJar(serverJarFile)
+        }
     }
 
     withType<Jar> {
