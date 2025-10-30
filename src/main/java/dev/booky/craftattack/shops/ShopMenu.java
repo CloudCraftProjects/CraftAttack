@@ -341,8 +341,7 @@ public final class ShopMenu {
                     @Nullable ItemStack[] contents = ctx.getInventory().getContents();
                     for (int i = 0; i < contents.length; i++) {
                         if (i == contents.length - SLOTS_PER_ROW) {
-                            i++; // don't override back button
-                            continue;
+                            continue; // don't override back button
                         }
                         ItemStack stack = contents[i];
                         if (stack != null && !stack.isEmpty()) {
