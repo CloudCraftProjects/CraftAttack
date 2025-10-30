@@ -102,8 +102,9 @@ public final class ShopListener implements Listener {
     }
 
     public boolean onInteract0(PlayerInteractEvent event) {
-        if (event.useItemInHand() == Event.Result.DENY) {
-            return false; // don't even check
+        if (event.useItemInHand() == Event.Result.DENY
+                || event.useInteractedBlock() == Event.Result.DENY) {
+            return false; // don't check
         }
         Location interactPoint = event.getInteractionPoint();
         if (interactPoint == null) {
