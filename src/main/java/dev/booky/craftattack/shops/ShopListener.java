@@ -10,6 +10,7 @@ import dev.booky.craftattack.utils.UniqueIdDataType;
 import io.papermc.paper.event.player.PlayerTradeEvent;
 import io.papermc.paper.event.player.PrePlayerAttackEntityEvent;
 import io.papermc.paper.event.server.ServerResourcesReloadedEvent;
+import net.kyori.adventure.util.Ticks;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -33,6 +34,7 @@ import org.bukkit.util.BoundingBox;
 import org.bukkit.util.Vector;
 import org.jspecify.annotations.NullMarked;
 
+import java.lang.ref.WeakReference;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -50,6 +52,8 @@ public final class ShopListener implements Listener {
     // don't always read/save data, add a cache for this
     private final LoadingCache<AbstractVillager, ShopVillager> villagerCache;
     private final Set<ShopVillager> villagerSaveQueue = new HashSet<>();
+
+    private final Set<MerchantEntry> openedMerchants = new HashSet<>();
 
     public ShopListener(CaManager manager) {
         this.manager = manager;
@@ -161,8 +165,7 @@ public final class ShopListener implements Listener {
         Player player = event.getPlayer();
 
         if (!player.isSneaking()) {
-            boolean opened = ShopMenu.openMerchantMenu(this.manager.getPlugin(), shop, player);
-            if (!opened) {
+            if (!this.openTradeInventory(shop, player)) {
                 player.sendMessage(CaManager.getPrefix().append(translatable("ca.menu.shop.no-trades")));
                 if (shop.isOwner(player)) {
                     player.sendMessage(CaManager.getPrefix().append(translatable("ca.menu.shop.no-trades.owner-hit")));
@@ -219,11 +222,21 @@ public final class ShopListener implements Listener {
                 if (!(event.getPlayer().getOpenInventory() instanceof MerchantView)) {
                     return; // exited merchant inventory menu
                 }
-                if (!ShopMenu.openMerchantMenu(this.manager.getPlugin(), shop, event.getPlayer())) {
+                if (!this.openTradeInventory(shop, event.getPlayer())) {
                     event.getPlayer().closeInventory(); // no trades present
                 }
             });
         }
+    }
+
+    public boolean openTradeInventory(ShopVillager shop, Player player) {
+        AbstractVillager merchant = ShopMenu.openMerchantMenu(this.manager.getPlugin(), shop, player);
+        if (merchant == null) {
+            return false; // failed
+        }
+        // keep track of opened merchants
+        this.openedMerchants.add(new MerchantEntry(shop, player, merchant));
+        return true;
     }
 
     @EventHandler
@@ -238,6 +251,51 @@ public final class ShopListener implements Listener {
                     it.remove();
                 }
             }
+        }
+        this.openedMerchants.removeIf(MerchantEntry::tick);
+    }
+
+    private static class MerchantEntry {
+
+        private static final int TTL = Ticks.TICKS_PER_SECOND * 60 * 5; // 5 minutes
+
+        private final ShopVillager shop;
+        private final WeakReference<Player> player;
+        private final WeakReference<AbstractVillager> merchant;
+
+        private int ttl = TTL;
+
+        public MerchantEntry(ShopVillager shop, Player player, AbstractVillager merchant) {
+            this.shop = shop;
+            this.player = new WeakReference<>(player);
+            this.merchant = new WeakReference<>(merchant);
+        }
+
+        public boolean checkValid() {
+            Player player = this.player.get();
+            if (player == null || !player.isValid() || !player.isConnected()) {
+                return false; // player has left/died
+            }
+            AbstractVillager merchant = this.merchant.get();
+            if (merchant == null || !merchant.isValid()) {
+                return false; // opened merchant has become invalid
+            } else if (this.ttl < 1) {
+                return false; // expired
+            }
+            this.shop.ensureLoaded(); // check original shop villager
+            return true;
+        }
+
+        public boolean tick() {
+            if (!this.checkValid()) {
+                Player player = this.player.get();
+                if (player != null && player.getOpenInventory() instanceof MerchantView) {
+                    player.closeInventory();
+                }
+                return true; // removed
+            }
+            this.ttl--;
+            return false;
         }
     }
 }

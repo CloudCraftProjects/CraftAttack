@@ -17,7 +17,6 @@ import io.papermc.paper.datacomponent.item.ItemLore;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.util.Ticks;
 import org.bukkit.Keyed;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -61,7 +60,6 @@ public final class ShopMenu {
     private static final int TRADES_PER_PAGE = 4;
     private static final int MAX_TRADES = 20;
     public static final Material EMPTY_INGREDIENT = Material.STRUCTURE_VOID;
-    private static final int PER_PLAYER_TRADER_TTL = Ticks.TICKS_PER_SECOND * 60 * 5;
 
     private static final Map<Villager.Type, Material> VILL_TYPE_ITEMS = Map.ofEntries(
             Map.entry(Villager.Type.DESERT, Material.SAND),
@@ -125,10 +123,10 @@ public final class ShopMenu {
         return filtered;
     }
 
-    public static boolean openMerchantMenu(Plugin plugin, ShopVillager shop, Player player) {
+    public static @Nullable AbstractVillager openMerchantMenu(Plugin plugin, ShopVillager shop, Player player) {
         List<MerchantRecipe> recipes = buildRecipes(shop);
         if (recipes.isEmpty()) {
-            return false; // no recipes available
+            return null; // no recipes available
         }
         // spawn separate merchant per player to allow multiple players to access one shop at the same time
         AbstractVillager merchant = shop.getMerchant();
@@ -138,7 +136,8 @@ public final class ShopMenu {
             trader.setSilent(true);
             trader.setVisibleByDefault(false);
             trader.setCollidable(false);
-            trader.setDespawnDelay(PER_PLAYER_TRADER_TTL);
+            // instantly despawn after player has closed the inventory
+            trader.setDespawnDelay(1);
             trader.setRecipes(recipes);
 
             NamespacedKey refKey = new NamespacedKey(plugin, "shop/reference");
@@ -150,7 +149,7 @@ public final class ShopMenu {
                 .checkReachable(true)
                 .title(translatable("ca.menu.shop.merchant"))
                 .build(player).open();
-        return true; // report success!
+        return spawnedMerchant; // report success!
     }
 
     public static void openMenu(ShopVillager shop, Player player) {
