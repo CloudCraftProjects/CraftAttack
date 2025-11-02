@@ -9,6 +9,7 @@ import dev.booky.craftattack.menu.result.MenuResult;
 import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryView;
 import org.bukkit.util.NumberConversions;
 import org.jetbrains.annotations.ApiStatus;
 import org.jspecify.annotations.NullMarked;
@@ -70,9 +71,13 @@ public abstract class AbstractMenu {
     @ApiStatus.Internal
     public abstract AbstractMenuHandler<?> createHandler(Player player);
 
-    public void open(Player player) {
+    public InventoryView open(Player player) {
         AbstractMenuHandler<?> handler = this.createHandler(player);
-        player.openInventory(handler.getInventory());
+        InventoryView view = player.openInventory(handler.getInventory());
+        if (view == null) {
+            throw new IllegalStateException("Failed to open inventory for " + player);
+        }
+        return view;
     }
 
     public Component getTitle() {
@@ -175,8 +180,8 @@ public abstract class AbstractMenu {
             return this.getSelf();
         }
 
-        public void open(Player player) {
-            this.build().open(player);
+        public InventoryView open(Player player) {
+            return this.build().open(player);
         }
 
         public abstract T build();

@@ -9,8 +9,10 @@ import io.papermc.paper.datacomponent.item.ResolvableProfile;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemRarity;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.persistence.PersistentDataType;
 import org.jspecify.annotations.NullMarked;
 
 import java.io.IOException;
@@ -30,6 +32,8 @@ public final class PlayerHeadUtil {
     // use a common profile owner id to prevent clients from resolving textures for this uuid over and over
     public static final UUID STATIC_PROFILE_UUID = UUID.fromString("853c80ef-3c37-39fd-aa49-938b674adae6");
     public static final String PROFILE_PROPERTY_TEXTURES = "textures";
+
+    public static final NamespacedKey CUSTOM_HEAD_KEY = new NamespacedKey("craftattack", "menu/custom_head");
 
     private PlayerHeadUtil() {
     }
@@ -66,8 +70,11 @@ public final class PlayerHeadUtil {
 
     public static ItemStack createHeadStack(String textureUrl, Component name) {
         ItemStack stack = createHeadStack(textureUrl);
-        stack.setData(DataComponentTypes.RARITY, ItemRarity.COMMON);
-        stack.setData(DataComponentTypes.ITEM_NAME, name);
+        stack.editMeta(meta -> {
+            meta.setRarity(ItemRarity.COMMON);
+            meta.itemName(name);
+            meta.getPersistentDataContainer().set(CUSTOM_HEAD_KEY, PersistentDataType.BOOLEAN, true);
+        });
         return stack;
     }
 

@@ -27,6 +27,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Villager;
 import org.bukkit.entity.WanderingTrader;
+import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.MenuType;
 import org.bukkit.inventory.MerchantRecipe;
@@ -97,6 +98,7 @@ public final class ShopMenu {
     }
 
     public static List<MerchantRecipe> buildRecipes(ShopVillager shop) {
+        shop.updateStock();
         List<MerchantRecipe> recipes = shop.getMerchant().getRecipes();
         List<MerchantRecipe> filtered = new ArrayList<>(recipes.size());
         for (MerchantRecipe recipe : recipes) {
@@ -317,22 +319,24 @@ public final class ShopMenu {
 
     public static void openStockMenu(ShopVillager shop, Player player, @Nullable AbstractMenu parent) {
         shop.ensureLoaded();
-        Menu.builder()
+        InventoryView view = Menu.builder()
                 .withTitle(translatable("ca.menu.shop.manage-stock"))
                 .withRows(6)
                 .withSlots(ctx -> {
                     shop.ensureLoaded();
                     List<ItemStack> stock = shop.getStock();
                     @Nullable MenuSlot[] slots = ctx.getSlots();
-                    for (int i = 0, j = 0; i < stock.size() && j < slots.length; i++) {
-                        ItemStack stack = stock.get(i);
-                        if (stack.isEmpty()) {
-                            continue; // don't place empty stacks
-                        }
+                    for (int i = 0, j = 0; j < slots.length; i++) {
+                        ItemStack stack = i < stock.size() ? stock.get(i) : ItemStack.empty();
                         if (j == slots.length - SLOTS_PER_ROW) {
                             j++; // don't override back button
                         }
-                        ctx.set(j++, new MenuSlot(stack, clickCtx -> MenuClickResult.ALLOW));
+                        ctx.set(j++, new MenuSlot(stack, clickCtx -> {
+                            // prevent exploits by ensuring the shop is loaded
+                            // at all times while this inventory is being interacted with
+                            shop.ensureLoaded();
+                            return MenuClickResult.ALLOW;
+                        }));
                     }
                 })
                 .onClose(ctx -> {
@@ -349,11 +353,13 @@ public final class ShopMenu {
                         }
                     }
                     shop.setStock(stock);
+                    shop.setStock((InventoryView) null);
                     return MenuResult.NONE;
                 })
                 .withParent(parent)
                 .withStorage(true)
                 .open(player);
+        shop.setStock(view);
     }
 
     public static void openTradeManageMenu(ShopVillager shop, Player player, @Nullable AbstractMenu parent) {

@@ -3,6 +3,7 @@ package dev.booky.craftattack.shops;
 
 import dev.booky.craftattack.CaManager;
 import dev.booky.craftattack.utils.ItemStackListDataType;
+import dev.booky.craftattack.utils.PlayerHeadUtil;
 import dev.booky.craftattack.utils.UniqueIdDataType;
 import org.bukkit.Color;
 import org.bukkit.Location;
@@ -15,6 +16,7 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.TextDisplay;
 import org.bukkit.entity.Villager;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.MerchantRecipe;
 import org.bukkit.persistence.PersistentDataContainer;
@@ -48,6 +50,7 @@ public final class ShopVillager {
     private final List<ItemStack> profit = new ArrayList<>();
     private final NamespacedKey stockKey;
     private final List<ItemStack> stock = new ArrayList<>();
+    private @Nullable WeakReference<InventoryView> stockInventory;
 
     private final NamespacedKey ownerKey;
     private @Nullable UUID ownerId;
@@ -112,6 +115,7 @@ public final class ShopVillager {
     }
 
     public boolean tryTrade(MerchantRecipe recipe) {
+        this.updateStock();
         if (this.isTradeStocked(recipe)) {
             this.consumeStock(recipe.getResult());
             this.addProfit(recipe);
@@ -138,6 +142,7 @@ public final class ShopVillager {
     }
 
     public void consumeStock(ItemStack stack) {
+        this.consumeStockFromOpenInventory(stack);
         stack = stack.clone();
         boolean mut = false;
         for (ItemStack stock : this.stock) {
@@ -207,6 +212,63 @@ public final class ShopVillager {
         this.stock.clear();
         this.stock.addAll(stock);
         this.markDirty();
+    }
+
+    public void setStock(@Nullable InventoryView view) {
+        this.stockInventory = view != null ? new WeakReference<>(view) : null;
+    }
+
+    public void updateStock() {
+        this.updateStock(true);
+    }
+
+    private @Nullable Inventory getOpenStockInventory() {
+        this.ensureLoaded();
+        if (this.stockInventory == null) {
+            return null;
+        }
+        InventoryView inv = this.stockInventory.get();
+        if (inv != null && inv.getPlayer().getOpenInventory() == inv) {
+            return inv.getTopInventory();
+        }
+        return null;
+    }
+
+    private void consumeStockFromOpenInventory(ItemStack stack) {
+        Inventory inv = this.getOpenStockInventory();
+        if (inv == null) {
+            return; // no inventory set, ignore
+        }
+        stack = stack.clone();
+        for (ItemStack stock : inv.getStorageContents()) {
+            if (stock == null || !stack.isSimilar(stock)) {
+                continue; // doesn't match
+            }
+            int newAmount = Math.max(0, stack.getAmount() - stock.getAmount());
+            stock.subtract(stack.getAmount());
+            stack.setAmount(newAmount);
+            if (stack.isEmpty()) {
+                break;
+            }
+        }
+    }
+
+    private void updateStock(boolean save) {
+        Inventory inv = this.getOpenStockInventory();
+        if (inv == null) {
+            return; // no inventory set, ignore
+        }
+        this.stock.clear();
+        for (ItemStack stack : inv.getStorageContents()) {
+            if (stack == null || stack.isEmpty()
+                    || stack.getPersistentDataContainer().has(PlayerHeadUtil.CUSTOM_HEAD_KEY)) {
+                continue; // ignore custom heads (back/next buttons)
+            }
+            this.stock.add(stack.clone());
+        }
+        if (save) {
+            this.markDirty();
+        }
     }
 
     public void cleanStock() {
@@ -281,6 +343,7 @@ public final class ShopVillager {
             pdc.remove(this.profitKey);
         }
         // save stock stacks
+        this.updateStock(false);
         if (!this.stock.isEmpty()) {
             pdc.set(this.stockKey, ItemStackListDataType.INSTANCE,
                     this.stock.toArray(new ItemStack[0]));

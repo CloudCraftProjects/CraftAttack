@@ -232,8 +232,11 @@ public final class ShopListener implements Listener {
         if (!this.villagerSaveQueue.isEmpty()) {
             for (Iterator<ShopVillager> it = this.villagerSaveQueue.iterator(); it.hasNext(); ) {
                 ShopVillager shop = it.next();
-                it.remove();
-                shop.saveData();
+                try {
+                    shop.saveData();
+                } finally {
+                    it.remove();
+                }
             }
         }
     }
