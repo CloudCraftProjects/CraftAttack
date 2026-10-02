@@ -3,9 +3,9 @@ pluginyml = "0.6.0"
 runtask = "3.0.0"
 shadow = "8.3.9"
 publishing = "0.7.4"
-paperweight = "2.0.0-beta.19"
+paperweight = "2.0.0-beta.24"
 
-paper = "1.21.9-R0.1-SNAPSHOT"
+paper = "26.3.build.+"
 luckperms-api = "5.4"
 bstats = "3.0.2"
 
@@ -14,7 +14,7 @@ launchplates = "1.0.2"
 
 caffeine = "3.1.8"
 
-commandapi = "11.0.0"
+commandapi = "12.1.0"
 debuggery = "1.5.1"
 
 [plugins]
@@ -32,6 +32,5 @@ cloudcore = { module = "dev.booky:cloudcore", version.ref = "cloudcore" }
 launchplates = { module = "dev.booky:launchplates", version.ref = "launchplates" }
 
 commandapi-paper-core = { module = "dev.jorel:commandapi-paper-core", version.ref = "commandapi" }
-commandapi-paper-plugin = { module = "dev.jorel:commandapi-paper-plugin", version.ref = "commandapi" }
 
 caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version.ref = "caffeine" }

@@ -3,19 +3,16 @@ package dev.booky.craftattack.utils;
 
 import dev.booky.craftattack.CaManager;
 import dev.booky.craftattack.utils.CaConfig.LeaderboardConfig;
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import net.kyori.adventure.util.Ticks;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.TextDisplay;
-import org.bukkit.scheduler.BukkitTask;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
-import java.lang.ref.WeakReference;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 @NullMarked
 public class LeaderboardTasks {
@@ -24,19 +21,18 @@ public class LeaderboardTasks {
 
     private final CaManager manager;
 
-    private final List<Integer> taskIds = new ArrayList<>();
-    private final Map<UUID, LeaderboardConfig> configs = new HashMap<>();
+    private final Map<UUID, ScheduledTask> tasks = new ConcurrentHashMap<>();
+    private final Map<UUID, LeaderboardConfig> configs = new ConcurrentHashMap<>();
 
     public LeaderboardTasks(CaManager manager) {
         this.manager = manager;
     }
 
     public void handleReload() {
-        for (int taskId : this.taskIds) {
-            Bukkit.getScheduler().cancelTask(taskId);
+        for (ScheduledTask task : this.tasks.values()) {
+            task.cancel();
         }
-        this.taskIds.clear();
-
+        this.tasks.clear();
         this.configs.clear();
         for (LeaderboardConfig config : this.manager.getConfig().getLeaderboards()) {
             this.configs.put(config.getEntityId(), config);
@@ -47,11 +43,24 @@ public class LeaderboardTasks {
     }
 
     public void launchUpdater(TextDisplay display, LeaderboardConfig config) {
-        LeaderboardTask lbTask = new LeaderboardTask(config, new WeakReference<>(display));
-        BukkitTask task = Bukkit.getScheduler().runTaskTimer(this.manager.getPlugin(), lbTask, 0L, UPDATE_INTERVAL);
-        // save task id for cancelling later
-        lbTask.setTaskId(task.getTaskId());
-        this.taskIds.add(task.getTaskId());
+        // cancel any updater already registered for this entity
+        ScheduledTask oldTask = this.tasks.remove(config.getEntityId());
+        if (oldTask != null) {
+            oldTask.cancel();
+        }
+        ScheduledTask task = display.getScheduler().runAtFixedRate(this.manager.getPlugin(), schedTask -> {
+            if (!display.isValid()) {
+                schedTask.cancel();
+                this.tasks.remove(config.getEntityId());
+                return;
+            }
+            if (!Bukkit.getOnlinePlayers().isEmpty()) {
+                LeaderboardUtil.applyLeaderboard(display, config);
+            }
+        }, () -> this.tasks.remove(config.getEntityId()), 1L, UPDATE_INTERVAL);
+        if (task != null) {
+            this.tasks.put(config.getEntityId(), task);
+        }
     }
 
     public @Nullable LeaderboardConfig getConfig(UUID entityId) {

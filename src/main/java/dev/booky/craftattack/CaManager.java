@@ -10,7 +10,6 @@ import io.papermc.paper.entity.TeleportFlag;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -25,12 +24,12 @@ import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
 
 import java.nio.file.Path;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.OptionalInt;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 import static dev.booky.cloudcore.config.ConfigurateLoader.yamlLoader;
@@ -49,11 +48,13 @@ public final class CaManager {
     private final NamespacedKey elytraBoostsKey;
 
     private final LeaderboardTasks leaderboardTasks = new LeaderboardTasks(this);
-    private final Map<UUID, CompletableFuture<TpResult>> teleports = new HashMap<>();
+    private final Map<UUID, CompletableFuture<TpResult>> teleports = new ConcurrentHashMap<>();
     private final Plugin plugin;
 
+    private final Object configLock = new Object();
+    private volatile CaConfig config;
+
     private final Path configPath;
-    private CaConfig config;
 
     public CaManager(Plugin plugin, Path configDir) {
         this.elytraDataKey = new NamespacedKey(plugin, "elytra_data");
@@ -87,22 +88,31 @@ public final class CaManager {
             return CompletableFuture.completedFuture(TpResult.ALREADY_TELEPORTING);
         }
 
+        Location spawnTarget;
         if (target == null) {
-            target = this.getConfig().getSpawnConfig().getWarpLocation();
-            if (target == null) {
-                target = player.getWorld().getSpawnLocation();
+            spawnTarget = this.getConfig().getSpawnConfig().getWarpLocation();
+            if (spawnTarget == null) {
+                spawnTarget = player.getWorld().getSpawnLocation();
             }
             player.sendMessage(getPrefix().append(translatable("ca.teleport.spawn-warning", NamedTextColor.RED)));
+        } else {
+            spawnTarget = target;
         }
+        // clone location before changing it
+        Location finalTarget = spawnTarget.clone();
 
         if (player.getAllowFlight()) {
             player.sendMessage(getPrefix().append(translatable("ca.teleport.teleporting", NamedTextColor.GRAY)));
 
-            Location finalTarget = target;
-            return target.getWorld().getChunkAtAsync(target, true).thenApply(chunk -> {
-                finalTarget.setYaw(player.getLocation().getYaw());
-                finalTarget.setPitch(player.getLocation().getPitch());
-                player.teleport(finalTarget, PlayerTeleportEvent.TeleportCause.COMMAND,
+            return finalTarget.getWorld().getChunkAtAsync(finalTarget, true).thenApply(chunk -> {
+                if (!player.isConnected()) {
+                    return TpResult.DISCONNECTED;
+                }
+                // apply yaw/pitch just before teleport
+                finalTarget.setYaw(player.getYaw());
+                finalTarget.setPitch(player.getPitch());
+
+                player.teleportAsync(finalTarget, PlayerTeleportEvent.TeleportCause.COMMAND,
                         TeleportFlag.Relative.VELOCITY_ROTATION);
                 return TpResult.SUCCESSFUL;
             });
@@ -111,25 +121,38 @@ public final class CaManager {
         player.sendMessage(getPrefix().append(translatable("ca.teleport.please-wait", NamedTextColor.GRAY)));
         CompletableFuture<TpResult> future = new CompletableFuture<>();
 
-        Location finalTarget = target;
-        Bukkit.getScheduler().runTaskLater(this.plugin, () -> {
+        this.teleports.put(player.getUniqueId(), future);
+        // delayed teleport on the region that owns the player
+        boolean scheduled = player.getScheduler().execute(this.plugin, () -> {
             if (future.isDone()) {
                 return;
             }
 
-            CaManager.this.teleports.remove(player.getUniqueId());
+            CaManager.this.teleports.remove(player.getUniqueId(), future);
             player.sendMessage(getPrefix().append(translatable("ca.teleport.teleporting", NamedTextColor.GRAY)));
 
             finalTarget.getWorld().getChunkAtAsync(finalTarget, true).thenAccept(chunk -> {
-                finalTarget.setYaw(player.getLocation().getYaw());
-                finalTarget.setPitch(player.getLocation().getPitch());
-                player.teleport(finalTarget, PlayerTeleportEvent.TeleportCause.COMMAND,
+                if (!player.isConnected()) {
+                    future.complete(TpResult.DISCONNECTED);
+                    return;
+                }
+                // apply yaw/pitch just before teleport
+                finalTarget.setYaw(player.getYaw());
+                finalTarget.setPitch(player.getPitch());
+
+                player.teleportAsync(finalTarget, PlayerTeleportEvent.TeleportCause.COMMAND,
                         TeleportFlag.Relative.VELOCITY_ROTATION);
                 future.complete(TpResult.SUCCESSFUL);
             });
+        }, () -> {
+            // player was removed before the teleport could be executed
+            CaManager.this.teleports.remove(player.getUniqueId(), future);
+            future.complete(TpResult.DISCONNECTED);
         }, 5 * 20);
-
-        teleports.put(player.getUniqueId(), future);
+        if (!scheduled) {
+            this.teleports.remove(player.getUniqueId(), future);
+            future.complete(TpResult.DISCONNECTED);
+        }
         return future;
     }
 
@@ -150,17 +173,26 @@ public final class CaManager {
     }
 
     public void updateConfig(Consumer<CaConfig> updater) {
-        updater.accept(this.getConfig());
+        synchronized (this.configLock) {
+            updater.accept(this.getConfig());
+        }
         this.saveConfig();
     }
 
     public void reloadConfig() {
-        this.config = CONFIG_LOADER.loadObject(this.configPath, CaConfig.class, CaConfig::new);
-        this.leaderboardTasks.handleReload();
+        synchronized (this.configLock) {
+            this.config = CONFIG_LOADER.loadObject(this.configPath, CaConfig.class, CaConfig::new);
+            this.leaderboardTasks.handleReload();
+        }
     }
 
     public void saveConfig() {
-        CONFIG_LOADER.saveObject(this.configPath, this.getConfig(), CaConfig.class);
+        synchronized (this.configLock) {
+            CaConfig config = this.config;
+            if (config != null) {
+                CONFIG_LOADER.saveObject(this.configPath, config, CaConfig.class);
+            }
+        }
     }
 
     public boolean inElytraBox(Location location) {

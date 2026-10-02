@@ -9,6 +9,7 @@ import dev.jorel.commandapi.exceptions.WrapperCommandSyntaxException;
 import dev.jorel.commandapi.executors.CommandArguments;
 import dev.jorel.commandapi.executors.NativeCommandExecutor;
 import dev.jorel.commandapi.wrappers.NativeProxyCommandSender;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.LivingEntity;
 import org.jspecify.annotations.NullMarked;
@@ -30,6 +31,7 @@ public class SpawnShopCommand extends CommandAPICommand implements NativeCommand
     @Override
     public void run(NativeProxyCommandSender sender, CommandArguments args) throws WrapperCommandSyntaxException {
         Location target = args.<Location>getOptionalUnchecked("target").orElseThrow();
-        ShopVillager.spawnShop(target, (LivingEntity) sender.getCallee(), this.manager.getPlugin());
+        Bukkit.getRegionScheduler().execute(this.manager.getPlugin(), target, () ->
+                ShopVillager.spawnShop(target, (LivingEntity) sender.getCallee(), this.manager.getPlugin()));
     }
 }

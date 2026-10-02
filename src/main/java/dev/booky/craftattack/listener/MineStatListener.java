@@ -3,10 +3,12 @@ package dev.booky.craftattack.listener;
 
 import dev.booky.craftattack.CaManager;
 import dev.booky.craftattack.utils.CaConfig.MineStatEntry;
+import net.minecraft.world.scores.ScoreHolder;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.craftbukkit.scoreboard.CraftScoreboard;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -16,11 +18,10 @@ import org.bukkit.event.block.BlockPistonRetractEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
-import org.bukkit.scoreboard.Objective;
-import org.bukkit.scoreboard.Score;
 import org.bukkit.scoreboard.Scoreboard;
 
 import java.util.List;
+import java.util.Objects;
 
 public class MineStatListener implements Listener {
 
@@ -63,10 +64,11 @@ public class MineStatListener implements Listener {
                 }
             }
 
-            Objective objective = scoreboard.getObjective(stat.getObjectiveName());
-            if (objective != null) {
-                Score score = objective.getScore(event.getPlayer());
-                score.setScore(score.getScore() + 1);
+            net.minecraft.world.scores.Scoreboard mcScoreboard = ((CraftScoreboard) scoreboard).getHandle();
+            net.minecraft.world.scores.Objective mcObjective = mcScoreboard.getObjective(stat.getObjectiveName());
+            if (mcObjective != null) {
+                ScoreHolder holder = ScoreHolder.forNameOnly(event.getPlayer().getName());
+                mcScoreboard.getOrCreatePlayerScore(holder, Objects.requireNonNull(mcObjective)).increment();
             }
         }
     }

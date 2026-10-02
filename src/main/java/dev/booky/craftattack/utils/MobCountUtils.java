@@ -24,6 +24,17 @@ public final class MobCountUtils {
     private MobCountUtils() {
     }
 
+    private static long bucketKey(int bucketX, int bucketZ) {
+        // pack two ints into a long
+        return (long) bucketX << 32 | bucketZ & 0xFFFFFFFFL;
+    }
+
+    private static boolean isWithinRadius(Location first, Location second) {
+        return Math.abs(first.getX() - second.getX()) <= SEARCH_RADIUS
+                && Math.abs(first.getY() - second.getY()) <= SEARCH_RADIUS
+                && Math.abs(first.getZ() - second.getZ()) <= SEARCH_RADIUS;
+    }
+
     public static Map<Location, Integer> run(World world, EntityType type) {
         Class<? extends Entity> entityClass = Objects.requireNonNull(type.getEntityClass());
         Collection<? extends Entity> entities = world.getEntitiesByClass(entityClass);
@@ -34,21 +45,46 @@ public final class MobCountUtils {
         List<Entity> shuffledEntities = new ArrayList<>(entities);
         Collections.shuffle(shuffledEntities);
 
+        // sort entities into region "buckets" and do distance checks ourselves;
+        // using e.g. Entity#getNearbyEntities isn't thread-safe on folia
+        Map<Long, List<Entity>> buckets = new HashMap<>();
+        for (Entity entity : shuffledEntities) {
+            Location location = entity.getLocation();
+            long key = bucketKey(Math.floorDiv(location.getBlockX(), SEARCH_RADIUS),
+                    Math.floorDiv(location.getBlockZ(), SEARCH_RADIUS));
+            buckets.computeIfAbsent(key, __ -> new ArrayList<>()).add(entity);
+        }
+
         Set<UUID> processedEntities = new HashSet<>(shuffledEntities.size());
         Map<Location, Integer> result = new HashMap<>();
 
         for (Entity entity : shuffledEntities) {
             if (!processedEntities.add(entity.getUniqueId())) {
-                continue;
+                continue; // already part of another cluster
             }
 
-            Collection<? extends Entity> foundEntities = entity.getWorld().getNearbyEntitiesByType(entityClass,
-                    entity.getLocation(), SEARCH_RADIUS);
-            for (Entity found : foundEntities) {
-                processedEntities.add(found.getUniqueId());
+            Location location = entity.getLocation();
+            int bucketX = Math.floorDiv(location.getBlockX(), SEARCH_RADIUS);
+            int bucketZ = Math.floorDiv(location.getBlockZ(), SEARCH_RADIUS);
+
+            // search neighboring buckets
+            int count = 0;
+            for (int x = -1; x <= 1; x++) {
+                for (int z = -1; z <= 1; z++) {
+                    long bucketKey = bucketKey(bucketX + x, bucketZ + z);
+                    List<Entity> bucket = buckets.getOrDefault(bucketKey, List.of());
+                    for (Entity other : bucket) {
+                        // still do distance checks, an entity being in a neighboring bucket
+                        // doesn't guarantee it's also near ourselves
+                        if (isWithinRadius(location, other.getLocation())) {
+                            count++;
+                            processedEntities.add(other.getUniqueId());
+                        }
+                    }
+                }
             }
 
-            result.put(entity.getLocation(), foundEntities.size());
+            result.put(location, count);
         }
 
         return Collections.unmodifiableMap(result);

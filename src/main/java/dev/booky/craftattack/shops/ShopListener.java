@@ -15,6 +15,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.Sound;
 import org.bukkit.entity.AbstractVillager;
 import org.bukkit.entity.Entity;
@@ -35,10 +36,9 @@ import org.bukkit.util.Vector;
 import org.jspecify.annotations.NullMarked;
 
 import java.lang.ref.WeakReference;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static net.kyori.adventure.text.Component.translatable;
 
@@ -51,9 +51,9 @@ public final class ShopListener implements Listener {
 
     // don't always read/save data, add a cache for this
     private final LoadingCache<AbstractVillager, ShopVillager> villagerCache;
-    private final Set<ShopVillager> villagerSaveQueue = new HashSet<>();
+    private final Set<ShopVillager> villagerSaveQueue = ConcurrentHashMap.newKeySet();
 
-    private final Set<MerchantEntry> openedMerchants = new HashSet<>();
+    private final Set<MerchantEntry> openedMerchants = ConcurrentHashMap.newKeySet();
 
     public ShopListener(CaManager manager) {
         this.manager = manager;
@@ -165,12 +165,7 @@ public final class ShopListener implements Listener {
         Player player = event.getPlayer();
 
         if (!player.isSneaking()) {
-            if (!this.openTradeInventory(shop, player)) {
-                player.sendMessage(CaManager.getPrefix().append(translatable("ca.menu.shop.no-trades")));
-                if (shop.isOwner(player)) {
-                    player.sendMessage(CaManager.getPrefix().append(translatable("ca.menu.shop.no-trades.owner-hit")));
-                }
-            }
+            this.openTradeInventory(shop, player, false);
             return;
         }
 
@@ -217,42 +212,64 @@ public final class ShopListener implements Listener {
 
         // if e.g. the trade goes out of stock, trigger an update
         if (update) {
-            Bukkit.getScheduler().runTask(this.manager.getPlugin(), () -> {
-                // if the player still has the merchant inventory menu open, re-open it
-                if (!(event.getPlayer().getOpenInventory() instanceof MerchantView)) {
-                    return; // exited merchant inventory menu
-                }
-                if (!this.openTradeInventory(shop, event.getPlayer())) {
-                    event.getPlayer().closeInventory(); // no trades present
-                }
-            });
+            this.openTradeInventory(shop, event.getPlayer(), true);
         }
     }
 
-    public boolean openTradeInventory(ShopVillager shop, Player player) {
-        AbstractVillager merchant = ShopMenu.openMerchantMenu(this.manager.getPlugin(), shop, player);
-        if (merchant == null) {
-            return false; // failed
-        }
-        // keep track of opened merchants
-        this.openedMerchants.add(new MerchantEntry(shop, player, merchant));
-        return true;
+    public void openTradeInventory(ShopVillager shop, Player player, boolean closeIfEmpty) {
+        AbstractVillager merchant = shop.getMerchant();
+        this.runOnRegion(this.manager.getPlugin(), merchant.getLocation(), () -> {
+            if (closeIfEmpty && Bukkit.isOwnedByCurrentRegion(player.getLocation())
+                    && !(player.getOpenInventory() instanceof MerchantView)) {
+                return; // player exited the merchant inventory menu
+            }
+            AbstractVillager spawned = ShopMenu.openMerchantMenu(this.manager.getPlugin(), shop, player);
+            if (spawned != null) {
+                // keep track of opened merchants
+                this.openedMerchants.add(new MerchantEntry(shop, player, spawned));
+            } else if (closeIfEmpty) {
+                player.closeInventory(); // no trades present
+            } else {
+                player.sendMessage(CaManager.getPrefix().append(translatable("ca.menu.shop.no-trades")));
+                if (shop.isOwner(player)) {
+                    player.sendMessage(CaManager.getPrefix().append(translatable("ca.menu.shop.no-trades.owner-hit")));
+                }
+            }
+        });
     }
 
     @EventHandler
     public void onTickEnd(ServerTickEndEvent event) {
-        // players may bulk-buy a few items, so we have a queue for saving shop villager data to prevent lags
+        // players may bulk-buy a few items, so we have a
+        // queue for saving shop villager data to prevent lags
         if (!this.villagerSaveQueue.isEmpty()) {
-            for (Iterator<ShopVillager> it = this.villagerSaveQueue.iterator(); it.hasNext(); ) {
-                ShopVillager shop = it.next();
-                try {
-                    shop.saveData();
-                } finally {
-                    it.remove();
+            for (ShopVillager shop : this.villagerSaveQueue) {
+                AbstractVillager merchant = shop.getMerchantIfValid();
+                if (merchant == null) {
+                    continue; // merchant no longer valid, can't save
                 }
+                this.runOnRegion(this.manager.getPlugin(), merchant.getLocation(), shop::saveData);
+            }
+            this.villagerSaveQueue.clear();
+        }
+        // tick open merchant entries on the regions owning each player
+        for (MerchantEntry entry : this.openedMerchants) {
+            Player player = entry.player.get();
+            if (player != null) {
+                this.runOnRegion(this.manager.getPlugin(), player.getLocation(), entry::tick);
+            }
+            if (!entry.checkValid()) {
+                this.openedMerchants.remove(entry);
             }
         }
-        this.openedMerchants.removeIf(MerchantEntry::tick);
+    }
+
+    private void runOnRegion(Plugin plugin, Location location, Runnable task) {
+        if (!Bukkit.isOwnedByCurrentRegion(location)) {
+            Bukkit.getRegionScheduler().execute(plugin, location, task);
+        } else {
+            task.run();
+        }
     }
 
     private static class MerchantEntry {
@@ -282,20 +299,23 @@ public final class ShopListener implements Listener {
             } else if (this.ttl < 1) {
                 return false; // expired
             }
-            this.shop.ensureLoaded(); // check original shop villager
+            try {
+                this.shop.ensureLoaded(); // check original shop villager
+            } catch (IllegalStateException exception) {
+                return false; // original shop villager is no longer valid
+            }
             return true;
         }
 
-        public boolean tick() {
+        public void tick() {
             if (!this.checkValid()) {
                 Player player = this.player.get();
                 if (player != null && player.getOpenInventory() instanceof MerchantView) {
                     player.closeInventory();
                 }
-                return true; // removed
+                return; // removed
             }
             this.ttl--;
-            return false;
         }
     }
 }

@@ -28,6 +28,7 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityDismountEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.util.BoundingBox;
@@ -178,7 +179,8 @@ public final class SitListener implements Listener {
             unmountLoc.setYaw(player.getLocation().getYaw());
             unmountLoc.setPitch(player.getLocation().getPitch());
 
-            player.teleport(unmountLoc, TeleportFlag.Relative.VELOCITY_ROTATION);
+            player.teleportAsync(unmountLoc, PlayerTeleportEvent.TeleportCause.PLUGIN,
+                    TeleportFlag.Relative.VELOCITY_ROTATION);
             event.getDismounted().remove();
             return;
         }
@@ -196,7 +198,8 @@ public final class SitListener implements Listener {
         unmountLoc.setYaw(player.getLocation().getYaw());
         unmountLoc.setPitch(player.getLocation().getPitch());
 
-        player.teleport(unmountLoc, TeleportFlag.Relative.VELOCITY_ROTATION);
+        player.teleportAsync(unmountLoc, PlayerTeleportEvent.TeleportCause.PLUGIN,
+                TeleportFlag.Relative.VELOCITY_ROTATION);
         event.getDismounted().remove();
     }
 }

@@ -14,7 +14,7 @@ plugins {
 
 group = "dev.booky"
 
-val plugin: Configuration by configurations.creating {
+val plugin = configurations.create("plugin") {
     isTransitive = false
 }
 
@@ -48,13 +48,12 @@ dependencies {
     // testserver dependency plugins (maven)
     plugin(variantOf(libs.cloudcore) { classifier("all") })
     plugin(variantOf(libs.launchplates) { classifier("all") })
-    plugin(libs.commandapi.paper.plugin)
 }
 
 java {
     withSourcesJar()
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion = JavaLanguageVersion.of(25)
         vendor = JvmVendorSpec.ADOPTIUM
     }
 }
@@ -68,16 +67,16 @@ publishing {
 
 bukkit {
     main = "$group.craftattack.CaMain"
-    apiVersion = "1.21.9"
+    apiVersion = "26.3"
     authors = listOf("booky10")
     depend = listOf("CommandAPI", "CloudCore")
     softDepend = listOf("LuckPerms", "LaunchPlates")
-    load = net.minecrell.pluginyml.bukkit.BukkitPluginDescription.PluginLoadOrder.POSTWORLD
+    foliaSupported = true
 }
 
 tasks {
     runServer {
-        minecraftVersion("1.21.9")
+        minecraftVersion("26.3")
 
         pluginJars.from(plugin.resolve())
         downloadPlugins {
@@ -86,9 +85,11 @@ tasks {
                 "v${libs.versions.debuggery.get()}",
                 "debuggery-bukkit-${libs.versions.debuggery.get()}.jar"
             )
+            val commandApiVer = libs.versions.commandapi.get()
+            github("CommandAPI", "CommandAPI", commandApiVer, "CommandAPI-$commandApiVer-Paper.jar")
 
             // not available on modrinth, github or hangar
-            url("https://download.luckperms.net/1605/bukkit/loader/LuckPerms-Bukkit-5.5.16.jar")
+            url("https://download.luckperms.net/1672/bukkit/loader/LuckPerms-Bukkit-5.5.85.jar")
         }
 
         val serverJarFile = runDirectory.file("custom-server.jar")
@@ -100,6 +101,14 @@ tasks {
     withType<Jar> {
         // no spigot mappings are used, disable useless remapping step
         manifest.attributes("paperweight-mappings-namespace" to "mojang")
+    }
+
+    withType<JavaCompile> {
+        options.release = 25
+        options.encoding = Charsets.UTF_8.name()
+        options.compilerArgs.add("-Xlint:unchecked")
+        options.compilerArgs.add("-Xlint:deprecation")
+        options.compilerArgs.add("-Xlint:removal")
     }
 
     shadowJar {

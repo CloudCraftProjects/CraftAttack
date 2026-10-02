@@ -28,7 +28,7 @@ public class TeleportBedCommand extends CommandAPICommand implements PlayerComma
 
     @Override
     public void run(Player sender, CommandArguments args) throws WrapperCommandSyntaxException {
-        this.manager.teleportRequest(sender, sender.getBedSpawnLocation()).thenAccept(result -> {
+        this.manager.teleportRequest(sender, sender.getRespawnLocation()).thenAccept(result -> {
             if (result == TpResult.SUCCESSFUL) {
                 sender.sendMessage(CaManager.getPrefix().append(Component.translatable("ca.teleport.bed", NamedTextColor.GREEN)));
             }

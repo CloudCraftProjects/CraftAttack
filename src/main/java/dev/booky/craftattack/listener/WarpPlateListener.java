@@ -72,7 +72,7 @@ public class WarpPlateListener implements Listener {
                             DIMENSION_NETHER_ID.equals(target) ? DIMENSION_NETHER : DIMENSION_END)
                     .getWarpLocation();
             case "bed" -> {
-                Location spawnLoc = player.getBedSpawnLocation();
+                Location spawnLoc = player.getRespawnLocation();
                 if (spawnLoc == null) {
                     spawnLoc = this.manager.getConfig().getSpawnConfig().getWarpLocation();
                 }

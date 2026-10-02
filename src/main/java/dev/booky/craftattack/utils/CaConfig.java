@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 // Can't be final because of object mapping
 @SuppressWarnings("FieldMayBeFinal")
@@ -59,7 +60,7 @@ public class CaConfig {
         }
     }
 
-    private Map<Key, DimensionConfig> dimensions = new HashMap<>();
+    private Map<Key, DimensionConfig> dimensions = new ConcurrentHashMap<>();
 
     @ConfigSerializable
     public static class DimensionConfig {

@@ -16,16 +16,14 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.MenuType;
 
 import java.util.function.Consumer;
 
 public class CraftCommand extends CommandAPICommand implements PlayerCommandExecutor {
 
-    private final CaManager manager;
-
-    public CraftCommand(CaManager manager) {
+    public CraftCommand() {
         super("craft");
-        this.manager = manager;
         super.withPermission("craftattack.command.craft");
         super.executesPlayer(this);
 
@@ -66,7 +64,7 @@ public class CraftCommand extends CommandAPICommand implements PlayerCommandExec
             return;
         }
 
-        sender.openWorkbench(null, true);
+        MenuType.CRAFTING.builder().checkReachable(false).build(sender).open();
         sender.sendMessage(CaManager.getPrefix().append(Component.translatable("ca.command.craft.success", NamedTextColor.GREEN)));
     }
 }

@@ -85,7 +85,7 @@ public class StatusCommand extends CommandAPICommand implements PlayerCommandExe
 
             sender.sendMessage(CaManager.getPrefix().append(Component.translatable(
                     "ca.command.status.success.update",
-                    NamedTextColor.GREEN).args(suffix)));
+                    NamedTextColor.GREEN, suffix)));
         });
     }
 }

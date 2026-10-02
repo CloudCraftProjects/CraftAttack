@@ -35,8 +35,8 @@ public class MobCountCommand extends CommandAPICommand implements PlayerCommandE
         Map<Location, Integer> counted = MobCountUtils.run(sender.getWorld(), type);
 
         if (counted.isEmpty()) {
-            sender.sendMessage(CaManager.getPrefix().append(Component.translatable("ca.command.admin.mobcount.failure", NamedTextColor.RED)
-                    .args(Component.translatable(type.translationKey()))));
+            sender.sendMessage(CaManager.getPrefix().append(Component.translatable("ca.command.admin.mobcount.failure",
+                    NamedTextColor.RED, Component.translatable(type.translationKey()))));
             return;
         }
 
