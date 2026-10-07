@@ -3,6 +3,8 @@ package dev.booky.craftattack.commands;
 
 import dev.booky.craftattack.CaManager;
 import dev.booky.craftattack.commands.admin.AdminSubCommand;
+import dev.booky.craftattack.commands.tag.LegacyStatusCommand;
+import dev.booky.craftattack.commands.tag.TagCommand;
 import dev.booky.craftattack.commands.teleport.TeleportSubCommand;
 import dev.jorel.commandapi.CommandAPI;
 import dev.jorel.commandapi.CommandAPICommand;
@@ -20,9 +22,10 @@ public class CaCommand extends CommandAPICommand {
         this.withSubcommand(new CraftCommand());
 
         if (Bukkit.getPluginManager().getPlugin("LuckPerms") != null) {
-            super.withSubcommand(new StatusCommand(manager));
+            this.withSubcommand(new TagCommand(manager));
+            this.withSubcommand(new LegacyStatusCommand(manager));
         } else {
-            Bukkit.getLogger().warning("LuckPerms is not installed, the status command won't work!");
+            Bukkit.getLogger().warning("LuckPerms is not installed, the tag command won't work!");
         }
 
         this.withSubcommand(new MineStatsCommand());

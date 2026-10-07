@@ -81,6 +81,8 @@ public final class CaMain extends JavaPlugin {
             CommandAPI.unregister("end", true);
             CommandAPI.unregister("spawn", true);
             CommandAPI.unregister("craft", true);
+            CommandAPI.unregister("tags", true);
+            CommandAPI.unregister("status", true);
         }
     }
 }

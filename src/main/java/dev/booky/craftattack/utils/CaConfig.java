@@ -26,17 +26,44 @@ import java.util.concurrent.ConcurrentHashMap;
 @ConfigSerializable
 public class CaConfig {
 
-    // I know this name sounds weird, but this is the actual plural of "status"
-    // (according to wiktionary)
-    private Map<String, Integer> statuses = new LinkedHashMap<>() {{
-        put("Farming", 0x10a361);
-        put("Building", 0x13f21e);
-        put("Redstone", 0xe50d35);
+    private Map<String, TagEntry> tags = new LinkedHashMap<>() {{
+        put("Farming", new TagEntry(null, "<c:#10a361>Farming"));
+        put("Building", new TagEntry(null, "<c:#13f21e>Building"));
+        put("Redstone", new TagEntry(null, "<c:#e50d35>Redstone"));
 
-        put("AFK", 0xd67f2f);
-        put("LIVE", 0x920de5);
-        put("REC", 0xfc2a0f);
+        put("AFK", new TagEntry(null, "<c:#d67f2f>AFK"));
+        put("LIVE", new TagEntry(null, "<c:#920de5>LIVE"));
+        put("REC", new TagEntry(null, "<c:#fc2a0f>REC"));
     }};
+
+    private String tagServerContext = "craftattack";
+
+    @ConfigSerializable
+    public static final class TagEntry {
+
+        private @Nullable UUID creator;
+        private String display = "";
+
+        public TagEntry() {
+        }
+
+        public TagEntry(@Nullable UUID creator, String display) {
+            this.creator = creator;
+            this.display = display;
+        }
+
+        public @Nullable UUID getCreator() {
+            return this.creator;
+        }
+
+        public String getDisplay() {
+            return this.display;
+        }
+
+        public void setDisplay(String display) {
+            this.display = display;
+        }
+    }
 
     private FeaturesConfig features = new FeaturesConfig();
 
@@ -205,8 +232,12 @@ public class CaConfig {
         return this.warpPlates.get(pos);
     }
 
-    public Map<String, Integer> getStatuses() {
-        return statuses;
+    public Map<String, TagEntry> getTags() {
+        return this.tags;
+    }
+
+    public String getTagServerContext() {
+        return this.tagServerContext;
     }
 
     public FeaturesConfig getFeatures() {

@@ -5,6 +5,7 @@ import dev.booky.cloudcore.config.ConfigurateLoader;
 import dev.booky.cloudcore.util.BlockBBox;
 import dev.booky.craftattack.utils.CaConfig;
 import dev.booky.craftattack.utils.LeaderboardTasks;
+import dev.booky.craftattack.utils.TagManager;
 import dev.booky.craftattack.utils.TpResult;
 import io.papermc.paper.entity.TeleportFlag;
 import net.kyori.adventure.text.Component;
@@ -48,6 +49,7 @@ public final class CaManager {
     private final NamespacedKey elytraBoostsKey;
 
     private final LeaderboardTasks leaderboardTasks = new LeaderboardTasks(this);
+    private final TagManager tagManager = new TagManager(this);
     private final Map<UUID, CompletableFuture<TpResult>> teleports = new ConcurrentHashMap<>();
     private final Plugin plugin;
 
@@ -267,6 +269,10 @@ public final class CaManager {
 
     public LeaderboardTasks getLeaderboardTasks() {
         return this.leaderboardTasks;
+    }
+
+    public TagManager getTagManager() {
+        return this.tagManager;
     }
 
     public CaConfig getConfig() {

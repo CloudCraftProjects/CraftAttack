@@ -19,9 +19,10 @@ https://dl.cloudcraftmc.de/craftattack
   - Fireworks can be activated by sneaking (configurable in config)
   - Can be configured using `/ca admin spawn elytra-box <corner1> <corner2>`
   - If present, [LaunchPlates](https://modrinth.com/project/launchplates) will automatically equip a one-time elytra
-- Status handling for tablist and player nametag
-  - Can be configured in the configuration file and then loaded using `/ca admin reload`
-  - Can be used by players using `/status`
+- Tag handling for tablist and player nametag
+  - Tags can be created/edited/deleted by players themselves using `/tags` (or `/ca tag`)
+  - Tags can only be edited/deleted by their creator or players with the `craftattack.command.tag.manage` permission
+  - Any player can assign any tag to themselves using `/tags assign <tag>`
   - Requires plugins like [CloudChat](https://modrinth.com/project/cloudchat) to be shown
 - Various administration utilities
   - Activate/deactivate end portals without restarts: `/ca admin end activate <true|false>`
