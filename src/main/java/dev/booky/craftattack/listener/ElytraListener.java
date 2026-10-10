@@ -129,10 +129,9 @@ public final class ElytraListener implements Listener {
 
     @EventHandler
     public void onMove(PlayerMoveEvent event) {
-        if (!event.hasExplicitlyChangedBlock()) {
+        if (!event.hasChangedPosition()) {
             return;
-        }
-        if (event.getPlayer().getPose() == Pose.FALL_FLYING) {
+        } else if (event.getPlayer().getPose() == Pose.FALL_FLYING) {
             return;
         }
 
