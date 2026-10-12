@@ -27,6 +27,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.entity.EntityMountEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
@@ -177,6 +178,14 @@ public final class ShopListener implements Listener {
             ShopMenu.openMenu(shop, player);
         } else {
             player.playSound(villager, Sound.ENTITY_VILLAGER_NO, 1f, 1f);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onMount(EntityMountEvent event) {
+        if (event.getEntity() instanceof AbstractVillager villager
+                && villager.getPersistentDataContainer().has(this.shopKey)) {
+            event.setCancelled(true);
         }
     }
 
