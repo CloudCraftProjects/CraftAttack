@@ -221,7 +221,8 @@ public final class ShopListener implements Listener {
 
         // if e.g. the trade goes out of stock, trigger an update
         if (update) {
-            this.openTradeInventory(shop, event.getPlayer(), true);
+            this.runOnRegionLater(this.manager.getPlugin(), shop.getMerchant().getLocation(),
+                    () -> this.openTradeInventory(shop, event.getPlayer(), true));
         }
     }
 
@@ -235,6 +236,7 @@ public final class ShopListener implements Listener {
             AbstractVillager spawned = ShopMenu.openMerchantMenu(this.manager.getPlugin(), shop, player);
             if (spawned != null) {
                 // keep track of opened merchants
+                this.openedMerchants.removeIf(entry -> entry.isPlayer(player));
                 this.openedMerchants.add(new MerchantEntry(shop, player, spawned));
             } else if (closeIfEmpty) {
                 player.closeInventory(); // no trades present
@@ -281,6 +283,10 @@ public final class ShopListener implements Listener {
         }
     }
 
+    private void runOnRegionLater(Plugin plugin, Location location, Runnable task) {
+        Bukkit.getRegionScheduler().runDelayed(plugin, location, _ -> task.run(), 1L);
+    }
+
     private static class MerchantEntry {
 
         private static final int TTL = Ticks.TICKS_PER_SECOND * 60 * 5; // 5 minutes
@@ -295,6 +301,10 @@ public final class ShopListener implements Listener {
             this.shop = shop;
             this.player = new WeakReference<>(player);
             this.merchant = new WeakReference<>(merchant);
+        }
+
+        public boolean isPlayer(Player player) {
+            return this.player.get() == player;
         }
 
         public boolean checkValid() {
