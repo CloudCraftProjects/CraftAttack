@@ -51,7 +51,7 @@ public final class LeaderboardUtil {
         if (leaderboard == null) {
             return; // objective can't be found
         }
-        ComponentBuilder<?, ?> builder = config.getPrefix();
+        ComponentBuilder<?, ?> builder = config.getPrefix().toBuilder();
         for (LeaderboardEntry line : leaderboard.entries()) {
             Component wrappedComp = config.getWrapper().append(line.buildLine());
             builder.append(wrappedComp).appendNewline();
