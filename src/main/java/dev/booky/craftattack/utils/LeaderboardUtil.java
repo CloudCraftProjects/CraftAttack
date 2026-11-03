@@ -2,7 +2,7 @@ package dev.booky.craftattack.utils;
 // Created by booky10 in CraftAttack (02:58 26.10.2025)
 
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.ComponentBuilder;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.minecraft.world.scores.PlayerScoreEntry;
 import org.bukkit.Bukkit;
@@ -51,12 +51,12 @@ public final class LeaderboardUtil {
         if (leaderboard == null) {
             return; // objective can't be found
         }
-        TextComponent.Builder builder = text();
+        ComponentBuilder<?, ?> builder = config.getPrefix();
         for (LeaderboardEntry line : leaderboard.entries()) {
             Component wrappedComp = config.getWrapper().append(line.buildLine());
             builder.append(wrappedComp).appendNewline();
         }
-        display.text(builder.build());
+        display.text(builder.append(config.getSuffix()).asComponent());
     }
 
     public static @Nullable LeaderboardResult buildLeaderboard(CaConfig.LeaderboardConfig config) {

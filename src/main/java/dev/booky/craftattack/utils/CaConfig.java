@@ -206,6 +206,8 @@ public class CaConfig {
         private UUID entityId;
         private int entries = 10;
         private Component wrapper = Component.text("");
+        private Component prefix = Component.text("");
+        private Component suffix = Component.text("");
 
         public String getObjective() {
             return this.objective;
@@ -221,6 +223,14 @@ public class CaConfig {
 
         public Component getWrapper() {
             return this.wrapper;
+        }
+
+        public Component getPrefix() {
+            return this.prefix;
+        }
+
+        public Component getSuffix() {
+            return this.suffix;
         }
     }
 
