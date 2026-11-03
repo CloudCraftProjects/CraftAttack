@@ -31,16 +31,16 @@ public final class LeaderboardUtil {
     private LeaderboardUtil() {
     }
 
-    private static LeaderboardEntry calcPlacedEntry(UnplacedLeaderboardEntry entry, @Nullable LeaderboardEntry lastEntry) {
-        // calculate placement position
+    private static LeaderboardEntry calcPlacedEntry(UnplacedLeaderboardEntry entry, int index, @Nullable LeaderboardEntry lastEntry) {
+        // calculate placement position, players with the same score share a placement
+        // and thereby occupy all following slots (e.g. 1, 1, 3 instead of 1, 1, 2)
         int placement;
-        if (lastEntry == null) {
-            placement = 1;
-        } else if (entry.score() == lastEntry.score()) {
+        if (lastEntry != null && entry.score() == lastEntry.score()) {
             // don't move one place further if still the same score
             placement = lastEntry.place();
         } else {
-            placement = lastEntry.place() + 1;
+            // skip slots already occupied by players with an equal score
+            placement = index + 1;
         }
 
         return entry.withPlacement(placement);
@@ -105,8 +105,9 @@ public final class LeaderboardUtil {
         List<LeaderboardEntry> leaderboard = new ArrayList<>(size);
         LeaderboardEntry lastEntry = null;
         LeaderboardEntry selfEntry = null;
-        for (UnplacedLeaderboardEntry entry : unplacedEntries) {
-            LeaderboardEntry placedEntry = calcPlacedEntry(entry, lastEntry);
+        for (int i = 0; i < unplacedEntries.size(); i++) {
+            UnplacedLeaderboardEntry entry = unplacedEntries.get(i);
+            LeaderboardEntry placedEntry = calcPlacedEntry(entry, i, lastEntry);
             // add to leaderboard if not already full
             if (leaderboard.size() < size) {
                 leaderboard.add(placedEntry);
@@ -124,8 +125,8 @@ public final class LeaderboardUtil {
 
         // fallback self entry if not on leaderboard
         if (selfEntry == null && unplacedSelfEntry != null) {
-            int placement = lastEntry == null ? 1 : lastEntry.place() + 1;
-            selfEntry = unplacedSelfEntry.withPlacement(placement);
+            // all remaining entries occupy the slots before the self entry
+            selfEntry = unplacedSelfEntry.withPlacement(unplacedEntries.size() + 1);
         }
 
         // add self entry to bottom of leaderboard
