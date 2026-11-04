@@ -63,9 +63,10 @@ public final class ShopMenu {
     private static final int MAX_PROFIT_ENTRIES = 10;
     private static final int TRADES_PER_PAGE = 4;
     private static final int MAX_TRADES = 20;
-    static final int MAX_STOCK_PAGES = 4;
+    static final int MAX_STOCK_PAGES = 4; // maximum page index, so there are MAX_STOCK_PAGES + 1 pages in total
     static final int STOCK_ROWS = 6;
     static final int STOCK_CONTENT_SLOTS = (STOCK_ROWS - 1) * SLOTS_PER_ROW;
+    static final int MAX_STOCK_SLOTS = (MAX_STOCK_PAGES + 1) * STOCK_CONTENT_SLOTS;
 
     public static final Material EMPTY_INGREDIENT = Material.STRUCTURE_VOID;
     public static final Item VANILLA_EMPTY_INGREDIENT = Items.STRUCTURE_VOID;
@@ -201,21 +202,17 @@ public final class ShopMenu {
         return new MenuSlot(_ -> {
             List<Component> lore = new ArrayList<>();
             List<Material> stackTypes = new ArrayList<>();
+            int profitCount = 0;
             shop.getStateLock().lock();
             try {
                 shop.ensureLoaded();
-                List<net.minecraft.world.item.ItemStack> profit = shop.getProfit();
-                if (profit.isEmpty()) {
-                    return itemStack(Material.STRUCTURE_VOID,
-                            translatable("ca.menu.shop.dump-profit"),
-                            translatable("ca.menu.shop.dump-profit.no-profit"));
-                }
-                for (net.minecraft.world.item.ItemStack mcStack : profit) {
+                for (net.minecraft.world.item.ItemStack mcStack : shop.getProfit()) {
+                    if (mcStack.isEmpty()) {
+                        continue;
+                    }
                     ItemStack stack = CraftItemStack.asBukkitMirror(mcStack);
-                    if (lore.size() == MAX_PROFIT_ENTRIES) {
-                        lore.add(translatable("ca.menu.shop.dump-profit.more",
-                                numeric(profit.size() - lore.size())));
-                    } else if (lore.size() < MAX_PROFIT_ENTRIES) {
+                    profitCount++;
+                    if (lore.size() < MAX_PROFIT_ENTRIES) {
                         lore.add(translatable("ca.menu.shop.dump-profit.profit-entry",
                                 numeric(stack.getAmount()), stack.effectiveName()));
                     }
@@ -223,6 +220,15 @@ public final class ShopMenu {
                 }
             } finally {
                 shop.getStateLock().unlock();
+            }
+            if (stackTypes.isEmpty()) {
+                return itemStack(Material.STRUCTURE_VOID,
+                        translatable("ca.menu.shop.dump-profit"),
+                        translatable("ca.menu.shop.dump-profit.no-profit"));
+            }
+            if (profitCount > MAX_PROFIT_ENTRIES) {
+                lore.add(translatable("ca.menu.shop.dump-profit.more",
+                        numeric(profitCount - MAX_PROFIT_ENTRIES)));
             }
             Material material = stackTypes.get(ThreadLocalRandom.current().nextInt(stackTypes.size()));
             ItemStack stack = itemStack(material, translatable("ca.menu.shop.dump-profit"), lore);

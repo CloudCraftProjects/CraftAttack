@@ -225,6 +225,10 @@ public final class ShopVillager {
     }
 
     public void padStock(int slot) {
+        if (slot < 0 || slot >= ShopMenu.MAX_STOCK_SLOTS) {
+            throw new IndexOutOfBoundsException("Stock slot " + slot
+                    + " is out of bounds (max " + (ShopMenu.MAX_STOCK_SLOTS - 1) + ")");
+        }
         int n = slot - this.stock.size() + 1;
         if (n > 0) {
             for (int i = 0; i < n; i++) {
@@ -250,7 +254,12 @@ public final class ShopVillager {
     }
 
     public boolean hasProfit() {
-        return !this.profit.isEmpty();
+        for (ItemStack stack : this.profit) {
+            if (!stack.isEmpty()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public List<ItemStack> getProfit() {
@@ -264,6 +273,11 @@ public final class ShopVillager {
         Iterator<ItemStack> it = this.profit.iterator();
         while (it.hasNext()) {
             ItemStack stack = it.next();
+            if (stack.isEmpty()) {
+                mut = true;
+                it.remove();
+                continue;
+            }
             org.bukkit.inventory.ItemStack bukkitStack = CraftItemStack.asBukkitCopy(stack);
             // try adding to inventory
             Map<Integer, org.bukkit.inventory.ItemStack> result = inventory.addItem(bukkitStack);
@@ -294,7 +308,11 @@ public final class ShopVillager {
         this.profit.clear();
         if (profitStacks != null) {
             for (org.bukkit.inventory.ItemStack stack : profitStacks) {
-                this.profit.add(CraftItemStack.unwrap(stack));
+                ItemStack item = CraftItemStack.unwrap(stack);
+                // legacy data may contain empty stacks, they don't contain any profit
+                if (!item.isEmpty()) {
+                    this.profit.add(item);
+                }
             }
         }
         // load stock stacks
@@ -305,38 +323,66 @@ public final class ShopVillager {
                 this.stock.add(CraftItemStack.unwrap(stack));
             }
         }
+        // trailing empty stacks are only padding added by the stock menu, drop them
+        while (!this.stock.isEmpty() && this.stock.getLast().isEmpty()) {
+            this.stock.removeLast();
+        }
         // load id of owner
         this.ownerId = pdc.get(this.ownerKey, UniqueIdDataType.INSTANCE);
     }
 
     public void saveData() {
-        PersistentDataContainer pdc = this.getMerchant().getPersistentDataContainer();
-        org.bukkit.inventory.ItemStack[] profitSnapshot = new org.bukkit.inventory.ItemStack[this.profit.size()];
-        for (int i = 0; i < profitSnapshot.length; i++) {
-            profitSnapshot[i] = CraftItemStack.asBukkitMirror(this.profit.get(i));
-        }
-        org.bukkit.inventory.ItemStack[] stockSnapshot = new org.bukkit.inventory.ItemStack[this.stock.size()];
-        for (int i = 0; i < stockSnapshot.length; i++) {
-            stockSnapshot[i] = CraftItemStack.asBukkitMirror(this.stock.get(i));
-        }
-        UUID ownerId = this.ownerId;
-        // save profit stacks
-        if (profitSnapshot.length > 0) {
-            pdc.set(this.profitKey, ItemStackListDataType.INSTANCE, profitSnapshot);
-        } else {
-            pdc.remove(this.profitKey);
-        }
-        // save stock stacks
-        if (stockSnapshot.length > 0) {
-            pdc.set(this.stockKey, ItemStackListDataType.INSTANCE, stockSnapshot);
-        } else {
-            pdc.remove(this.stockKey);
-        }
-        // save id of owner
-        if (ownerId != null) {
-            pdc.set(this.ownerKey, UniqueIdDataType.INSTANCE, ownerId);
-        } else {
-            pdc.remove(this.ownerKey);
+        AbstractVillager merchant = this.getMerchant();
+        PersistentDataContainer pdc = merchant.getPersistentDataContainer();
+        this.stateLock.lock();
+        try {
+            // take an independent snapshot while holding the lock so concurrent
+            // trades/menu interactions can't tear the serialized data; keep the
+            // lock for the writes so two saves can't interleave
+            int profitCount = 0;
+            for (ItemStack stack : this.profit) {
+                if (!stack.isEmpty()) {
+                    profitCount++;
+                }
+            }
+            org.bukkit.inventory.ItemStack[] profitSnapshot = new org.bukkit.inventory.ItemStack[profitCount];
+            int profitIndex = 0;
+            for (ItemStack stack : this.profit) {
+                // empty profit entries are leftovers from old data, don't persist them
+                if (!stack.isEmpty()) {
+                    profitSnapshot[profitIndex++] = CraftItemStack.asBukkitCopy(stack);
+                }
+            }
+            // trailing empty stacks are only padding added by the stock menu
+            int stockSize = this.stock.size();
+            while (stockSize > 0 && this.stock.get(stockSize - 1).isEmpty()) {
+                stockSize--;
+            }
+            org.bukkit.inventory.ItemStack[] stockSnapshot = new org.bukkit.inventory.ItemStack[stockSize];
+            for (int i = 0; i < stockSize; i++) {
+                stockSnapshot[i] = CraftItemStack.asBukkitCopy(this.stock.get(i));
+            }
+            UUID ownerId = this.getOwnerId();
+            // save profit stacks
+            if (profitSnapshot.length > 0) {
+                pdc.set(this.profitKey, ItemStackListDataType.INSTANCE, profitSnapshot);
+            } else {
+                pdc.remove(this.profitKey);
+            }
+            // save stock stacks
+            if (stockSnapshot.length > 0) {
+                pdc.set(this.stockKey, ItemStackListDataType.INSTANCE, stockSnapshot);
+            } else {
+                pdc.remove(this.stockKey);
+            }
+            // save id of owner
+            if (ownerId != null) {
+                pdc.set(this.ownerKey, UniqueIdDataType.INSTANCE, ownerId);
+            } else {
+                pdc.remove(this.ownerKey);
+            }
+        } finally {
+            this.stateLock.unlock();
         }
     }
 
@@ -346,6 +392,10 @@ public final class ShopVillager {
 
     public void ensureLoaded() {
         this.getMerchant();
+    }
+
+    public UUID getMerchantId() {
+        return this.merchantId;
     }
 
     public AbstractVillager getMerchant() {
@@ -359,6 +409,10 @@ public final class ShopVillager {
     public @Nullable AbstractVillager getMerchantIfValid() {
         AbstractVillager merchant = this.merchant.get();
         return merchant != null && merchant.isValid() ? merchant : null;
+    }
+
+    public boolean hasMerchantReference() {
+        return this.merchant.get() != null;
     }
 
     public boolean isOwner(Entity entity) {
