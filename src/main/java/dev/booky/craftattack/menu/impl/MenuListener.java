@@ -5,6 +5,7 @@ import dev.booky.craftattack.menu.result.MenuClickResult;
 import dev.booky.craftattack.menu.result.MenuResult;
 import net.kyori.adventure.sound.Sound;
 import org.bukkit.entity.HumanEntity;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -16,6 +17,7 @@ import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.Plugin;
 import org.jspecify.annotations.NullMarked;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +28,12 @@ import java.util.Objects;
 public class MenuListener implements Listener {
 
     private static final Logger LOGGER = LoggerFactory.getLogger("CraftAttack");
+
+    private final Plugin plugin;
+
+    public MenuListener(Plugin plugin) {
+        this.plugin = plugin;
+    }
 
     @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
     public void onInventoryClick(InventoryClickEvent event) {
@@ -81,6 +89,24 @@ public class MenuListener implements Listener {
         if (cancel) {
             event.setCancelled(true);
         }
+        if (storage) {
+            // storage contents can be changed by shift-clicks/drags as well,
+            // so refresh the menu after the click has been applied
+            this.scheduleRefresh(handler, topInventory);
+        }
+    }
+
+    private void scheduleRefresh(AbstractMenuHandler<?> handler, Inventory topInventory) {
+        Player player = handler.getPlayer();
+        try {
+            player.getScheduler().runDelayed(this.plugin, _ -> {
+                if (player.getOpenInventory().getTopInventory() == topInventory) {
+                    handler.refreshContent();
+                }
+            }, null, 1L);
+        } catch (RuntimeException exception) {
+            LOGGER.error("Error while scheduling refresh of {} for {}", topInventory, player, exception);
+        }
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
@@ -112,7 +138,9 @@ public class MenuListener implements Listener {
         }
 
         if (handler.getMenu().isStorage()) {
-            return; // allow dragging in storage menus
+            // allow dragging in storage menus, but re-render afterward
+            this.scheduleRefresh(handler, topInventory);
+            return;
         }
 
         // if any of the dragged slots are in the top inventory,

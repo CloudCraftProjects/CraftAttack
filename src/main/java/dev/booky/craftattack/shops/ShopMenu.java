@@ -9,7 +9,6 @@ import dev.booky.craftattack.menu.MenuSlot;
 import dev.booky.craftattack.menu.PagedMenu;
 import dev.booky.craftattack.menu.context.MenuClickContext;
 import dev.booky.craftattack.menu.result.MenuClickResult;
-import dev.booky.craftattack.menu.result.MenuResult;
 import dev.booky.craftattack.utils.PlayerHeadUtil;
 import dev.booky.craftattack.utils.UniqueIdDataType;
 import io.papermc.paper.datacomponent.DataComponentTypes;
@@ -17,16 +16,22 @@ import io.papermc.paper.datacomponent.item.ItemLore;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.inventory.ChestMenu;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Items;
 import org.bukkit.Keyed;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Registry;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
+import org.bukkit.craftbukkit.inventory.CraftItemStack;
 import org.bukkit.entity.AbstractVillager;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Villager;
 import org.bukkit.entity.WanderingTrader;
-import org.bukkit.inventory.InventoryView;
+import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.MenuType;
 import org.bukkit.inventory.MerchantRecipe;
@@ -59,7 +64,12 @@ public final class ShopMenu {
     private static final int MAX_PROFIT_ENTRIES = 10;
     private static final int TRADES_PER_PAGE = 4;
     private static final int MAX_TRADES = 20;
+    static final int MAX_STOCK_PAGES = 4;
+    static final int STOCK_ROWS = 6;
+    static final int STOCK_CONTENT_SLOTS = (STOCK_ROWS - 1) * SLOTS_PER_ROW;
+
     public static final Material EMPTY_INGREDIENT = Material.STRUCTURE_VOID;
+    public static final Item VANILLA_EMPTY_INGREDIENT = Items.STRUCTURE_VOID;
 
     private static final Map<Villager.Type, Material> VILL_TYPE_ITEMS = Map.ofEntries(
             Map.entry(Villager.Type.DESERT, Material.SAND),
@@ -95,8 +105,11 @@ public final class ShopMenu {
         return stack != null && !stack.isEmpty() && stack.getType() != EMPTY_INGREDIENT;
     }
 
+    public static boolean isValidIngredient(net.minecraft.world.item.@Nullable ItemStack stack) {
+        return stack != null && !stack.isEmpty() && stack.getItem() != VANILLA_EMPTY_INGREDIENT;
+    }
+
     public static List<MerchantRecipe> buildRecipes(ShopVillager shop) {
-        shop.updateStock();
         List<MerchantRecipe> recipes = shop.getMerchant().getRecipes();
         List<MerchantRecipe> filtered = new ArrayList<>(recipes.size());
         for (MerchantRecipe recipe : recipes) {
@@ -186,38 +199,50 @@ public final class ShopMenu {
     }
 
     private static MenuSlot buildDumpSlot(ShopVillager shop) {
-        return new MenuSlot(supplyCtx -> {
-            shop.ensureLoaded();
-            List<ItemStack> profit = shop.getProfit();
-            if (profit.isEmpty()) {
-                return itemStack(Material.STRUCTURE_VOID,
-                        translatable("ca.menu.shop.dump-profit"),
-                        translatable("ca.menu.shop.dump-profit.no-profit"));
-            }
-            List<Component> lore = new ArrayList<>(profit.size());
-            List<Material> stackTypes = new ArrayList<>(profit.size());
-            for (ItemStack stack : profit) {
-                if (lore.size() == MAX_PROFIT_ENTRIES) {
-                    lore.add(translatable("ca.menu.shop.dump-profit.more",
-                            numeric(profit.size() - lore.size())));
-                } else if (lore.size() < MAX_PROFIT_ENTRIES) {
-                    lore.add(translatable("ca.menu.shop.dump-profit.profit-entry",
-                            numeric(stack.getAmount()), stack.effectiveName()));
+        return new MenuSlot(_ -> {
+            List<Component> lore = new ArrayList<>();
+            List<Material> stackTypes = new ArrayList<>();
+            shop.getStateLock().lock();
+            try {
+                shop.ensureLoaded();
+                List<net.minecraft.world.item.ItemStack> profit = shop.getProfit();
+                if (profit.isEmpty()) {
+                    return itemStack(Material.STRUCTURE_VOID,
+                            translatable("ca.menu.shop.dump-profit"),
+                            translatable("ca.menu.shop.dump-profit.no-profit"));
                 }
-                stackTypes.add(stack.getType());
+                for (net.minecraft.world.item.ItemStack mcStack : profit) {
+                    ItemStack stack = CraftItemStack.asBukkitMirror(mcStack);
+                    if (lore.size() == MAX_PROFIT_ENTRIES) {
+                        lore.add(translatable("ca.menu.shop.dump-profit.more",
+                                numeric(profit.size() - lore.size())));
+                    } else if (lore.size() < MAX_PROFIT_ENTRIES) {
+                        lore.add(translatable("ca.menu.shop.dump-profit.profit-entry",
+                                numeric(stack.getAmount()), stack.effectiveName()));
+                    }
+                    stackTypes.add(stack.getType());
+                }
+            } finally {
+                shop.getStateLock().unlock();
             }
             Material material = stackTypes.get(ThreadLocalRandom.current().nextInt(stackTypes.size()));
             ItemStack stack = itemStack(material, translatable("ca.menu.shop.dump-profit"), lore);
             stack.setData(DataComponentTypes.ENCHANTMENT_GLINT_OVERRIDE, true);
             return stack;
         }, clickCtx -> {
-            shop.ensureLoaded();
-            if (!shop.hasProfit()) {
-                return new MenuClickResult(Sound.sound()
-                        .type(Key.key("entity.villager.no"))
-                        .build());
+            boolean dumpedEverything;
+            shop.getStateLock().lock();
+            try {
+                shop.ensureLoaded();
+                if (!shop.hasProfit()) {
+                    return new MenuClickResult(Sound.sound()
+                            .type(Key.key("entity.villager.no"))
+                            .build());
+                }
+                dumpedEverything = shop.dumpProfit(clickCtx.getPlayer().getInventory());
+            } finally {
+                shop.getStateLock().unlock();
             }
-            boolean dumpedEverything = shop.dumpProfit(clickCtx.getPlayer().getInventory());
             if (!dumpedEverything) {
                 clickCtx.getPlayer().sendMessage(CaManager.getPrefix().append(
                         translatable("ca.shop.manage.dump.inventory-full")));
@@ -238,12 +263,17 @@ public final class ShopMenu {
 
     private static MenuClickResult triggerDelete(MenuClickContext ctx, ShopVillager shop, boolean confirmed) {
         AbstractVillager merchant = shop.getMerchant();
-        if (shop.hasProfit()) {
-            ctx.getPlayer().sendMessage(CaManager.getPrefix().append(translatable("ca.menu.shop.delete.profit-present")));
-            return MenuClickResult.SOUND_FAIL.plus(MenuClickResult.CLOSE);
-        } else if (shop.hasStock()) {
-            ctx.getPlayer().sendMessage(CaManager.getPrefix().append(translatable("ca.menu.shop.delete.stock-present")));
-            return MenuClickResult.SOUND_FAIL.plus(MenuClickResult.CLOSE);
+        shop.getStateLock().lock();
+        try {
+            if (shop.hasProfit()) {
+                ctx.getPlayer().sendMessage(CaManager.getPrefix().append(translatable("ca.menu.shop.delete.profit-present")));
+                return MenuClickResult.SOUND_FAIL.plus(MenuClickResult.CLOSE);
+            } else if (shop.hasStock()) {
+                ctx.getPlayer().sendMessage(CaManager.getPrefix().append(translatable("ca.menu.shop.delete.stock-present")));
+                return MenuClickResult.SOUND_FAIL.plus(MenuClickResult.CLOSE);
+            }
+        } finally {
+            shop.getStateLock().unlock();
         }
         if (confirmed) {
             merchant.setHealth(0d);
@@ -317,48 +347,11 @@ public final class ShopMenu {
     }
 
     public static void openStockMenu(ShopVillager shop, Player player, @Nullable AbstractMenu parent) {
-        shop.ensureLoaded();
-        InventoryView view = Menu.builder()
-                .withTitle(translatable("ca.menu.shop.manage-stock"))
-                .withRows(6)
-                .withSlots(ctx -> {
-                    shop.ensureLoaded();
-                    List<ItemStack> stock = shop.getStock();
-                    @Nullable MenuSlot[] slots = ctx.getSlots();
-                    for (int i = 0, j = 0; j < slots.length; i++) {
-                        ItemStack stack = i < stock.size() ? stock.get(i) : ItemStack.empty();
-                        if (j == slots.length - SLOTS_PER_ROW) {
-                            j++; // don't override back button
-                        }
-                        ctx.set(j++, new MenuSlot(stack, clickCtx -> {
-                            // prevent exploits by ensuring the shop is loaded
-                            // at all times while this inventory is being interacted with
-                            shop.ensureLoaded();
-                            return MenuClickResult.ALLOW;
-                        }));
-                    }
-                })
-                .onClose(ctx -> {
-                    shop.ensureLoaded();
-                    List<ItemStack> stock = new ArrayList<>();
-                    @Nullable ItemStack[] contents = ctx.getInventory().getContents();
-                    for (int i = 0; i < contents.length; i++) {
-                        if (i == contents.length - SLOTS_PER_ROW) {
-                            continue; // don't override back button
-                        }
-                        ItemStack stack = contents[i];
-                        if (stack != null && !stack.isEmpty()) {
-                            stock.add(stack.clone());
-                        }
-                    }
-                    shop.setStock(stock);
-                    shop.setStock((InventoryView) null);
-                    return MenuResult.NONE;
-                })
-                .withParent(parent)
-                .withStorage(true)
-                .open(player);
-        shop.setStock(view);
+        ServerPlayer mcPlayer = ((CraftPlayer) player).getHandle();
+        StockMenuContainer container = new StockMenuContainer(shop, parent != null ? () -> parent.open(player) : null);
+        ChestMenu menu = ChestMenu.sixRows(mcPlayer.nextContainerCounter(), mcPlayer.getInventory(), container);
+        menu.setTitle(net.minecraft.network.chat.Component.translatable("ca.menu.shop.manage-stock"));
+        player.openInventory(menu.getBukkitView());
     }
 
     public static void openTradeManageMenu(ShopVillager shop, Player player, @Nullable AbstractMenu parent) {
@@ -437,13 +430,31 @@ public final class ShopMenu {
         return stack;
     }
 
+    private static @Nullable ItemStack adjustIngredientCount(@Nullable ItemStack stack, boolean increase) {
+        if (!isValidIngredient(stack)) {
+            return null; // nothing to increase/decrease
+        }
+        int amount = stack.getAmount();
+        if (increase) {
+            if (amount >= stack.getMaxStackSize()) {
+                return null; // already at maximum
+            }
+            return stack.asQuantity(stack.getAmount() + 1);
+        }
+        if (amount <= 1) {
+            return ItemStack.of(EMPTY_INGREDIENT); // decrementing to zero removes the option
+        }
+        return stack.asQuantity(stack.getAmount() - 1);
+    }
+
     private static MenuSlot buildIngredientSlot(int tradeIndex, int index, MerchantRecipe recipe, ShopVillager shop) {
-        return new MenuSlot(ctx -> {
+        return new MenuSlot(_ -> {
             shop.ensureLoaded();
             List<ItemStack> ingredients = recipe.getIngredients();
             return modifyIngredient(index >= ingredients.size() ? null : ingredients.get(index));
         }, clickCtx -> {
-            if (!clickCtx.getClickType().isMouseClick()) {
+            ClickType clickType = clickCtx.getClickType();
+            if (!clickType.isMouseClick()) {
                 return MenuClickResult.NONE; // ignore non-mouse clicks
             }
             // extract up-to-date ingredients
@@ -453,12 +464,32 @@ public final class ShopMenu {
             while (ingredients.size() <= index) {
                 ingredients.add(ItemStack.of(EMPTY_INGREDIENT));
             }
-            // verify something actually changed
-            if (clickCtx.getCursor().equals(ingredients.get(index))) {
-                return MenuClickResult.NONE;
+            ItemStack current = ingredients.get(index);
+            ItemStack updated;
+            if (clickType.isShiftClick()) {
+                // shift-click removes the ingredient option
+                if (!isValidIngredient(current)) {
+                    return MenuClickResult.NONE; // already empty
+                }
+                updated = ItemStack.of(EMPTY_INGREDIENT);
+            } else if (!isValidIngredient(clickCtx.getCursor())) {
+                // empty hand: left-click increases, right-click decreases the count
+                if (clickType != ClickType.LEFT && clickType != ClickType.RIGHT) {
+                    return MenuClickResult.NONE;
+                }
+                updated = adjustIngredientCount(current, clickType == ClickType.LEFT);
+                if (updated == null) {
+                    return MenuClickResult.NONE; // no change possible
+                }
+            } else {
+                // cursor holds an item, set the ingredient like before
+                if (clickCtx.getCursor().equals(current)) {
+                    return MenuClickResult.NONE;
+                }
+                updated = getCursorStack(clickCtx);
             }
             // update ingredients
-            ingredients.set(index, getCursorStack(clickCtx));
+            ingredients.set(index, updated);
             trade.setIngredients(ingredients);
             merchant.setRecipe(tradeIndex, trade);
             // update inventory content
@@ -472,17 +503,38 @@ public final class ShopMenu {
             shop.ensureLoaded();
             return modifyIngredient(recipe.getResult());
         }, clickCtx -> {
-            if (!clickCtx.getClickType().isMouseClick()) {
+            ClickType clickType = clickCtx.getClickType();
+            if (!clickType.isMouseClick()) {
                 return MenuClickResult.NONE; // ignore non-mouse clicks
             }
             // we have to re-create the recipe
             AbstractVillager merchant = shop.getMerchant();
             MerchantRecipe trade = merchant.getRecipe(tradeIndex);
-            if (clickCtx.getCursor().equals(trade.getResult())) {
-                return MenuClickResult.NONE;
+            ItemStack current = trade.getResult();
+            ItemStack updated;
+            if (clickType.isShiftClick()) {
+                // shift-click removes the result option
+                if (!isValidIngredient(current)) {
+                    return MenuClickResult.NONE; // already empty
+                }
+                updated = ItemStack.of(EMPTY_INGREDIENT);
+            } else if (!isValidIngredient(clickCtx.getCursor())) {
+                // empty hand: left-click increases, right-click decreases the count
+                if (clickType != ClickType.LEFT && clickType != ClickType.RIGHT) {
+                    return MenuClickResult.NONE;
+                }
+                updated = adjustIngredientCount(current, clickType == ClickType.LEFT);
+                if (updated == null) {
+                    return MenuClickResult.NONE; // no change possible
+                }
+            } else {
+                // cursor holds an item, set the result like before
+                if (clickCtx.getCursor().equals(current)) {
+                    return MenuClickResult.NONE;
+                }
+                updated = getCursorStack(clickCtx);
             }
-            ItemStack newResult = getCursorStack(clickCtx);
-            MerchantRecipe newTrade = new MerchantRecipe(newResult, 0);
+            MerchantRecipe newTrade = new MerchantRecipe(updated, 0);
             newTrade.setIngredients(trade.getIngredients());
             merchant.setRecipe(tradeIndex, newTrade);
             // update inventory content
@@ -492,23 +544,25 @@ public final class ShopMenu {
     }
 
     private static MenuSlot buildNewTradeSlot(ShopVillager shop) {
-        return new MenuSlot(ItemStack.of(Material.STONE), clickCtx -> {
-            AbstractVillager merchant = shop.getMerchant();
-            int recipeCount = merchant.getRecipeCount();
-            if (recipeCount >= MAX_TRADES) {
-                clickCtx.update();
-                return MenuClickResult.NONE;
-            }
-            // create dummy recipe
-            MerchantRecipe dummyRecipe = new MerchantRecipe(ItemStack.of(EMPTY_INGREDIENT), 0);
-            dummyRecipe.addIngredient(ItemStack.of(EMPTY_INGREDIENT));
-            // create new list for all recipes... there is no addRecipe method
-            List<MerchantRecipe> allRecipes = new ArrayList<>(merchant.getRecipes());
-            allRecipes.add(dummyRecipe);
-            merchant.setRecipes(allRecipes);
+        return new MenuSlot(
+                PlayerHeadUtil.createHeadStack(WHITE_PLUS_TEXTURE, empty()),
+                clickCtx -> {
+                    AbstractVillager merchant = shop.getMerchant();
+                    int recipeCount = merchant.getRecipeCount();
+                    if (recipeCount >= MAX_TRADES) {
+                        clickCtx.update();
+                        return MenuClickResult.NONE;
+                    }
+                    // create dummy recipe
+                    MerchantRecipe dummyRecipe = new MerchantRecipe(ItemStack.of(EMPTY_INGREDIENT), 0);
+                    dummyRecipe.addIngredient(ItemStack.of(EMPTY_INGREDIENT));
+                    // create new list for all recipes... there is no addRecipe method
+                    List<MerchantRecipe> allRecipes = new ArrayList<>(merchant.getRecipes());
+                    allRecipes.add(dummyRecipe);
+                    merchant.setRecipes(allRecipes);
 
-            clickCtx.update();
-            return MenuClickResult.SOUND;
-        });
+                    clickCtx.update();
+                    return MenuClickResult.SOUND;
+                });
     }
 }

@@ -55,7 +55,7 @@ public final class CaMain extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new WarpPlateListener(this.manager), this);
         Bukkit.getPluginManager().registerEvents(new LeaderboardListener(this.manager), this);
         Bukkit.getPluginManager().registerEvents(new ShopListener(this.manager), this);
-        Bukkit.getPluginManager().registerEvents(new MenuListener(), this);
+        Bukkit.getPluginManager().registerEvents(new MenuListener(this), this);
 
         Bukkit.getServicesManager().register(CaManager.class, this.manager, this, ServicePriority.Normal);
 

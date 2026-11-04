@@ -211,12 +211,17 @@ public final class ShopListener implements Listener {
         // lookup shop villager instance and try to process this trade transaction
         ShopVillager shop = this.villagerCache.get((AbstractVillager) realVillager);
         boolean update;
-        if (!shop.tryTrade(event.getTrade())) {
-            event.setCancelled(true);
-            update = true;
-        } else {
-            // trade was successful, but verify that there is still stock remaining; if not, trigger update
-            update = !shop.isTradeStocked(event.getTrade());
+        shop.getStateLock().lock();
+        try {
+            if (!shop.tryTrade(event.getTrade())) {
+                event.setCancelled(true);
+                update = true;
+            } else {
+                // trade was successful, but verify that there is still stock remaining; if not, trigger update
+                update = !shop.isTradeStocked(event.getTrade());
+            }
+        } finally {
+            shop.getStateLock().unlock();
         }
 
         // if e.g. the trade goes out of stock, trigger an update
@@ -233,7 +238,13 @@ public final class ShopListener implements Listener {
                     && !(player.getOpenInventory() instanceof MerchantView)) {
                 return; // player exited the merchant inventory menu
             }
-            AbstractVillager spawned = ShopMenu.openMerchantMenu(this.manager.getPlugin(), shop, player);
+            AbstractVillager spawned;
+            shop.getStateLock().lock();
+            try {
+                spawned = ShopMenu.openMerchantMenu(this.manager.getPlugin(), shop, player);
+            } finally {
+                shop.getStateLock().unlock();
+            }
             if (spawned != null) {
                 // keep track of opened merchants
                 this.openedMerchants.removeIf(entry -> entry.isPlayer(player));
