@@ -29,6 +29,7 @@ public final class CaMain extends JavaPlugin {
     private CommandAPICommand command;
     private CaManager manager;
     private CloudTranslator i18n;
+    private ShopListener shopListener;
 
     @Override
     public void onLoad() {
@@ -54,8 +55,8 @@ public final class CaMain extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new TeleportListener(this.manager), this);
         Bukkit.getPluginManager().registerEvents(new WarpPlateListener(this.manager), this);
         Bukkit.getPluginManager().registerEvents(new LeaderboardListener(this.manager), this);
-        Bukkit.getPluginManager().registerEvents(new ShopListener(this.manager), this);
-        Bukkit.getPluginManager().registerEvents(new MenuListener(), this);
+        Bukkit.getPluginManager().registerEvents(this.shopListener = new ShopListener(this.manager), this);
+        Bukkit.getPluginManager().registerEvents(new MenuListener(this), this);
 
         Bukkit.getServicesManager().register(CaManager.class, this.manager, this, ServicePriority.Normal);
 
@@ -66,6 +67,10 @@ public final class CaMain extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (this.shopListener != null) {
+            this.shopListener.flushSaveQueue();
+        }
+
         if (this.i18n != null) {
             this.i18n.unload();
         }

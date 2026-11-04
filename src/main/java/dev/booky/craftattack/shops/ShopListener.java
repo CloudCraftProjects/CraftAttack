@@ -37,9 +37,13 @@ import org.bukkit.util.Vector;
 import org.jspecify.annotations.NullMarked;
 
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
 
 import static net.kyori.adventure.text.Component.translatable;
 
@@ -211,12 +215,17 @@ public final class ShopListener implements Listener {
         // lookup shop villager instance and try to process this trade transaction
         ShopVillager shop = this.villagerCache.get((AbstractVillager) realVillager);
         boolean update;
-        if (!shop.tryTrade(event.getTrade())) {
-            event.setCancelled(true);
-            update = true;
-        } else {
-            // trade was successful, but verify that there is still stock remaining; if not, trigger update
-            update = !shop.isTradeStocked(event.getTrade());
+        shop.getStateLock().lock();
+        try {
+            if (!shop.tryTrade(event.getTrade())) {
+                event.setCancelled(true);
+                update = true;
+            } else {
+                // trade was successful, but verify that there is still stock remaining; if not, trigger update
+                update = !shop.isTradeStocked(event.getTrade());
+            }
+        } finally {
+            shop.getStateLock().unlock();
         }
 
         // if e.g. the trade goes out of stock, trigger an update
@@ -233,7 +242,13 @@ public final class ShopListener implements Listener {
                     && !(player.getOpenInventory() instanceof MerchantView)) {
                 return; // player exited the merchant inventory menu
             }
-            AbstractVillager spawned = ShopMenu.openMerchantMenu(this.manager.getPlugin(), shop, player);
+            AbstractVillager spawned;
+            shop.getStateLock().lock();
+            try {
+                spawned = ShopMenu.openMerchantMenu(this.manager.getPlugin(), shop, player);
+            } finally {
+                shop.getStateLock().unlock();
+            }
             if (spawned != null) {
                 // keep track of opened merchants
                 this.openedMerchants.removeIf(entry -> entry.isPlayer(player));
@@ -254,14 +269,42 @@ public final class ShopListener implements Listener {
         // players may bulk-buy a few items, so we have a
         // queue for saving shop villager data to prevent lags
         if (!this.villagerSaveQueue.isEmpty()) {
-            for (ShopVillager shop : this.villagerSaveQueue) {
+            // collect first, so a failed save retried by saveShop() can't be
+            // picked up again by the iterator during this tick
+            List<ShopVillager> shopsToSave = new ArrayList<>(this.villagerSaveQueue.size());
+            for (Iterator<ShopVillager> it = this.villagerSaveQueue.iterator(); it.hasNext(); ) {
+                ShopVillager shop = it.next();
+                if (shop.getMerchantIfValid() == null) {
+                    // the merchant may become valid again (e.g. while it is being
+                    // replaced); retry in that case, otherwise drop the entry
+                    if (!shop.hasMerchantReference()) {
+                        it.remove();
+                    }
+                    continue;
+                }
+                // dequeue before saving, so data marked dirty while the save is
+                // running gets queued again and is written next tick
+                it.remove();
+                shopsToSave.add(shop);
+            }
+            for (ShopVillager shop : shopsToSave) {
                 AbstractVillager merchant = shop.getMerchantIfValid();
                 if (merchant == null) {
-                    continue; // merchant no longer valid, can't save
+                    if (shop.hasMerchantReference()) {
+                        this.villagerSaveQueue.add(shop); // retry next tick
+                    }
+                    continue;
                 }
-                this.runOnRegion(this.manager.getPlugin(), merchant.getLocation(), shop::saveData);
+                try {
+                    this.runOnRegion(this.manager.getPlugin(), merchant.getLocation(), () -> this.saveShop(shop));
+                } catch (RuntimeException exception) {
+                    // couldn't schedule the save (e.g. the region scheduler is
+                    // shutting down); keep the data queued for a retry/flush
+                    this.villagerSaveQueue.add(shop);
+                    this.manager.getPlugin().getLogger().log(Level.WARNING,
+                            "Failed to schedule save of shop villager " + shop.getMerchantId(), exception);
+                }
             }
-            this.villagerSaveQueue.clear();
         }
         // tick open merchant entries on the regions owning each player
         for (MerchantEntry entry : this.openedMerchants) {
@@ -273,6 +316,38 @@ public final class ShopListener implements Listener {
                 this.openedMerchants.remove(entry);
             }
         }
+    }
+
+    private void saveShop(ShopVillager shop) {
+        try {
+            shop.saveData();
+        } catch (RuntimeException exception) {
+            // keep/queue the data so the save is retried on the next tick
+            if (shop.hasMerchantReference()) {
+                this.villagerSaveQueue.add(shop);
+            }
+            this.manager.getPlugin().getLogger().log(Level.WARNING,
+                    "Failed to save data of shop villager " + shop.getMerchantId(), exception);
+        }
+    }
+
+    public void flushSaveQueue() {
+        if (this.villagerSaveQueue.isEmpty()) {
+            return;
+        }
+        for (ShopVillager shop : this.villagerSaveQueue) {
+            AbstractVillager merchant = shop.getMerchantIfValid();
+            if (merchant == null) {
+                continue;
+            }
+            try {
+                shop.saveData();
+            } catch (RuntimeException exception) {
+                this.manager.getPlugin().getLogger().log(Level.WARNING,
+                        "Failed to save data of shop villager " + merchant.getUniqueId(), exception);
+            }
+        }
+        this.villagerSaveQueue.clear();
     }
 
     private void runOnRegion(Plugin plugin, Location location, Runnable task) {
