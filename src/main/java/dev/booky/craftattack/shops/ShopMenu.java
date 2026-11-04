@@ -17,7 +17,6 @@ import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.inventory.ChestMenu;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import org.bukkit.Keyed;
@@ -349,8 +348,7 @@ public final class ShopMenu {
     public static void openStockMenu(ShopVillager shop, Player player, @Nullable AbstractMenu parent) {
         ServerPlayer mcPlayer = ((CraftPlayer) player).getHandle();
         StockMenuContainer container = new StockMenuContainer(shop, parent != null ? () -> parent.open(player) : null);
-        ChestMenu menu = ChestMenu.sixRows(mcPlayer.nextContainerCounter(), mcPlayer.getInventory(), container);
-        menu.setTitle(net.minecraft.network.chat.Component.translatable("ca.menu.shop.manage-stock"));
+        StockChestMenu menu = new StockChestMenu(mcPlayer.nextContainerCounter(), mcPlayer.getInventory(), container);
         player.openInventory(menu.getBukkitView());
     }
 

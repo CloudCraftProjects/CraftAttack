@@ -151,16 +151,22 @@ public final class ShopVillager {
     }
 
     public void consumeStock(ItemStack stack) {
+        int remaining = stack.getCount();
         boolean mut = false;
         for (ItemStack stock : this.stock) {
+            if (remaining <= 0) {
+                break; // finished consuming
+            }
             if (!ItemStack.isSameItemSameComponents(stock, stack)) {
                 continue; // doesn't match
             }
-            stack = stock.split(stack.getCount());
-            mut = true;
-            if (stack.isEmpty()) {
-                break;
+            int amount = Math.min(remaining, stock.getCount());
+            if (amount <= 0) {
+                continue;
             }
+            stock.shrink(amount);
+            remaining -= amount;
+            mut = true;
         }
         if (mut) {
             this.markDirty();
@@ -296,7 +302,7 @@ public final class ShopVillager {
         this.stock.clear();
         if (stockStacks != null) {
             for (org.bukkit.inventory.ItemStack stack : stockStacks) {
-                this.profit.add(CraftItemStack.unwrap(stack));
+                this.stock.add(CraftItemStack.unwrap(stack));
             }
         }
         // load id of owner

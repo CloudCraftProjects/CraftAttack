@@ -69,6 +69,16 @@ final class StockMenuPageSlot extends Slot {
     }
 
     @Override
+    public boolean hasItem() {
+        return false;
+    }
+
+    @Override
+    public boolean mayPlace(ItemStack itemStack) {
+        return false;
+    }
+
+    @Override
     public ItemStack getItem() {
         int newPage = this.state.getPage() + this.pageOffset;
         boolean oob = newPage < 0 || newPage > this.state.getPageCount();
