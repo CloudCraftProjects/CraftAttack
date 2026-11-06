@@ -10,11 +10,14 @@ import dev.booky.craftattack.utils.UniqueIdDataType;
 import io.papermc.paper.event.player.PlayerTradeEvent;
 import io.papermc.paper.event.player.PrePlayerAttackEntityEvent;
 import io.papermc.paper.event.server.ServerResourcesReloadedEvent;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.kyori.adventure.util.Ticks;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.Sound;
 import org.bukkit.entity.AbstractVillager;
@@ -134,8 +137,13 @@ public final class ShopListener implements Listener {
         if (!interactPoint.getWorld().hasCollisionsIn(bbox)) {
             return false; // no ground, don't spawn floating shops
         }
+
+        // we prevented !stack.hasItemMeta() and event.getItem() == null already in onInteract
+        ItemMeta meta = event.getItem().getItemMeta();
+        Component shopname = meta.hasCustomName() ? meta.customName() : Component.empty();
+
         // all checks successful, spawn!
-        ShopVillager.spawnShop(interactPoint, event.getPlayer(), this.manager.getPlugin());
+        ShopVillager.spawnShop(interactPoint, event.getPlayer(), this.manager.getPlugin(), shopname);
         return true;
     }
 
