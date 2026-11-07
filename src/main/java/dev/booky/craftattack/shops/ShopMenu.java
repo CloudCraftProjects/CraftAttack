@@ -408,6 +408,7 @@ public final class ShopMenu {
                     MenuSlot emptySlot = MenuSlot.createEmptySlot();
                     MenuSlot plusSlot = new MenuSlot(PlayerHeadUtil.createHeadStack(WHITE_PLUS_TEXTURE, empty()));
                     MenuSlot arrowSlot = new MenuSlot(PlayerHeadUtil.createHeadStack(WHITE_ARROW_RIGHT_TEXTURE, empty()));
+
                     while (!trades.isEmpty()) {
                         for (int i = 0; i < SLOTS_PER_ROW; i++) {
                             ctx.add(emptySlot);
@@ -422,12 +423,11 @@ public final class ShopMenu {
                                 ctx.add(emptySlot, emptySlot, emptySlot, emptySlot);
                                 continue;
                             }
-                            // 0IOIOROFO
                             ctx.add(emptySlot, emptySlot);
                             ctx.add(buildIngredientSlot(tradeIndex, 0, recipe, shop));
                             ctx.add(plusSlot, buildIngredientSlot(tradeIndex, 1, recipe, shop));
                             ctx.add(arrowSlot, buildResultSlot(tradeIndex, recipe, shop));
-                            ctx.add(emptySlot, emptySlot);
+                            ctx.add(emptySlot, deleteTradeSlot(tradeIndex, shop));
                             tradeIndex++;
                         }
                         if (i == TRADES_PER_PAGE) {
@@ -484,6 +484,28 @@ public final class ShopMenu {
             return ItemStack.of(EMPTY_INGREDIENT); // decrementing to zero removes the option
         }
         return stack.asQuantity(stack.getAmount() - 1);
+    }
+
+    private static MenuSlot deleteTradeSlot(int tradeIndex, ShopVillager shop) {
+        return new MenuSlot(_ -> {
+            shop.ensureLoaded();
+            return itemStack(Material.BARRIER, translatable("ca.menu.shop-manage.trade-delete"));
+        }, clickCtx -> {
+            ClickType clickType = clickCtx.getClickType();
+            if (!clickType.isMouseClick()) {
+                return MenuClickResult.NONE; // ignore non-mouse clicks
+            }
+
+            // remove trade with tradeIndex
+            AbstractVillager merchant = shop.getMerchant();
+            List<MerchantRecipe> allRecipes = new ArrayList<>(merchant.getRecipes());
+            allRecipes.remove(tradeIndex);
+            merchant.setRecipes(allRecipes);
+
+            // update inventory content
+            clickCtx.update();
+            return MenuClickResult.SOUND;
+        });
     }
 
     private static MenuSlot buildIngredientSlot(int tradeIndex, int index, MerchantRecipe recipe, ShopVillager shop) {
@@ -589,6 +611,7 @@ public final class ShopMenu {
                     AbstractVillager merchant = shop.getMerchant();
                     int recipeCount = merchant.getRecipeCount();
                     if (recipeCount >= MAX_TRADES) {
+                        // TODO play sound
                         clickCtx.update();
                         return MenuClickResult.NONE;
                     }
