@@ -174,6 +174,9 @@ public final class ShopListener implements Listener {
             if (shop.isOwner(event.getPlayer())) {
                 lookAt(villager, event.getPlayer());
             }
+
+            // prevent damage from creative players
+            event.setCancelled(true);
         }
     }
 
