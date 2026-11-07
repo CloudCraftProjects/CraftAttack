@@ -7,11 +7,11 @@ import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.github.benmanes.caffeine.cache.Ticker;
 import dev.booky.craftattack.CaManager;
 import dev.booky.craftattack.utils.UniqueIdDataType;
+import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.event.player.PlayerTradeEvent;
 import io.papermc.paper.event.player.PrePlayerAttackEntityEvent;
 import io.papermc.paper.event.server.ServerResourcesReloadedEvent;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.kyori.adventure.util.Ticks;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
@@ -152,13 +152,12 @@ public final class ShopListener implements Listener {
         if (event.getEntity() instanceof AbstractVillager villager
                 && villager.getPersistentDataContainer().has(this.shopKey)) {
 
-            // TODO handle custom name
             ItemStack spawnEgg = ShopVillager.createSpawnEgg(this.manager.getPlugin());
 
             ShopVillager shop = this.villagerCache.get(villager);
             if (!shop.getShopName().equals(translatable("ca.shop.shopname"))) {
                 // custom name
-                spawnEgg.editMeta(meta -> meta.customName(shop.getShopName()));
+                spawnEgg.setData(DataComponentTypes.CUSTOM_NAME, shop.getShopName());
             }
 
             event.getDrops().add(spawnEgg);

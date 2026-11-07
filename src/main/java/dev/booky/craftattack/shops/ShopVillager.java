@@ -60,6 +60,7 @@ public final class ShopVillager {
     private final Lock stateLock = new ReentrantLock();
     private final NonNullList<ItemStack> profit = NonNullList.create();
     private final NonNullList<ItemStack> stock = NonNullList.create();
+    private final String DEFAULT_NAME_GSON = GsonComponentSerializer.gson().serialize(translatable("ca.shop.shopname"));
     private @Nullable UUID ownerId;
     private Component shopName;
 
@@ -346,14 +347,11 @@ public final class ShopVillager {
         this.ownerId = pdc.get(this.ownerKey, UniqueIdDataType.INSTANCE);
 
         // load shopname
-        String defaultName = GsonComponentSerializer.gson()
-                .serialize(translatable("ca.shop.shopname"));
-
         // ensure backwards compatibility
         String storedName = pdc.getOrDefault(
                 this.nameKey,
                 PersistentDataType.STRING,
-                defaultName
+                DEFAULT_NAME_GSON
         );
 
         this.shopName = GsonComponentSerializer.gson().deserialize(storedName);
