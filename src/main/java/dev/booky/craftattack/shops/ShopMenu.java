@@ -34,6 +34,7 @@ import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.MenuType;
 import org.bukkit.inventory.MerchantRecipe;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -166,7 +167,7 @@ public final class ShopMenu {
         MenuType.MERCHANT.builder()
                 .merchant(spawnedMerchant)
                 .checkReachable(true)
-                .title(translatable("ca.menu.shop.merchant"))
+                .title(shop.getShopName())
                 .build(player).open();
         return spawnedMerchant; // report success!
     }

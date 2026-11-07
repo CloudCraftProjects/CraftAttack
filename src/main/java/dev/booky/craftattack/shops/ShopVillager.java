@@ -5,8 +5,7 @@ import dev.booky.craftattack.CaManager;
 import dev.booky.craftattack.utils.ItemStackListDataType;
 import dev.booky.craftattack.utils.UniqueIdDataType;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.MiniMessage;
-import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.minecraft.core.NonNullList;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -56,11 +55,13 @@ public final class ShopVillager {
     private final NamespacedKey profitKey;
     private final NamespacedKey stockKey;
     private final NamespacedKey ownerKey;
+    private final NamespacedKey nameKey;
 
     private final Lock stateLock = new ReentrantLock();
     private final NonNullList<ItemStack> profit = NonNullList.create();
     private final NonNullList<ItemStack> stock = NonNullList.create();
     private @Nullable UUID ownerId;
+    private Component shopName;
 
     public ShopVillager(CaManager manager, AbstractVillager merchant, Consumer<ShopVillager> onDirty) {
         this.merchant = new WeakReference<>(merchant);
@@ -70,6 +71,7 @@ public final class ShopVillager {
         this.profitKey = new NamespacedKey(manager.getPlugin(), "shop/profit");
         this.stockKey = new NamespacedKey(manager.getPlugin(), "shop/stock");
         this.ownerKey = new NamespacedKey(manager.getPlugin(), "shop/owner");
+        this.nameKey = new NamespacedKey(manager.getPlugin(), "shop/name");
 
         this.loadData();
     }
@@ -91,13 +93,18 @@ public final class ShopVillager {
             throw new IllegalStateException("Location " + location + " needs to be owned for shop to spawn");
         }
 
+        // either custom shop name or ca.shop.shopname
+        Component validShopName = Component.IS_NOT_EMPTY.test(shopname) ? shopname : translatable("ca.shop.shopname");
+
         NamespacedKey shopKey = new NamespacedKey(plugin, "shop");
         NamespacedKey ownerKey = new NamespacedKey(plugin, "shop/owner");
+        NamespacedKey nameKey = new NamespacedKey(plugin, "shop/name");
 
         Villager ret = location.getWorld().spawn(location, Villager.class, false, villager -> {
             PersistentDataContainer pdc = villager.getPersistentDataContainer();
             pdc.set(shopKey, PersistentDataType.BOOLEAN, true);
             pdc.set(ownerKey, UniqueIdDataType.INSTANCE, owner.getUniqueId());
+            pdc.set(nameKey, PersistentDataType.STRING, GsonComponentSerializer.gson().serialize(validShopName));
 
             villager.setAI(false);
             villager.setRemoveWhenFarAway(false);
@@ -126,7 +133,7 @@ public final class ShopVillager {
             display.setVisibleByDefault(false);
 
             // apply custom name if any
-            display.text(translatable("ca.shop.display", Component.IS_NOT_EMPTY.test(shopname) ? shopname : translatable("ca.shop.shopname"), owner.name()));
+            display.text(translatable("ca.shop.display", validShopName, owner.name()));
         });
         shopText.setVisibleByDefault(true);
         return ret;
@@ -337,6 +344,19 @@ public final class ShopVillager {
         }
         // load id of owner
         this.ownerId = pdc.get(this.ownerKey, UniqueIdDataType.INSTANCE);
+
+        // load shopname
+        String defaultName = GsonComponentSerializer.gson()
+                .serialize(translatable("ca.shop.shopname"));
+
+        // ensure backwards compatibility
+        String storedName = pdc.getOrDefault(
+                this.nameKey,
+                PersistentDataType.STRING,
+                defaultName
+        );
+
+        this.shopName = GsonComponentSerializer.gson().deserialize(storedName);
     }
 
     public void saveData() {
@@ -443,6 +463,12 @@ public final class ShopVillager {
                 this.ownerId = ownerId;
                 this.markDirty();
             }
+        }
+    }
+
+    public Component getShopName() {
+        synchronized (this) {
+            return this.shopName;
         }
     }
 }

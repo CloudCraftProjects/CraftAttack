@@ -151,8 +151,17 @@ public final class ShopListener implements Listener {
     public void onDeath(EntityDeathEvent event) {
         if (event.getEntity() instanceof AbstractVillager villager
                 && villager.getPersistentDataContainer().has(this.shopKey)) {
+
             // TODO handle custom name
-            event.getDrops().add(ShopVillager.createSpawnEgg(this.manager.getPlugin()));
+            ItemStack spawnEgg = ShopVillager.createSpawnEgg(this.manager.getPlugin());
+
+            ShopVillager shop = this.villagerCache.get(villager);
+            if (!shop.getShopName().equals(translatable("ca.shop.shopname"))) {
+                // custom name
+                spawnEgg.editMeta(meta -> meta.customName(shop.getShopName()));
+            }
+
+            event.getDrops().add(spawnEgg);
         }
     }
 
