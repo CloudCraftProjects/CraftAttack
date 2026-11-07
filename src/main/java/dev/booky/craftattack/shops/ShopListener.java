@@ -73,11 +73,6 @@ public final class ShopListener implements Listener {
                         new ShopVillager(manager, villager, this.villagerSaveQueue::add));
     }
 
-    @EventHandler
-    public void onResourceReload(ServerResourcesReloadedEvent event) {
-        ShopRecipes.registerRecipe(this.manager.getPlugin());
-    }
-
     static void lookAt(LivingEntity source, LivingEntity target) {
         double diffX = target.getX() - source.getX();
         double diffY = (target.getY() + target.getEyeHeight()) - (source.getY() + source.getEyeHeight());
@@ -86,6 +81,11 @@ public final class ShopListener implements Listener {
         float yaw = (float) Math.toDegrees(Math.atan2(diffZ, diffX)) - 90f;
         float pitch = (float) -Math.toDegrees(Math.atan2(diffY, distXZ));
         source.setRotation(yaw, pitch);
+    }
+
+    @EventHandler
+    public void onResourceReload(ServerResourcesReloadedEvent event) {
+        ShopRecipes.registerRecipe(this.manager.getPlugin());
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -151,6 +151,7 @@ public final class ShopListener implements Listener {
     public void onDeath(EntityDeathEvent event) {
         if (event.getEntity() instanceof AbstractVillager villager
                 && villager.getPersistentDataContainer().has(this.shopKey)) {
+            // TODO handle custom name
             event.getDrops().add(ShopVillager.createSpawnEgg(this.manager.getPlugin()));
         }
     }

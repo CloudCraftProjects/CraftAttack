@@ -60,17 +60,15 @@ import static net.kyori.adventure.text.format.TextDecoration.ITALIC;
 @NullMarked
 public final class ShopMenu {
 
-    private static final int MAX_PROFIT_ENTRIES = 10;
-    private static final int TRADES_PER_PAGE = 4;
-    private static final int MAX_TRADES = 20;
+    public static final Material EMPTY_INGREDIENT = Material.STRUCTURE_VOID;
+    public static final Item VANILLA_EMPTY_INGREDIENT = Items.STRUCTURE_VOID;
     static final int MAX_STOCK_PAGES = 4; // maximum page index, so there are MAX_STOCK_PAGES + 1 pages in total
     static final int STOCK_ROWS = 6;
     static final int STOCK_CONTENT_SLOTS = (STOCK_ROWS - 1) * SLOTS_PER_ROW;
     static final int MAX_STOCK_SLOTS = (MAX_STOCK_PAGES + 1) * STOCK_CONTENT_SLOTS;
-
-    public static final Material EMPTY_INGREDIENT = Material.STRUCTURE_VOID;
-    public static final Item VANILLA_EMPTY_INGREDIENT = Items.STRUCTURE_VOID;
-
+    private static final int MAX_PROFIT_ENTRIES = 10;
+    private static final int TRADES_PER_PAGE = 4;
+    private static final int MAX_TRADES = 20;
     private static final Map<Villager.Type, Material> VILL_TYPE_ITEMS = Map.ofEntries(
             Map.entry(Villager.Type.DESERT, Material.SAND),
             Map.entry(Villager.Type.JUNGLE, Material.JUNGLE_WOOD),
@@ -96,6 +94,14 @@ public final class ShopMenu {
             Map.entry(Villager.Profession.SHEPHERD, Material.LOOM),
             Map.entry(Villager.Profession.TOOLSMITH, Material.SMITHING_TABLE),
             Map.entry(Villager.Profession.WEAPONSMITH, Material.GRINDSTONE)
+    );
+
+    private static final Map<Integer, Material> VILL_LEVEL_ITEMS = Map.ofEntries(
+            Map.entry(1, Material.GRAY_CONCRETE),
+            Map.entry(2, Material.IRON_BLOCK),
+            Map.entry(3, Material.GOLD_BLOCK),
+            Map.entry(4, Material.EMERALD_BLOCK),
+            Map.entry(5, Material.DIAMOND_BLOCK)
     );
 
     private ShopMenu() {
@@ -307,7 +313,7 @@ public final class ShopMenu {
                     AbstractVillager merchant = shop.getMerchant();
                     if (merchant instanceof Villager villager) {
                         // biome changer
-                        ctx.set(SLOTS_PER_ROW + 3,
+                        ctx.set(SLOTS_PER_ROW + 2,
                                 itemStack(
                                         VILL_TYPE_ITEMS.get(villager.getVillagerType()),
                                         translatable("ca.menu.shop.style.biome",
@@ -317,7 +323,7 @@ public final class ShopMenu {
                                         () -> ((Villager) shop.getMerchant()).getVillagerType(),
                                         type -> ((Villager) shop.getMerchant()).setVillagerType(type)));
                         // profession changer
-                        ctx.set(SLOTS_PER_ROW + 3 + 2,
+                        ctx.set(SLOTS_PER_ROW + 2 + 2,
                                 itemStack(
                                         VILL_PROFESSION_ITEMS.get(villager.getProfession()),
                                         translatable("ca.menu.shop.style.profession",
@@ -332,6 +338,16 @@ public final class ShopMenu {
                                             entity.setProfession(prof);
                                             entity.setRecipes(recipes);
                                         }));
+                        // level changer
+                        ctx.set(SLOTS_PER_ROW + 2 + 2 + 2,
+                                itemStack(
+                                        VILL_LEVEL_ITEMS.get(villager.getVillagerLevel()),
+                                        translatable("ca.menu.shop.style.level", String.valueOf(villager.getVillagerLevel()))),
+                                buildLevelHandler(
+                                        () -> ((Villager) shop.getMerchant()).getVillagerLevel(),
+                                        level -> ((Villager) shop.getMerchant()).setVillagerLevel(level)
+                                )
+                        );
                     }
                 })
                 .withParent(parent)
@@ -350,6 +366,24 @@ public final class ShopMenu {
             return MenuClickResult.SOUND;
         };
     }
+
+    public static Function<MenuClickContext, MenuClickResult> buildLevelHandler(
+            Supplier<Integer> getter,
+            Consumer<Integer> setter
+    ) {
+        List<Integer> levels = List.of(1, 2, 3, 4, 5);
+
+        return ctx -> {
+            int currentIndex = levels.indexOf(getter.get());
+            int offset = ctx.getClickType().isRightClick() ? -1 : 1;
+            int newIndex = Math.floorMod(currentIndex + offset, levels.size());
+
+            setter.accept(levels.get(newIndex));
+            ctx.update();
+            return MenuClickResult.SOUND;
+        };
+    }
+
 
     public static void openStockMenu(ShopVillager shop, Player player, @Nullable AbstractMenu parent) {
         ServerPlayer mcPlayer = ((CraftPlayer) player).getHandle();
