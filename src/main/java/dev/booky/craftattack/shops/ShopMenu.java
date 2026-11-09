@@ -611,7 +611,6 @@ public final class ShopMenu {
                     AbstractVillager merchant = shop.getMerchant();
                     int recipeCount = merchant.getRecipeCount();
                     if (recipeCount >= MAX_TRADES) {
-                        // TODO play sound
                         clickCtx.update();
                         return MenuClickResult.NONE;
                     }
