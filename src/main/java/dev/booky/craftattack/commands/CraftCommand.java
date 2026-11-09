@@ -43,22 +43,6 @@ public class CraftCommand extends CommandAPICommand implements PlayerCommandExec
     @Override
     public void run(Player sender, CommandArguments args) throws WrapperCommandSyntaxException {
 
-        PagedMenu.builder()
-                .withTitle(MiniMessage.miniMessage().deserialize("<rainbow>test1"))
-                .withSlots(slots(7))
-                .withRows(1)
-                .withParent(PagedMenu.builder()
-                        .withTitle(MiniMessage.miniMessage().deserialize("<rainbow>test2"))
-                        .withSlots(slots(8))
-                        .withRows(1)
-                        .withParent(PagedMenu.builder()
-                                .withTitle(MiniMessage.miniMessage().deserialize("<rainbow>test3"))
-                                .withSlots(slots(9))
-                                .withRows(1)
-                                .build())
-                        .build())
-                .open(sender);
-
         if (!sender.getInventory().contains(Material.CRAFTING_TABLE)) {
             sender.sendMessage(CaManager.getPrefix().append(Component.translatable("ca.command.craft.no-table-found", NamedTextColor.RED)));
             return;

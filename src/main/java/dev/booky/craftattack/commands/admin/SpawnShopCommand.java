@@ -5,10 +5,13 @@ import dev.booky.craftattack.CaManager;
 import dev.booky.craftattack.shops.ShopVillager;
 import dev.jorel.commandapi.CommandAPICommand;
 import dev.jorel.commandapi.arguments.LocationArgument;
+import dev.jorel.commandapi.arguments.StringArgument;
 import dev.jorel.commandapi.exceptions.WrapperCommandSyntaxException;
 import dev.jorel.commandapi.executors.CommandArguments;
 import dev.jorel.commandapi.executors.NativeCommandExecutor;
 import dev.jorel.commandapi.wrappers.NativeProxyCommandSender;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.LivingEntity;
@@ -25,13 +28,15 @@ public class SpawnShopCommand extends CommandAPICommand implements NativeCommand
 
         this.withPermission("craftattack.command.admin.spawnshop");
         this.withArguments(new LocationArgument("target"));
+        this.withOptionalArguments(new StringArgument("name"));
         this.executesNative(this);
     }
 
     @Override
     public void run(NativeProxyCommandSender sender, CommandArguments args) throws WrapperCommandSyntaxException {
         Location target = args.<Location>getOptionalUnchecked("target").orElseThrow();
+        Component shopName = args.<String>getOptionalUnchecked("name").map(MiniMessage.miniMessage()::deserialize).orElse(Component.empty());
         Bukkit.getRegionScheduler().execute(this.manager.getPlugin(), target, () ->
-                ShopVillager.spawnShop(target, (LivingEntity) sender.getCallee(), this.manager.getPlugin()));
+                ShopVillager.spawnShop(target, (LivingEntity) sender.getCallee(), this.manager.getPlugin(), shopName));
     }
 }

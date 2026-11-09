@@ -34,6 +34,7 @@ import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.MenuType;
 import org.bukkit.inventory.MerchantRecipe;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -60,17 +61,15 @@ import static net.kyori.adventure.text.format.TextDecoration.ITALIC;
 @NullMarked
 public final class ShopMenu {
 
-    private static final int MAX_PROFIT_ENTRIES = 10;
-    private static final int TRADES_PER_PAGE = 4;
-    private static final int MAX_TRADES = 20;
+    public static final Material EMPTY_INGREDIENT = Material.STRUCTURE_VOID;
+    public static final Item VANILLA_EMPTY_INGREDIENT = Items.STRUCTURE_VOID;
     static final int MAX_STOCK_PAGES = 4; // maximum page index, so there are MAX_STOCK_PAGES + 1 pages in total
     static final int STOCK_ROWS = 6;
     static final int STOCK_CONTENT_SLOTS = (STOCK_ROWS - 1) * SLOTS_PER_ROW;
     static final int MAX_STOCK_SLOTS = (MAX_STOCK_PAGES + 1) * STOCK_CONTENT_SLOTS;
-
-    public static final Material EMPTY_INGREDIENT = Material.STRUCTURE_VOID;
-    public static final Item VANILLA_EMPTY_INGREDIENT = Items.STRUCTURE_VOID;
-
+    private static final int MAX_PROFIT_ENTRIES = 10;
+    private static final int TRADES_PER_PAGE = 4;
+    private static final int MAX_TRADES = 20;
     private static final Map<Villager.Type, Material> VILL_TYPE_ITEMS = Map.ofEntries(
             Map.entry(Villager.Type.DESERT, Material.SAND),
             Map.entry(Villager.Type.JUNGLE, Material.JUNGLE_WOOD),
@@ -96,6 +95,14 @@ public final class ShopMenu {
             Map.entry(Villager.Profession.SHEPHERD, Material.LOOM),
             Map.entry(Villager.Profession.TOOLSMITH, Material.SMITHING_TABLE),
             Map.entry(Villager.Profession.WEAPONSMITH, Material.GRINDSTONE)
+    );
+
+    private static final Map<Integer, Material> VILL_LEVEL_ITEMS = Map.ofEntries(
+            Map.entry(1, Material.GRAY_CONCRETE),
+            Map.entry(2, Material.IRON_BLOCK),
+            Map.entry(3, Material.GOLD_BLOCK),
+            Map.entry(4, Material.EMERALD_BLOCK),
+            Map.entry(5, Material.DIAMOND_BLOCK)
     );
 
     private ShopMenu() {
@@ -160,7 +167,7 @@ public final class ShopMenu {
         MenuType.MERCHANT.builder()
                 .merchant(spawnedMerchant)
                 .checkReachable(true)
-                .title(translatable("ca.menu.shop.merchant"))
+                .title(shop.getShopName())
                 .build(player).open();
         return spawnedMerchant; // report success!
     }
@@ -307,7 +314,7 @@ public final class ShopMenu {
                     AbstractVillager merchant = shop.getMerchant();
                     if (merchant instanceof Villager villager) {
                         // biome changer
-                        ctx.set(SLOTS_PER_ROW + 3,
+                        ctx.set(SLOTS_PER_ROW + 2,
                                 itemStack(
                                         VILL_TYPE_ITEMS.get(villager.getVillagerType()),
                                         translatable("ca.menu.shop.style.biome",
@@ -317,7 +324,7 @@ public final class ShopMenu {
                                         () -> ((Villager) shop.getMerchant()).getVillagerType(),
                                         type -> ((Villager) shop.getMerchant()).setVillagerType(type)));
                         // profession changer
-                        ctx.set(SLOTS_PER_ROW + 3 + 2,
+                        ctx.set(SLOTS_PER_ROW + 2 + 2,
                                 itemStack(
                                         VILL_PROFESSION_ITEMS.get(villager.getProfession()),
                                         translatable("ca.menu.shop.style.profession",
@@ -332,6 +339,16 @@ public final class ShopMenu {
                                             entity.setProfession(prof);
                                             entity.setRecipes(recipes);
                                         }));
+                        // level changer
+                        ctx.set(SLOTS_PER_ROW + 2 + 2 + 2,
+                                itemStack(
+                                        VILL_LEVEL_ITEMS.get(villager.getVillagerLevel()),
+                                        translatable("ca.menu.shop.style.level", String.valueOf(villager.getVillagerLevel()))),
+                                buildLevelHandler(
+                                        () -> ((Villager) shop.getMerchant()).getVillagerLevel(),
+                                        level -> ((Villager) shop.getMerchant()).setVillagerLevel(level)
+                                )
+                        );
                     }
                 })
                 .withParent(parent)
@@ -350,6 +367,24 @@ public final class ShopMenu {
             return MenuClickResult.SOUND;
         };
     }
+
+    public static Function<MenuClickContext, MenuClickResult> buildLevelHandler(
+            Supplier<Integer> getter,
+            Consumer<Integer> setter
+    ) {
+        List<Integer> levels = List.of(1, 2, 3, 4, 5);
+
+        return ctx -> {
+            int currentIndex = levels.indexOf(getter.get());
+            int offset = ctx.getClickType().isRightClick() ? -1 : 1;
+            int newIndex = Math.floorMod(currentIndex + offset, levels.size());
+
+            setter.accept(levels.get(newIndex));
+            ctx.update();
+            return MenuClickResult.SOUND;
+        };
+    }
+
 
     public static void openStockMenu(ShopVillager shop, Player player, @Nullable AbstractMenu parent) {
         ServerPlayer mcPlayer = ((CraftPlayer) player).getHandle();
@@ -373,6 +408,7 @@ public final class ShopMenu {
                     MenuSlot emptySlot = MenuSlot.createEmptySlot();
                     MenuSlot plusSlot = new MenuSlot(PlayerHeadUtil.createHeadStack(WHITE_PLUS_TEXTURE, empty()));
                     MenuSlot arrowSlot = new MenuSlot(PlayerHeadUtil.createHeadStack(WHITE_ARROW_RIGHT_TEXTURE, empty()));
+
                     while (!trades.isEmpty()) {
                         for (int i = 0; i < SLOTS_PER_ROW; i++) {
                             ctx.add(emptySlot);
@@ -387,12 +423,11 @@ public final class ShopMenu {
                                 ctx.add(emptySlot, emptySlot, emptySlot, emptySlot);
                                 continue;
                             }
-                            // 0IOIOROFO
                             ctx.add(emptySlot, emptySlot);
                             ctx.add(buildIngredientSlot(tradeIndex, 0, recipe, shop));
                             ctx.add(plusSlot, buildIngredientSlot(tradeIndex, 1, recipe, shop));
                             ctx.add(arrowSlot, buildResultSlot(tradeIndex, recipe, shop));
-                            ctx.add(emptySlot, emptySlot);
+                            ctx.add(emptySlot, deleteTradeSlot(tradeIndex, shop));
                             tradeIndex++;
                         }
                         if (i == TRADES_PER_PAGE) {
@@ -449,6 +484,28 @@ public final class ShopMenu {
             return ItemStack.of(EMPTY_INGREDIENT); // decrementing to zero removes the option
         }
         return stack.asQuantity(stack.getAmount() - 1);
+    }
+
+    private static MenuSlot deleteTradeSlot(int tradeIndex, ShopVillager shop) {
+        return new MenuSlot(_ -> {
+            shop.ensureLoaded();
+            return itemStack(Material.BARRIER, translatable("ca.menu.shop-manage.trade-delete"));
+        }, clickCtx -> {
+            ClickType clickType = clickCtx.getClickType();
+            if (!clickType.isMouseClick()) {
+                return MenuClickResult.NONE; // ignore non-mouse clicks
+            }
+
+            // remove trade with tradeIndex
+            AbstractVillager merchant = shop.getMerchant();
+            List<MerchantRecipe> allRecipes = new ArrayList<>(merchant.getRecipes());
+            allRecipes.remove(tradeIndex);
+            merchant.setRecipes(allRecipes);
+
+            // update inventory content
+            clickCtx.update();
+            return MenuClickResult.SOUND;
+        });
     }
 
     private static MenuSlot buildIngredientSlot(int tradeIndex, int index, MerchantRecipe recipe, ShopVillager shop) {

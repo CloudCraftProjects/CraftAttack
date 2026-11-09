@@ -7,14 +7,17 @@ import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.github.benmanes.caffeine.cache.Ticker;
 import dev.booky.craftattack.CaManager;
 import dev.booky.craftattack.utils.UniqueIdDataType;
+import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.event.player.PlayerTradeEvent;
 import io.papermc.paper.event.player.PrePlayerAttackEntityEvent;
 import io.papermc.paper.event.server.ServerResourcesReloadedEvent;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.util.Ticks;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.Sound;
 import org.bukkit.entity.AbstractVillager;
@@ -70,11 +73,6 @@ public final class ShopListener implements Listener {
                         new ShopVillager(manager, villager, this.villagerSaveQueue::add));
     }
 
-    @EventHandler
-    public void onResourceReload(ServerResourcesReloadedEvent event) {
-        ShopRecipes.registerRecipe(this.manager.getPlugin());
-    }
-
     static void lookAt(LivingEntity source, LivingEntity target) {
         double diffX = target.getX() - source.getX();
         double diffY = (target.getY() + target.getEyeHeight()) - (source.getY() + source.getEyeHeight());
@@ -83,6 +81,11 @@ public final class ShopListener implements Listener {
         float yaw = (float) Math.toDegrees(Math.atan2(diffZ, diffX)) - 90f;
         float pitch = (float) -Math.toDegrees(Math.atan2(diffY, distXZ));
         source.setRotation(yaw, pitch);
+    }
+
+    @EventHandler
+    public void onResourceReload(ServerResourcesReloadedEvent event) {
+        ShopRecipes.registerRecipe(this.manager.getPlugin());
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -134,8 +137,13 @@ public final class ShopListener implements Listener {
         if (!interactPoint.getWorld().hasCollisionsIn(bbox)) {
             return false; // no ground, don't spawn floating shops
         }
+
+        // we prevented !stack.hasItemMeta() and event.getItem() == null already in onInteract
+        ItemMeta meta = event.getItem().getItemMeta();
+        Component shopname = meta.hasCustomName() ? meta.customName() : Component.empty();
+
         // all checks successful, spawn!
-        ShopVillager.spawnShop(interactPoint, event.getPlayer(), this.manager.getPlugin());
+        ShopVillager.spawnShop(interactPoint, event.getPlayer(), this.manager.getPlugin(), shopname);
         return true;
     }
 
@@ -143,7 +151,16 @@ public final class ShopListener implements Listener {
     public void onDeath(EntityDeathEvent event) {
         if (event.getEntity() instanceof AbstractVillager villager
                 && villager.getPersistentDataContainer().has(this.shopKey)) {
-            event.getDrops().add(ShopVillager.createSpawnEgg(this.manager.getPlugin()));
+
+            ItemStack spawnEgg = ShopVillager.createSpawnEgg(this.manager.getPlugin());
+
+            ShopVillager shop = this.villagerCache.get(villager);
+            if (!shop.getShopName().equals(translatable("ca.shop.shopname"))) {
+                // custom name
+                spawnEgg.setData(DataComponentTypes.CUSTOM_NAME, shop.getShopName());
+            }
+
+            event.getDrops().add(spawnEgg);
         }
     }
 
@@ -156,6 +173,9 @@ public final class ShopListener implements Listener {
             if (shop.isOwner(event.getPlayer())) {
                 lookAt(villager, event.getPlayer());
             }
+
+            // prevent damage from creative players
+            event.setCancelled(true);
         }
     }
 

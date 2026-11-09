@@ -90,6 +90,11 @@ public final class CaManager {
             return CompletableFuture.completedFuture(TpResult.ALREADY_TELEPORTING);
         }
 
+        if (player.isSleeping()) {
+            player.sendMessage(getPrefix().append(translatable("ca.teleport.in-bed", NamedTextColor.RED)));
+            return CompletableFuture.completedFuture(TpResult.CANCELLED);
+        }
+
         Location spawnTarget;
         if (target == null) {
             spawnTarget = this.getConfig().getSpawnConfig().getWarpLocation();

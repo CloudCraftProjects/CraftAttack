@@ -4,6 +4,8 @@ package dev.booky.craftattack.shops;
 import dev.booky.craftattack.CaManager;
 import dev.booky.craftattack.utils.ItemStackListDataType;
 import dev.booky.craftattack.utils.UniqueIdDataType;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.minecraft.core.NonNullList;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -53,11 +55,14 @@ public final class ShopVillager {
     private final NamespacedKey profitKey;
     private final NamespacedKey stockKey;
     private final NamespacedKey ownerKey;
+    private final NamespacedKey nameKey;
 
     private final Lock stateLock = new ReentrantLock();
     private final NonNullList<ItemStack> profit = NonNullList.create();
     private final NonNullList<ItemStack> stock = NonNullList.create();
+    private final String DEFAULT_NAME_GSON = GsonComponentSerializer.gson().serialize(translatable("ca.shop.shopname"));
     private @Nullable UUID ownerId;
+    private Component shopName;
 
     public ShopVillager(CaManager manager, AbstractVillager merchant, Consumer<ShopVillager> onDirty) {
         this.merchant = new WeakReference<>(merchant);
@@ -67,6 +72,7 @@ public final class ShopVillager {
         this.profitKey = new NamespacedKey(manager.getPlugin(), "shop/profit");
         this.stockKey = new NamespacedKey(manager.getPlugin(), "shop/stock");
         this.ownerKey = new NamespacedKey(manager.getPlugin(), "shop/owner");
+        this.nameKey = new NamespacedKey(manager.getPlugin(), "shop/name");
 
         this.loadData();
     }
@@ -83,16 +89,23 @@ public final class ShopVillager {
         return stack;
     }
 
-    public static Villager spawnShop(Location location, LivingEntity owner, Plugin plugin) {
+    public static Villager spawnShop(Location location, LivingEntity owner, Plugin plugin, Component shopname) {
         if (!Bukkit.isOwnedByCurrentRegion(location)) {
             throw new IllegalStateException("Location " + location + " needs to be owned for shop to spawn");
         }
+
+        // either custom shop name or ca.shop.shopname
+        Component validShopName = Component.IS_NOT_EMPTY.test(shopname) ? shopname : translatable("ca.shop.shopname");
+
         NamespacedKey shopKey = new NamespacedKey(plugin, "shop");
         NamespacedKey ownerKey = new NamespacedKey(plugin, "shop/owner");
+        NamespacedKey nameKey = new NamespacedKey(plugin, "shop/name");
+
         Villager ret = location.getWorld().spawn(location, Villager.class, false, villager -> {
             PersistentDataContainer pdc = villager.getPersistentDataContainer();
             pdc.set(shopKey, PersistentDataType.BOOLEAN, true);
             pdc.set(ownerKey, UniqueIdDataType.INSTANCE, owner.getUniqueId());
+            pdc.set(nameKey, PersistentDataType.STRING, GsonComponentSerializer.gson().serialize(validShopName));
 
             villager.setAI(false);
             villager.setRemoveWhenFarAway(false);
@@ -109,16 +122,19 @@ public final class ShopVillager {
                 ShopListener.lookAt(villager, owner);
             }
         });
+
         TextDisplay shopText = location.getWorld().spawn(location, TextDisplay.class, false, display -> {
             display.setShadowed(true);
             display.setBackgroundColor(Color.fromARGB(0x00000000));
             display.setBillboard(Display.Billboard.CENTER);
-            display.text(translatable("ca.shop.display", owner.name()));
             display.setTransformationMatrix(new Matrix4f()
                     .translateLocal(0f, 0.2f, 0f));
             ret.addPassenger(display);
             // try to prevent flickering of text display by not showing it until it has been spawned
             display.setVisibleByDefault(false);
+
+            // apply custom name if any
+            display.text(translatable("ca.shop.display", validShopName, owner.name()));
         });
         shopText.setVisibleByDefault(true);
         return ret;
@@ -329,6 +345,16 @@ public final class ShopVillager {
         }
         // load id of owner
         this.ownerId = pdc.get(this.ownerKey, UniqueIdDataType.INSTANCE);
+
+        // load shopname
+        // ensure backwards compatibility
+        String storedName = pdc.getOrDefault(
+                this.nameKey,
+                PersistentDataType.STRING,
+                DEFAULT_NAME_GSON
+        );
+
+        this.shopName = GsonComponentSerializer.gson().deserialize(storedName);
     }
 
     public void saveData() {
@@ -435,6 +461,12 @@ public final class ShopVillager {
                 this.ownerId = ownerId;
                 this.markDirty();
             }
+        }
+    }
+
+    public Component getShopName() {
+        synchronized (this) {
+            return this.shopName;
         }
     }
 }
